@@ -1,3 +1,6 @@
+[user]
+  name = Andreas Steffan
+  email = a.steffan@contentreich.de
 [init]
   templatedir = ~/.git_template
 [push]
