@@ -1,5 +1,5 @@
 [submodule "emacs/.emacs.d"]
-	path = emacs/.emacs.d
+	path = emacs.d
 	url = https://github.com/syl20bnr/spacemacs
 [submodule "zsh/.oh-my-zsh"]
 	path = zsh/oh-my-zsh

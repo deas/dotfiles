@@ -46,13 +46,14 @@
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="/home/deas/.zsh/oh-my-zsh"
+export ZSH="$HOME/.zsh/oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
+ZSH_THEME="lambda"
+# "robbyrussell"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -112,7 +113,15 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+# plugins=(git)
+plugins=(git github git-flow golang jsontools vagrant wp-cli lein mvn gradle grails npm nvm node postgres encode64 urltools docker docker-compose pip systemadmin emoji ubuntu systemd sudo tmux web-search colored-man-pages debian emacs react-native composer python virtualenv httpie yarn kubectl aws terraform gem)
+# zsh-autosuggestions 
+
+# source $ZSH/oh-my-zsh.sh
+# source $ZSH/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# source $ZSH/custom/plugins/z/z.sh
+# PROMPT='$(kube_ps1)'$PROMPT
+
 
 source $ZSH/oh-my-zsh.sh
 
