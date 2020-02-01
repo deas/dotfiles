@@ -1,2 +1,2 @@
-EXCLUDES="README*.md LICENSE vimrc vimrc.bundles"
+EXCLUDES="README*.md LICENSE emacs.d vimrc vimrc.bundles"
 DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles"

@@ -1,7 +1,14 @@
+# See last line "zprof"
+# zmodload zsh/zprof
+# setopt verbose
+# setopt xtrace
 source ~/.zplug/init.zsh
 
 # Make sure to use double quotes
 zplug "zsh-users/zsh-history-substring-search"
+zplug "zsh-users/zsh-autosuggestions"
+# zplug "rupa/z", use:"*.sh"
+zplug "andrewferrier/fzf-z"
 
 # Use the package as a command
 # And accept glob patterns (e.g., brace, wildcard, ...)
@@ -21,6 +28,27 @@ zplug "zsh-users/zsh-history-substring-search"
 #     rename-to:fzf, \
 #     use:"*darwin*amd64*"
 
+# TODO: helm at https://get.helm.sh/helm-v*-linux-amd64.tar.gz - not on github
+# zplug "helm/helm", \
+#     from:gh-r, \
+#     as:command, \
+#     rename-to:helm, \
+#     use:"*linux*amd64*"
+
+zplug "GoogleContainerTools/skaffold", \
+    from:gh-r, \
+    as:command, \
+    rename-to:skaffold, \
+    use:"*linux*amd64*"
+
+zplug "openshift/origin", \
+    from:gh-r, \
+    as:command, \
+    rename-to:oc, \
+    use:"*client*linux*64*"
+
+zplug "lib/history",    from:oh-my-zsh
+# zplug "themes/robbyrussell", from:oh-my-zsh, use:"*.zsh-theme"
 # Supports oh-my-zsh plugins and the like
 zplug "plugins/git",   from:oh-my-zsh
 zplug "plugins/github",   from:oh-my-zsh
@@ -61,7 +89,9 @@ zplug "plugins/kubectl",   from:oh-my-zsh
 # zplug "plugins/aws",   from:oh-my-zsh
 zplug "plugins/terraform",   from:oh-my-zsh
 zplug "plugins/gem",   from:oh-my-zsh
+zplug "plugins/z",   from:oh-my-zsh
 
+# zplug "themes/robbyrussell", from:oh-my-zsh, defer:1
 
 # Also prezto
 zplug "modules/prompt", from:prezto
@@ -135,8 +165,10 @@ zplug load
 #--verbose
 
 if [ -d "$HOME/.zsh/configs" ] ; then
-    find "$HOME/.zsh/configs" -name "*.zsh" | while read f
+    find "$HOME/.zsh/configs" -maxdepth 1 -name "*.zsh" | while read f
     do
 	source "$f"
     done
 fi
+
+# zprof
