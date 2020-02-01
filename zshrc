@@ -58,7 +58,7 @@ zplug "plugins/virtualenv",   from:oh-my-zsh
 zplug "plugins/httpie",   from:oh-my-zsh
 zplug "plugins/yarn",   from:oh-my-zsh
 zplug "plugins/kubectl",   from:oh-my-zsh
-zplug "plugins/aws",   from:oh-my-zsh
+# zplug "plugins/aws",   from:oh-my-zsh
 zplug "plugins/terraform",   from:oh-my-zsh
 zplug "plugins/gem",   from:oh-my-zsh
 
@@ -117,7 +117,7 @@ zplug "modules/prompt", from:prezto
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 
 # Can manage local plugins
-# zplug "~/.zsh", from:local
+# zplug "~/.zsh/plugins", from:local
 
 # Load theme file
 # zplug 'dracula/zsh', as:theme
@@ -133,3 +133,10 @@ fi
 # Then, source plugins and add commands to $PATH
 zplug load
 #--verbose
+
+if [ -d "$HOME/.zsh/configs" ] ; then
+    find "$HOME/.zsh/configs" -name "*.zsh" | while read f
+    do
+	source "$f"
+    done
+fi
