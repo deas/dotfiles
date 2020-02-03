@@ -2,167 +2,58 @@
 # zmodload zsh/zprof
 # setopt verbose
 # setopt xtrace
-source ~/.zplug/init.zsh
 
-# Make sure to use double quotes
-zplug "zsh-users/zsh-history-substring-search"
-zplug "zsh-users/zsh-autosuggestions"
-# zplug "rupa/z", use:"*.sh"
-zplug "andrewferrier/fzf-z"
+source $HOME/.zsh/antigen.zsh
 
-# Use the package as a command
-# And accept glob patterns (e.g., brace, wildcard, ...)
-# zplug "Jxck/dotfiles", as:command, use:"bin/{histuniq,color}"
+# Load the oh-my-zsh's library.
+antigen use oh-my-zsh
 
-# Can manage everything e.g., other person's zshrc
-# zplug "tcnksm/docker-alias", use:zshrc
+antigen bundle git
+antigen bundle github
+## git-flow
+antigen bundle golang
+antigen bundle jsontools
+## vagrant
+antigen bundle wp-cli
+antigen bundle lein
+antigen bundle mvn
+antigen bundle gradle
+antigen bundle npm
+antigen bundle nvm
+antigen bundle node
+antigen bundle postgres
+antigen bundle encode64
+antigen bundle urltools
+antigen bundle docker
+antigen bundle docker-compose
+antigen bundle pip
+antigen bundle systemadmin
+antigen bundle emoji
+antigen bundle ubuntu
+antigen bundle systemd
+antigen bundle sudo
+antigen bundle tmux
+antigen bundle web-search
+antigen bundle colored-man-page
+antigen bundle debian
+#antigen bundle react-native
+# antigen bundle composer
+antigen bundle python
+antigen bundle virtualenv
+antigen bundle httpie
+antigen bundle yarn
+antigen bundle kubectl
+# antigen bundle aws
+antigen bundle terraform
+antigen bundle gem
+antigen bundle z
 
-# Disable updates using the "frozen" tag
-# zplug "k4rthik/git-cal", as:command, frozen:1
+antigen bundle zsh-users/zsh-history-substring-search
+antigen bundle zsh-users/zsh-autosuggestions
+antigen bundle andrewferrier/fzf-z
 
-# Grab binaries from GitHub Releases
-# and rename with the "rename-to:" tag
-# zplug "junegunn/fzf-bin", \
-#     from:gh-r, \
-#     as:command, \
-#     rename-to:fzf, \
-#     use:"*darwin*amd64*"
-
-# TODO: helm at https://get.helm.sh/helm-v*-linux-amd64.tar.gz - not on github
-# zplug "helm/helm", \
-#     from:gh-r, \
-#     as:command, \
-#     rename-to:helm, \
-#     use:"*linux*amd64*"
-
-zplug "GoogleContainerTools/skaffold", \
-    from:gh-r, \
-    as:command, \
-    rename-to:skaffold, \
-    use:"*linux*amd64*"
-
-zplug "openshift/origin", \
-    from:gh-r, \
-    as:command, \
-    rename-to:oc, \
-    use:"*client*linux*64*"
-
-zplug "lib/history",    from:oh-my-zsh
-# zplug "themes/robbyrussell", from:oh-my-zsh, use:"*.zsh-theme"
-# Supports oh-my-zsh plugins and the like
-zplug "plugins/git",   from:oh-my-zsh
-zplug "plugins/github",   from:oh-my-zsh
-# git-flow
-zplug "plugins/golang",   from:oh-my-zsh
-zplug "plugins/jsontools",   from:oh-my-zsh
-# vagrant
-zplug "plugins/wp-cli",   from:oh-my-zsh
-zplug "plugins/lein",   from:oh-my-zsh
-zplug "plugins/mvn",   from:oh-my-zsh
-zplug "plugins/gradle",   from:oh-my-zsh
-# grails
-zplug "plugins/npm",   from:oh-my-zsh
-zplug "plugins/nvm",   from:oh-my-zsh
-zplug "plugins/node",   from:oh-my-zsh
-zplug "plugins/postgres",   from:oh-my-zsh
-zplug "plugins/encode64",   from:oh-my-zsh
-zplug "plugins/urltools",   from:oh-my-zsh
-zplug "plugins/docker",   from:oh-my-zsh
-zplug "plugins/docker-compose",   from:oh-my-zsh
-zplug "plugins/pip",   from:oh-my-zsh
-zplug "plugins/systemadmin",   from:oh-my-zsh
-zplug "plugins/emoji",   from:oh-my-zsh
-zplug "plugins/ubuntu",   from:oh-my-zsh
-zplug "plugins/systemd",   from:oh-my-zsh
-zplug "plugins/sudo",   from:oh-my-zsh
-zplug "plugins/tmux",   from:oh-my-zsh
-zplug "plugins/web-search",   from:oh-my-zsh
-zplug "plugins/colored-man-pages",   from:oh-my-zsh
-zplug "plugins/debian",   from:oh-my-zsh
-zplug "plugins/react-native",   from:oh-my-zsh
-# zplug "plugins/composer",   from:oh-my-zsh
-zplug "plugins/python",   from:oh-my-zsh
-zplug "plugins/virtualenv",   from:oh-my-zsh
-zplug "plugins/httpie",   from:oh-my-zsh
-zplug "plugins/yarn",   from:oh-my-zsh
-zplug "plugins/kubectl",   from:oh-my-zsh
-# zplug "plugins/aws",   from:oh-my-zsh
-zplug "plugins/terraform",   from:oh-my-zsh
-zplug "plugins/gem",   from:oh-my-zsh
-zplug "plugins/z",   from:oh-my-zsh
-
-# zplug "themes/robbyrussell", from:oh-my-zsh, defer:1
-
-# Also prezto
-zplug "modules/prompt", from:prezto
-
-# Load if "if" tag returns true
-# zplug "lib/clipboard", from:oh-my-zsh, if:"[[ $OSTYPE == *darwin* ]]"
-
-# Run a command after a plugin is installed/updated
-# Provided, it requires to set the variable like the following:
-# ZPLUG_SUDO_PASSWORD="********"
-# zplug "jhawthorn/fzy", \
-#     as:command, \
-#     rename-to:fzy, \
-#     hook-build:"make && sudo make install"
-
-# Supports checking out a specific branch/tag/commit
-# zplug "b4b4r07/enhancd", at:v1
-# zplug "mollifier/anyframe", at:4c23cb60
-
-# Can manage gist file just like other packages
-# zplug "b4b4r07/79ee61f7c140c63d2786", \
-#     from:gist, \
-#     as:command, \
-#     use:get_last_pane_path.sh
-
-# Support bitbucket
-# zplug "b4b4r07/hello_bitbucket", \
-#     from:bitbucket, \
-#     as:command, \
-#     use:"*.sh"
-
-# Rename a command with the string captured with `use` tag
-# zplug "b4b4r07/httpstat", \
-#     as:command, \
-#     use:'(*).sh', \
-#     rename-to:'$1'
-
-# Group dependencies
-# Load "emoji-cli" if "jq" is installed in this example
-# zplug "stedolan/jq", \
-#     from:gh-r, \
-#     as:command, \
-#     rename-to:jq
-#     zplug "b4b4r07/emoji-cli", \
-#     on:"stedolan/jq"
-# # Note: To specify the order in which packages should be loaded, use the defer
-# #       tag described in the next section
-
-# Set the priority when loading
-# e.g., zsh-syntax-highlighting must be loaded
-# after executing compinit command and sourcing other plugins
-# (If the defer tag is given 2 or above, run after compinit command)
-zplug "zsh-users/zsh-syntax-highlighting", defer:2
-
-# Can manage local plugins
-# zplug "~/.zsh/plugins", from:local
-
-# Load theme file
-# zplug 'dracula/zsh', as:theme
-
-# Install plugins if there are plugins that have not been installed
-if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-        echo; zplug install
-    fi
-fi
-
-# Then, source plugins and add commands to $PATH
-zplug load
-#--verbose
+# Load the theme.
+antigen theme robbyrussell
 
 if [ -d "$HOME/.zsh/configs" ] ; then
     find "$HOME/.zsh/configs" -maxdepth 1 -name "*.zsh" | while read f
@@ -170,5 +61,8 @@ if [ -d "$HOME/.zsh/configs" ] ; then
 	source "$f"
     done
 fi
+
+# Tell Antigen that you're done.
+antigen apply
 
 # zprof
