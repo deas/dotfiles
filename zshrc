@@ -56,14 +56,17 @@ antigen bundle zsh-users/zsh-autosuggestions
 antigen bundle andrewferrier/fzf-z
 
 # Load the theme.
+# antigen theme agnoster
 antigen theme robbyrussell
 
 if [ -d "$HOME/.zsh/configs" ] ; then
     find "$HOME/.zsh/configs" -maxdepth 1 -name "*.zsh" | while read f
     do
-	source "$f"
+	    source "$f"
     done
 fi
+
+[ -e "$HOME/noscm.zsh" ] && source "$HOME/noscm.zsh"
 
 # Tell Antigen that you're done.
 antigen apply
