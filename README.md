@@ -15,10 +15,11 @@ cd dotfiles
 git submodule update --init --recursive
 cd $HOME
 env RCRC=$HOME/dotfiles/rcrc rcup
-curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
 ```
 
 misc
 ------------
+- [Powerline fonts](https://github.com/powerline/fonts)
 - [Setting up Windows Subsystem for Linux with zsh + oh-my-zsh + ConEmu](https://blog.joaograssi.com/windows-subsystem-for-linux-with-oh-my-zsh-conemu/)
--  [zplug](https://github.com/zplug/zplug) appears to have a forkbomb issue on WSL 
+- [Powerline fonts in crostini](https://www.reddit.com/r/Crostini/comments/9blkjv/powerline_fonts_in_the_crostini_terminal/)
+- [zplug](https://github.com/zplug/zplug) appears to have a forkbomb issue on WSL 
