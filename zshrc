@@ -4,7 +4,10 @@
 # setopt xtrace
 
 # https://github.com/microsoft/WSL/issues/352
+# Order matters
 grep --quiet Microsoft /proc/version 2>/dev/null && [[ "$(umask)" == '000' ]] && umask 022
+
+[ -e "$HOME/noscm.zsh" ] && source "$HOME/noscm.zsh"
 
 source $HOME/.zsh/antigen.zsh
 
@@ -66,7 +69,7 @@ if [ -d "$HOME/.zsh/configs" ] ; then
     done
 fi
 
-[ -e "$HOME/noscm.zsh" ] && source "$HOME/noscm.zsh"
+# [ -e "$HOME/noscm.zsh" ] && source "$HOME/noscm.zsh"
 
 # Tell Antigen that you're done.
 antigen apply
