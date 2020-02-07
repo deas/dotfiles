@@ -61,6 +61,7 @@ antigen bundle andrewferrier/fzf-z
 # Load the theme.
 # antigen theme agnoster
 antigen theme robbyrussell
+# PROMPT='$(kube_ps1)'$PROMPT
 
 if [ -d "$HOME/.zsh/configs" ] ; then
     find "$HOME/.zsh/configs" -maxdepth 1 -name "*.zsh" | while read f
