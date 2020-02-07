@@ -1,5 +1,11 @@
 PATH="$PATH:$HOME/.local/bin"
 
+if [ -d "$HOME/go" ] ; then
+  PATH="$PATH:$HOME/.local/bin"
+fi
+
+# export GEM_HOME="$HOME/gems"
+# $HOME/.linkerd2/bin:$HOME/.fabric8/bin:$HOME/.krew/bin:$HOME/.cargo/bin:$HOME/gems/bin
 # PATH="$PATH:$HOME/.rvm/bin"
 
 # which kubectl > /dev/null && source <(kubectl completion zsh)
@@ -14,7 +20,7 @@ PATH="$PATH:$HOME/.local/bin"
 
 KREW_ROOT=$HOME/.krew
 
-if [ -d $KREW_ROOT ] ; then
+if [ -d "$KREW_ROOT" ] ; then
     PATH="$PATH:${KREW_ROOT}/bin"
 fi
 
