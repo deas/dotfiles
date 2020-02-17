@@ -1,6 +1,10 @@
 PATH="$PATH:$HOME/.local/bin"
 
 if [ -d "$HOME/go" ] ; then
+  PATH="$PATH:$HOME/go/bin"
+fi
+
+if [ -d "$HOME/.local/bin" ] ; then
   PATH="$PATH:$HOME/.local/bin"
 fi
 
@@ -8,9 +12,9 @@ fi
 # $HOME/.linkerd2/bin:$HOME/.fabric8/bin:$HOME/.krew/bin:$HOME/.cargo/bin:$HOME/gems/bin
 # PATH="$PATH:$HOME/.rvm/bin"
 
-# which kubectl > /dev/null && source <(kubectl completion zsh)
-# which helm > /dev/null && source <(helm completion zsh)
-# which oc >/dev/null && source <(oc completion zsh)
+which kubectl > /dev/null && source <(kubectl completion zsh)
+which helm > /dev/null && source <(helm completion zsh)
+which oc >/dev/null && source <(oc completion zsh)
 # which jx >/dev/null && source <(jx completion zsh)
 # which kubeadm >/dev/null && source <(kubeadm completion zsh)
 
