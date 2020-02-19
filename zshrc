@@ -50,6 +50,7 @@ antigen bundles <<EOBUNDLES
   httpie
   yarn
   kubectl
+  kube-ps1
   terraform
   gem
   z
@@ -82,5 +83,9 @@ fi
 
 # Tell Antigen that you're done.
 antigen apply
+
+kubeoff
+
+PROMPT=$PROMPT'$(kube_ps1)'
 
 # zprof
