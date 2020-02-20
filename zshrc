@@ -5,20 +5,27 @@
 
 # https://github.com/microsoft/WSL/issues/352
 # Order matters
+
 grep --quiet Microsoft /proc/version 2>/dev/null && [[ "$(umask)" == '000' ]] && umask 022
 
 [ -e "$HOME/noscm.zsh" ] && source "$HOME/noscm.zsh"
+
+# ZSH=$HOME/.oh-my-zsh
+ZSH="$HOME/.antigen/bundles/robbyrussell/oh-my-zsh/"
+ZSH_THEME="robbyrussell"
+# "agnoster"
 
 # which helm > /dev/null && source <(helm completion zsh)
 # which kubectl > /dev/null && source <(kubectl completion zsh)
 # which oc > /dev/null && source <(oc completion zsh)
 
-source $HOME/.zsh/antigen.zsh
+# source $HOME/.zsh/antigen.zsh
+# antigen use oh-my-zsh
 
-# Load the oh-my-zsh's library.
-antigen use oh-my-zsh
-
-antigen bundles <<EOBUNDLES
+# TODO: https://github.com/zsh-users/antigen/issues/701
+#
+# antigen bundles <<EOBUNDLES
+plugins=(
   git
   github
   golang
@@ -43,7 +50,7 @@ antigen bundles <<EOBUNDLES
   sudo
   tmux
   web-search
-  colored-man-page
+  colored-man-pages
   debian
   python
   virtualenv
@@ -54,11 +61,19 @@ antigen bundles <<EOBUNDLES
   terraform
   gem
   z
-  zsh-users/zsh-history-substring-search
-  zsh-users/zsh-autosuggestions
-  andrewferrier/fzf-z
-  $HOME/.zsh/hacks
-EOBUNDLES
+)
+#  zsh-users/zsh-history-substring-search
+#  zsh-users/zsh-autosuggestions
+#  andrewferrier/fzf-z
+#  $HOME/.zsh/hacks
+# EOBUNDLES
+
+source "$ZSH/oh-my-zsh.sh"
+source "$HOME/.antigen/bundles/zsh-users/zsh-autosuggestions/zsh-autosuggestions.zsh"
+source "$HOME/.antigen/bundles/zsh-users/zsh-history-substring-search/zsh-history-substring-search.zsh"
+# source $ZSH/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+
 # vagrant
 # git-flow
 #  react-native
@@ -68,7 +83,7 @@ EOBUNDLES
 
 # Load the theme.
 # antigen theme agnoster
-antigen theme robbyrussell
+# antigen theme ${ZSH_THEME}
 
 # PROMPT='$(kube_ps1)'$PROMPT
 
@@ -79,10 +94,8 @@ if [ -d "$HOME/.zsh/configs" ] ; then
     done
 fi
 
-# [ -e "$HOME/noscm.zsh" ] && source "$HOME/noscm.zsh"
-
 # Tell Antigen that you're done.
-antigen apply
+# antigen apply
 
 kubeoff
 
