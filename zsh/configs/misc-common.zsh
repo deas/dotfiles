@@ -1,11 +1,13 @@
-PATH="$PATH:$HOME/.local/bin"
-
 if [ -d "$HOME/go" ] ; then
   PATH="$PATH:$HOME/go/bin"
 fi
 
 if [ -d "$HOME/.local/bin" ] ; then
   PATH="$PATH:$HOME/.local/bin"
+fi
+
+if [ -d "$HOME/bin" ] ; then
+  PATH="$PATH:$HOME/bin"
 fi
 
 # export GEM_HOME="$HOME/gems"
