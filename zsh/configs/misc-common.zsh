@@ -34,6 +34,11 @@ fi
 #export SDKMAN_DIR="$HOME/.sdkman"
 #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
+if [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] ; then
+  export SDKMAN_DIR="$HOME/.sdkman"
+  source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+fi
+
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
