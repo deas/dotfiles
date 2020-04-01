@@ -37,6 +37,8 @@
            :zprint {:extra-deps {org.clojure/clojure {:mvn/version "1.9.0"}
                                  zprint              {:mvn/version "0.4.9"}}
                     :main-opts  ["-m" "zprint.main"]}
+           :rebel {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
+                   :main-opts  ["-m" "rebel-readline.main"]}
            ;;   :deps {:extra-deps {org.clojure/tools.deps.alpha {:mvn/version "0.2.196"}}}
            ;;   :test {:extra-paths ["test"]}
            }
