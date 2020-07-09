@@ -29,6 +29,10 @@ if [ -d "$KREW_ROOT" ] ; then
     PATH="$PATH:${KREW_ROOT}/bin"
 fi
 
+if [ -d "$HOME/.deno" ] ; then
+  export DENO_INSTALL="$HOME/.deno"
+  PATH="$DENO_INSTALL/bin:$PATH"
+fi  
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 #export SDKMAN_DIR="$HOME/.sdkman"
@@ -43,6 +47,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
+export GEM_HOME="$HOME/gems"
+  
 # tabtab source for serverless package
 # uninstall by removing these lines or running `tabtab uninstall serverless`
 # [[ -f $HOME/.config/yarn/global/node_modules/tabtab/.completions/serverless.zsh ]] && . $HOME/.config/yarn/global/node_modules/tabtab/.completions/serverless.zsh
