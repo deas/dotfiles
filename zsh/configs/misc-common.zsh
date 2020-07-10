@@ -10,13 +10,22 @@ if [ -d "$HOME/bin" ] ; then
   PATH="$PATH:$HOME/bin"
 fi
 
-# export GEM_HOME="$HOME/gems"
-# $HOME/.linkerd2/bin:$HOME/.fabric8/bin:$HOME/.krew/bin:$HOME/.cargo/bin:$HOME/gems/bin
-# PATH="$PATH:$HOME/.rvm/bin"
+# Ruby
+# if [ -d "$HOME/.rvm/bin" ] ; then
+#   PATH="$PATH:$HOME/.rvm/bin"
+# fi
 
-# which helm > /dev/null && source <(helm completion zsh)
+export GEM_HOME="$HOME/gems"
+
+if [ -d "$GEM_HOME/bin" ] ; then
+  PATH="$PATH:$GEM_HOME/bin"
+fi
+
+# $HOME/.linkerd2/bin:$HOME/.fabric8/bin:$HOME/.krew/bin:$HOME/.cargo/bin
+
+which helm > /dev/null && source <(helm completion zsh)
 # which oc >/dev/null && source <(oc completion zsh)
-# which jx >/dev/null && source <(jx completion zsh)
+which jx >/dev/null && source <(jx completion zsh)
 # which kubeadm >/dev/null && source <(kubeadm completion zsh)
 
 
@@ -47,8 +56,6 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-export GEM_HOME="$HOME/gems"
-  
 # tabtab source for serverless package
 # uninstall by removing these lines or running `tabtab uninstall serverless`
 # [[ -f $HOME/.config/yarn/global/node_modules/tabtab/.completions/serverless.zsh ]] && . $HOME/.config/yarn/global/node_modules/tabtab/.completions/serverless.zsh
