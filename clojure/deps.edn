@@ -127,7 +127,7 @@
                          org.yaml/snakeyaml {:mvn/version "1.25"}
                          com.cognitect/rebl
                          ;; adjust to match your install location
-                                                {:local/root "/Developer/REBL/latest/REBL.jar"}}
+                                                {:local/root "/opt/REBL/java8"}}
             :main-opts ["-m" "cognitect.rebl"]}
            :rebl-11
            {:extra-deps {org.clojure/core.async {:mvn/version "0.6.532"}
@@ -137,7 +137,7 @@
                          org.yaml/snakeyaml {:mvn/version "1.25"}
                          com.cognitect/rebl
                          ;; adjust to match your install location
-                                                {:local/root "/Developer/REBL/latest/REBL.jar"}
+                                                {:local/root "/opt/REBL/openjfx15ea"}
                          org.openjfx/javafx-fxml     {:mvn/version "11.0.2"}
                          org.openjfx/javafx-controls {:mvn/version "11.0.2"}
                          org.openjfx/javafx-graphics {:mvn/version "11.0.2"}
