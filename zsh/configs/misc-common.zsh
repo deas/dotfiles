@@ -1,3 +1,8 @@
+# https://www.realjenius.com/2020/01/12/kde-neon-snap-apps-missing/
+if [ -r "/etc/profile.d/apps-bin-path.sh" ] ; then
+    emulate sh -c 'source /etc/profile.d/apps-bin-path.sh'
+fi
+
 if [ -d "$HOME/go" ] ; then
   PATH="$PATH:$HOME/go/bin"
 fi
