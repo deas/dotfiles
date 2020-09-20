@@ -61,6 +61,7 @@ plugins=(
   terraform
   gem
   z
+  asdf
 )
 #  zsh-users/zsh-history-substring-search
 #  zsh-users/zsh-autosuggestions
