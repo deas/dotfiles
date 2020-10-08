@@ -63,13 +63,10 @@ if [ -f "$HOME/.asdf/asdf.sh" ] ; then
 fi  
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-#export SDKMAN_DIR="$HOME/.sdkman"
-#[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-
-if [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] ; then
-  export SDKMAN_DIR="$HOME/.sdkman"
-  source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-fi
+#if [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] ; then
+#  export SDKMAN_DIR="$HOME/.sdkman"
+#  source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+#fi
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
