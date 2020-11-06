@@ -43,6 +43,7 @@ which helm > /dev/null && source <(helm completion zsh)
 which jx >/dev/null && source <(jx completion zsh)
 # which kubeadm >/dev/null && source <(kubeadm completion zsh)
 
+which direnv >/dev/null && eval "$(direnv hook zsh)"
 
 # source "$HOME/.../kube-ps1/kube-ps1.sh"
 # [ -f "/usr/share/zsh/vendor-completions/_awscli" ] && source "/usr/share/zsh/vendor-completions/_awscli"
