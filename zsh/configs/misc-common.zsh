@@ -82,6 +82,15 @@ if [ -d /home/linuxbrew ] ; then
     export INFOPATH="/home/linuxbrew/.linuxbrew/share/info:${INFOPATH:-}";
 fi
 
+
+# https://emacsredux.com/blog/2020/07/16/running-emacs-with-systemd/
+if systemctl --user is-active --quiet emacs.service ; then
+    export EDITOR='emacsclient -t'
+    export VISUAL='emacsclient -t'
+    alias vi='emacsclient -t'
+    alias vim='emacsclient -t'
+fi
+
 # tabtab source for serverless package
 # uninstall by removing these lines or running `tabtab uninstall serverless`
 # [[ -f $HOME/.config/yarn/global/node_modules/tabtab/.completions/serverless.zsh ]] && . $HOME/.config/yarn/global/node_modules/tabtab/.completions/serverless.zsh

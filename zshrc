@@ -53,7 +53,8 @@ plugins=(
   colored-man-pages
   debian
   python
-  virtualenv
+#  virtualenv
+  virtualenvwrapper
   httpie
   yarn
   kubectl
@@ -68,6 +69,8 @@ plugins=(
 #  andrewferrier/fzf-z
 #  $HOME/.zsh/hacks
 # EOBUNDLES
+
+export WORKON_HOME=$HOME/.virtualenvs
 
 source "$ZSH/oh-my-zsh.sh"
 source "$HOME/.antigen/bundles/zsh-users/zsh-autosuggestions/zsh-autosuggestions.zsh"
