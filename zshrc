@@ -63,6 +63,7 @@ plugins=(
   gem
   z
   asdf
+  vi-mode
 )
 #  zsh-users/zsh-history-substring-search
 #  zsh-users/zsh-autosuggestions
