@@ -71,6 +71,10 @@ plugins=(
 #  $HOME/.zsh/hacks
 # EOBUNDLES
 
+# Conditionally append to array
+# if ... ; then
+#    plugins+=another-pugin
+# fi
 export WORKON_HOME=$HOME/.virtualenvs
 
 source "$ZSH/oh-my-zsh.sh"
