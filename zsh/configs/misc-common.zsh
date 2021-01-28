@@ -36,8 +36,10 @@ if [ -n "$XDG_CONFIG_HOME" ] ; then
     export CLJ_CONFIG=$HOME/.clojure
 fi    
 
-# $HOME/.linkerd2/bin:$HOME/.fabric8/bin:$HOME/.krew/bin:$HOME/.cargo/bin
+# gcloud completion
+[ -r "/usr/share/google-cloud-sdk/completion.zsh.inc" ] && source "/usr/share/google-cloud-sdk/completion.zsh.inc"
 
+# $HOME/.linkerd2/bin:$HOME/.fabric8/bin:$HOME/.krew/bin:$HOME/.cargo/bin
 which helm > /dev/null && source <(helm completion zsh)
 # which oc >/dev/null && source <(oc completion zsh)
 which jx >/dev/null && source <(jx completion zsh)
