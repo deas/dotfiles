@@ -1,9 +1,6 @@
 [submodule "emacs/.emacs.d"]
 	path = emacs.d
 	url = https://github.com/syl20bnr/spacemacs
-[submodule "kubectx"]
-	path = kubectx
-	url = https://github.com/ahmetb/kubectx.git
 [submodule "clojure"]
 	path = clojure
 	url = git@github.com:practicalli/clojure-deps-edn.git
