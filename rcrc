@@ -1,2 +1,2 @@
-EXCLUDES="README*.md LICENSE zshrc-zplug vimrc vimrc.bundles"
+EXCLUDES="README*.md LICENSE zshrc-zplug vimrc vimrc.bundles clojure-sc"
 DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles"
