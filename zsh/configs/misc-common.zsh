@@ -39,6 +39,9 @@ fi
 # gcloud completion
 [ -r "/usr/share/google-cloud-sdk/completion.zsh.inc" ] && source "/usr/share/google-cloud-sdk/completion.zsh.inc"
 
+# azure-cli completion
+[ -r "/etc/bash_completion.d/azure-cli" ] && source /etc/bash_completion.d/azure-cli
+
 # $HOME/.linkerd2/bin:$HOME/.fabric8/bin:$HOME/.krew/bin:$HOME/.cargo/bin
 which helm > /dev/null && source <(helm completion zsh)
 # which oc >/dev/null && source <(oc completion zsh)
