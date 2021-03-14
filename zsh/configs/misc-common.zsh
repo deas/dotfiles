@@ -47,6 +47,9 @@ which jx >/dev/null && source <(jx completion zsh)
 
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
+# https://askubuntu.com/questions/910821/programs-installed-via-snap-not-showing-up-in-launcher
+[ -r "/etc/profile.d/apps-bin-path.sh" ] && emulate sh -c 'source /etc/profile.d/apps-bin-path.sh'
+
 # source "$HOME/.../kube-ps1/kube-ps1.sh"
 # [ -f "/usr/share/zsh/vendor-completions/_awscli" ] && source "/usr/share/zsh/vendor-completions/_awscli"
 
@@ -71,6 +74,11 @@ fi
 #  source "${SDKMAN_DIR}/bin/sdkman-init.sh"
 #fi
 
+[ -x "/usr/bin/ksshaskpass" ] && export SSH_ASKPASS="/usr/bin/ksshaskpass"
+
+export GEM_HOME="$HOME/gems"
+
+
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
@@ -92,6 +100,14 @@ if systemctl --user is-active --quiet emacs.service ; then
     alias vi='emacsclient -t'
     alias vim='emacsclient -t'
 fi
+
+# jupyther notebook strip
+alias nbstrip_jq="jq --indent 1 \
+    '(.cells[] | select(has(\"outputs\")) | .outputs) = []  \
+    | (.cells[] | select(has(\"execution_count\")) | .execution_count) = null  \
+    | .metadata = {\"language_info\": {\"name\": \"python\", \"pygments_lexer\": \"ipython3\"}} \
+    | .cells[].metadata = {} \
+    '"
 
 # tabtab source for serverless package
 # uninstall by removing these lines or running `tabtab uninstall serverless`

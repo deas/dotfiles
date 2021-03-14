@@ -26,6 +26,7 @@ ZSH_THEME="robbyrussell"
 #
 # antigen bundles <<EOBUNDLES
 plugins=(
+  aws
   git
   github
   golang
