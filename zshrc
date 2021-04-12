@@ -15,10 +15,6 @@ ZSH=$HOME/.oh-my-zsh
 ZSH_THEME="robbyrussell"
 # "agnoster"
 
-# which helm > /dev/null && source <(helm completion zsh)
-# which kubectl > /dev/null && source <(kubectl completion zsh)
-# which oc > /dev/null && source <(oc completion zsh)
-
 # source $HOME/.zsh/antigen.zsh
 # antigen use oh-my-zsh
 
@@ -77,6 +73,8 @@ plugins=(
 #    plugins+=another-pugin
 # fi
 export WORKON_HOME=$HOME/.virtualenvs
+
+fpath+=$HOME/.zsh/completion
 
 source "$ZSH/oh-my-zsh.sh"
 source "$HOME/.antigen/bundles/zsh-users/zsh-autosuggestions/zsh-autosuggestions.zsh"

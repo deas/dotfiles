@@ -34,7 +34,7 @@ fi
 # https://clojure.org/reference/deps_and_cli
 if [ -n "$XDG_CONFIG_HOME" ] ; then
     export CLJ_CONFIG=$HOME/.clojure
-fi    
+fi
 
 # gcloud completion
 [ -r "/usr/share/google-cloud-sdk/completion.zsh.inc" ] && source "/usr/share/google-cloud-sdk/completion.zsh.inc"
@@ -47,6 +47,8 @@ which helm > /dev/null && source <(helm completion zsh)
 # which oc >/dev/null && source <(oc completion zsh)
 which jx >/dev/null && source <(jx completion zsh)
 # which kubeadm >/dev/null && source <(kubeadm completion zsh)
+
+which lxc >/dev/null && source <(lxc completion zsh; echo "compdef _lxc lxc")
 
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
