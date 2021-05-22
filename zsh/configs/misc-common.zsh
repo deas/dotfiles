@@ -64,10 +64,10 @@ if [ -d "$KREW_ROOT" ] ; then
     PATH="$PATH:${KREW_ROOT}/bin"
 fi
 
-if [ -d "$HOME/.deno" ] ; then
-  export DENO_INSTALL="$HOME/.deno"
-  PATH="$DENO_INSTALL/bin:$PATH"
-fi  
+#if [ -d "$HOME/.deno" ] ; then
+#  export DENO_INSTALL="$HOME/.deno"
+#  PATH="$DENO_INSTALL/bin:$PATH"
+#fi  
 
 if [ -f "$HOME/.asdf/asdf.sh" ] ; then
   source "$HOME/.asdf/asdf.sh"
