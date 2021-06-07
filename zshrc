@@ -60,6 +60,8 @@ plugins=(
   gem
   z
   asdf
+  extract
+  gh
 #  vi-mode
 )
 #  zsh-users/zsh-history-substring-search
