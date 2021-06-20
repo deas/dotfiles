@@ -48,7 +48,7 @@ which helm > /dev/null && source <(helm completion zsh)
 which jx >/dev/null && source <(jx completion zsh)
 # which kubeadm >/dev/null && source <(kubeadm completion zsh)
 
-which flux >/dev/null && source <(flux completion zsh)
+which flux >/dev/null && source <(flux completion zsh; echo "compdef _flux flux")
 
 which lxc >/dev/null && source <(lxc completion zsh; echo "compdef _lxc lxc")
 
