@@ -50,6 +50,8 @@ which jx >/dev/null && source <(jx completion zsh)
 
 which flux >/dev/null && source <(flux completion zsh; echo "compdef _flux flux")
 
+which kustomize >/dev/null && source <(kustomize completion zsh; echo "compdef _kustomize kustomize")
+
 which lxc >/dev/null && source <(lxc completion zsh; echo "compdef _lxc lxc")
 
 which direnv >/dev/null && eval "$(direnv hook zsh)"
