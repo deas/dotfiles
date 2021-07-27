@@ -62,6 +62,9 @@ plugins=(
   asdf
   extract
   gh
+  autojump
+  common-aliases
+  alias-finder
 #  vi-mode
 )
 #  zsh-users/zsh-history-substring-search
