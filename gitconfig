@@ -30,3 +30,5 @@
   path = ~/.gitconfig.local
 [diff]
   colorMoved = zebra
+[credential]
+	helper = /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
