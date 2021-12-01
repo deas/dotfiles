@@ -94,6 +94,9 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
+
+export DOCKER_BUILDKIT=1
+
 if [ -d /home/linuxbrew ] ; then
     export HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew";
     export HOMEBREW_CELLAR="/home/linuxbrew/.linuxbrew/Cellar";
