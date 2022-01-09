@@ -58,6 +58,9 @@ which velero >/dev/null && source <(velero completion zsh; echo "compdef _velero
 
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
+if which fdfind >/dev/null; then
+    export FZF_DEFAULT_COMMAND='fdfind --type f'
+fi
 # https://askubuntu.com/questions/910821/programs-installed-via-snap-not-showing-up-in-launcher
 [ -r "/etc/profile.d/apps-bin-path.sh" ] && emulate sh -c 'source /etc/profile.d/apps-bin-path.sh'
 
@@ -73,11 +76,11 @@ fi
 #if [ -d "$HOME/.deno" ] ; then
 #  export DENO_INSTALL="$HOME/.deno"
 #  PATH="$DENO_INSTALL/bin:$PATH"
-#fi  
+#fi
 
 if [ -f "$HOME/.asdf/asdf.sh" ] ; then
   source "$HOME/.asdf/asdf.sh"
-fi  
+fi
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 #if [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] ; then
@@ -105,7 +108,6 @@ if [ -d /home/linuxbrew ] ; then
     export MANPATH="/home/linuxbrew/.linuxbrew/share/man${MANPATH+:$MANPATH}:";
     export INFOPATH="/home/linuxbrew/.linuxbrew/share/info:${INFOPATH:-}";
 fi
-
 
 # https://emacsredux.com/blog/2020/07/16/running-emacs-with-systemd/
 if systemctl --user is-active --quiet emacs.service ; then
