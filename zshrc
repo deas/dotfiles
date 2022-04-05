@@ -52,6 +52,7 @@ plugins=(
   python
 #  virtualenv
   virtualenvwrapper
+  poetry
   httpie
   yarn
   kubectl
@@ -66,6 +67,7 @@ plugins=(
   common-aliases
   alias-finder
   fzf
+  zsh-autosuggestions
 #  vi-mode
 )
 #  zsh-users/zsh-history-substring-search
@@ -83,8 +85,13 @@ export WORKON_HOME=$HOME/.virtualenvs
 fpath+=$HOME/.zsh/completion
 
 source "$ZSH/oh-my-zsh.sh"
-source "$HOME/.antigen/bundles/zsh-users/zsh-autosuggestions/zsh-autosuggestions.zsh"
-source "$HOME/.antigen/bundles/zsh-users/zsh-history-substring-search/zsh-history-substring-search.zsh"
+
+# ZSH_USERS_DIR=$HOME/.antigen/bundles/zsh-users
+#
+# if [ -d "$ZSH_USERS_DIR" ] ; then
+#    source "${ZSH_USERS}_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh"
+#    source "${ZSH_USERS}_DIR/zsh-history-substring-search/zsh-history-substring-search.zsh"
+# fi
 # source $ZSH/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 
