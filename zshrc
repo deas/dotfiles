@@ -12,8 +12,7 @@ grep --quiet Microsoft /proc/version 2>/dev/null && [[ "$(umask)" == '000' ]] &&
 
 ZSH=$HOME/.oh-my-zsh
 # ZSH="$HOME/.antigen/bundles/robbyrussell/oh-my-zsh/"
-ZSH_THEME="robbyrussell"
-# "agnoster"
+ZSH_THEME="agnoster"
 
 # source $HOME/.zsh/antigen.zsh
 # antigen use oh-my-zsh
