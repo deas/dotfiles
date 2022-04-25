@@ -145,3 +145,5 @@ alias nbstrip_jq="jq --indent 1 \
 # complete -o nospace -C /usr/local/bin/terraform terraform
 
 alias lastmod="find . -type f -exec stat --format '%Y :%y %n' \"{}\" \; | sort -nr | cut -d: -f2-"
+
+alias gcurl='curl -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json"'
