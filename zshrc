@@ -12,7 +12,8 @@ grep --quiet Microsoft /proc/version 2>/dev/null && [[ "$(umask)" == '000' ]] &&
 
 ZSH=$HOME/.oh-my-zsh
 # ZSH="$HOME/.antigen/bundles/robbyrussell/oh-my-zsh/"
-ZSH_THEME="agnoster"
+# ZSH_THEME="robbyrussell"
+ZSH_THEME="agnoster" # set by `omz`
 
 # source $HOME/.zsh/antigen.zsh
 # antigen use oh-my-zsh
@@ -67,6 +68,7 @@ plugins=(
   alias-finder
   fzf
   zsh-autosuggestions
+  rust
 #  vi-mode
 )
 #  zsh-users/zsh-history-substring-search
