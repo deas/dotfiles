@@ -4,6 +4,3 @@
 [submodule "clojure"]
 	path = clojure
 	url = git@github.com:practicalli/clojure-deps-edn.git
-[submodule "clojure-sc"]
-	path = clojure-sc
-	url = git@github.com:seancorfield/dot-clojure.git
