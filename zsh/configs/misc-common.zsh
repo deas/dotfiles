@@ -56,6 +56,8 @@ which kustomize >/dev/null && source <(kustomize completion zsh; echo "compdef _
 
 which velero >/dev/null && source <(velero completion zsh; echo "compdef _velero velero")
 
+which eksctl >/dev/null && source <(eksctl completion zsh; echo "compdef _eksctl eksctl")
+
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
 if which fdfind >/dev/null; then
