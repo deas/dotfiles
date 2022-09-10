@@ -58,6 +58,9 @@ which velero >/dev/null && source <(velero completion zsh; echo "compdef _velero
 
 which eksctl >/dev/null && source <(eksctl completion zsh; echo "compdef _eksctl eksctl")
 
+# TODO: Needs api server?
+# which tfctl >/dev/null && source <(tfctl completion zsh; echo "compdef _tfctl tfctl")
+
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
 if which fdfind >/dev/null; then
