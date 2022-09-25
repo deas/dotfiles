@@ -61,6 +61,8 @@ which eksctl >/dev/null && source <(eksctl completion zsh; echo "compdef _eksctl
 # TODO: Needs api server?
 # which tfctl >/dev/null && source <(tfctl completion zsh; echo "compdef _tfctl tfctl")
 
+which clusterctl >/dev/null && source <(clusterctl completion zsh; echo "compdef _clusterctl clusterctl")
+
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
 if which fdfind >/dev/null; then
