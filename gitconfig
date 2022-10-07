@@ -18,8 +18,8 @@
 [core]
   excludesfile = ~/.gitignore
   autocrlf = input
-[merge]
-  ff = only
+#[merge]
+#  ff = only
 [commit]
   template = ~/.gitmessage
 [fetch]
@@ -31,4 +31,16 @@
 [diff]
   colorMoved = zebra
 [credential]
-	helper = /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+  helper = /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+[diff]
+  tool = difftastic
+[difftool]
+  prompt = false
+[difftool "difftastic"]
+  cmd = difft "$LOCAL" "$REMOTE"
+# Use a pager for large output, just like other git commands.
+[pager]
+  difftool = true
+# `git dft` is less to type than `git difftool`.
+[alias]
+  dft = difftool
