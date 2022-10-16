@@ -30,6 +30,10 @@ if [ -d "$HOME/.poetry/bin" ] ; then
   PATH="$PATH:$HOME/.poetry/bin"
 fi
 
+if [ -d "$HOME/.babashka/bbin/bin" ] ; then
+  PATH="$PATH:$HOME/.babashka/bbin/bin"
+fi
+
 # Harmonize with Chrostini
 # https://clojure.org/reference/deps_and_cli
 if [ -n "$XDG_CONFIG_HOME" ] ; then
