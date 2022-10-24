@@ -62,6 +62,8 @@ which velero >/dev/null && source <(velero completion zsh; echo "compdef _velero
 
 which eksctl >/dev/null && source <(eksctl completion zsh; echo "compdef _eksctl eksctl")
 
+which kn >/dev/null && source <(kn completion zsh; echo "compdef _kn kn")
+
 # TODO: Needs api server?
 # which tfctl >/dev/null && source <(tfctl completion zsh; echo "compdef _tfctl tfctl")
 
