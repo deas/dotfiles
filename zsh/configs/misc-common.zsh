@@ -69,6 +69,8 @@ which kn >/dev/null && source <(kn completion zsh; echo "compdef _kn kn")
 
 which clusterctl >/dev/null && source <(clusterctl completion zsh; echo "compdef _clusterctl clusterctl")
 
+which kubebuilder >/dev/null && source <(kubebuilder completion zsh; echo "compdef _kubecbuilder kubecbuilder")
+
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
 if which fdfind >/dev/null; then
