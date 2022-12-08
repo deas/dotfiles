@@ -34,7 +34,11 @@ if [ -d "$HOME/.babashka/bbin/bin" ] ; then
   PATH="$PATH:$HOME/.babashka/bbin/bin"
 fi
 
-# Harmonize with Chrostini
+if [ -d "$HOME/.crc/bin/oc" ] ; then
+  PATH="$PATH:$HOME/.crc/bin/oc"
+fi
+
+# Harmonize with Crostini
 # https://clojure.org/reference/deps_and_cli
 if [ -n "$XDG_CONFIG_HOME" ] ; then
     export CLJ_CONFIG=$HOME/.clojure
@@ -69,7 +73,7 @@ which kn >/dev/null && source <(kn completion zsh; echo "compdef _kn kn")
 
 which clusterctl >/dev/null && source <(clusterctl completion zsh; echo "compdef _clusterctl clusterctl")
 
-which kubebuilder >/dev/null && source <(kubebuilder completion zsh; echo "compdef _kubecbuilder kubecbuilder")
+which kubebuilder >/dev/null && source <(kubebuilder completion zsh; echo "compdef _kubebuilder kubebuilder")
 
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
