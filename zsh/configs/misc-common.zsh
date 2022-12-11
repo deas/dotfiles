@@ -48,31 +48,26 @@ fi
 [ -r "/usr/share/google-cloud-sdk/completion.zsh.inc" ] && source "/usr/share/google-cloud-sdk/completion.zsh.inc"
 
 # azure-cli completion
-[ -r "/etc/bash_completion.d/azure-cli" ] && source /etc/bash_completion.d/azure-cli
+# [ -r "/etc/bash_completion.d/azure-cli" ] && source /etc/bash_completion.d/azure-cli
 
 # $HOME/.linkerd2/bin:$HOME/.fabric8/bin:$HOME/.krew/bin:$HOME/.cargo/bin
 which helm > /dev/null && source <(helm completion zsh)
 # which oc >/dev/null && source <(oc completion zsh)
-which jx >/dev/null && source <(jx completion zsh)
+# which jx >/dev/null && source <(jx completion zsh)
 # which kubeadm >/dev/null && source <(kubeadm completion zsh)
-
 which flux >/dev/null && source <(flux completion zsh; echo "compdef _flux flux")
-
 which kustomize >/dev/null && source <(kustomize completion zsh; echo "compdef _kustomize kustomize")
-
 # which lxc >/dev/null && source <(lxc completion zsh; echo "compdef _lxc lxc")
-
-which velero >/dev/null && source <(velero completion zsh; echo "compdef _velero velero")
-
-which eksctl >/dev/null && source <(eksctl completion zsh; echo "compdef _eksctl eksctl")
-
+# which velero >/dev/null && source <(velero completion zsh; echo "compdef _velero velero")
+# which eksctl >/dev/null && source <(eksctl completion zsh; echo "compdef _eksctl eksctl")
 which kn >/dev/null && source <(kn completion zsh; echo "compdef _kn kn")
+which oc >/dev/null && source <(oc completion zsh; echo "compdef _oc oc")
+which argocd >/dev/null && source <(argocd completion zsh; echo "compdef _argocd argocd")
 
 # TODO: Needs api server?
 # which tfctl >/dev/null && source <(tfctl completion zsh; echo "compdef _tfctl tfctl")
 
 which clusterctl >/dev/null && source <(clusterctl completion zsh; echo "compdef _clusterctl clusterctl")
-
 which kubebuilder >/dev/null && source <(kubebuilder completion zsh; echo "compdef _kubebuilder kubebuilder")
 
 which direnv >/dev/null && eval "$(direnv hook zsh)"
