@@ -69,6 +69,7 @@ plugins=(
   fzf
   zsh-autosuggestions
   rust
+  ripgrep
 #  vi-mode
 )
 #  zsh-users/zsh-history-substring-search

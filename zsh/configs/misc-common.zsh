@@ -69,6 +69,9 @@ which argocd >/dev/null && source <(argocd completion zsh; echo "compdef _argocd
 
 which clusterctl >/dev/null && source <(clusterctl completion zsh; echo "compdef _clusterctl clusterctl")
 which kubebuilder >/dev/null && source <(kubebuilder completion zsh; echo "compdef _kubebuilder kubebuilder")
+# Next one should probably come from ~/.zsh/completion (by _ convention)
+which govc >/dev/null && source $HOME/.zsh/hacks/govc_bash_completion
+# <(kubebuilder completion zsh; echo "compdef _kubebuilder kubebuilder")
 
 which direnv >/dev/null && eval "$(direnv hook zsh)"
 
