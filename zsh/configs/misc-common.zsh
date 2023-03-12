@@ -63,6 +63,7 @@ which kustomize >/dev/null && source <(kustomize completion zsh; echo "compdef _
 which kn >/dev/null && source <(kn completion zsh; echo "compdef _kn kn")
 which oc >/dev/null && source <(oc completion zsh; echo "compdef _oc oc")
 which argocd >/dev/null && source <(argocd completion zsh; echo "compdef _argocd argocd")
+which argo >/dev/null && source <(argo completion zsh; echo "compdef _argo argo")
 which starship >/dev/null && eval "$(starship init zsh)"
 
 # TODO: Needs api server?
