@@ -3,4 +3,4 @@
 	url = https://github.com/syl20bnr/spacemacs
 [submodule "clojure"]
 	path = clojure
-	url = git@github.com:practicalli/clojure-deps-edn.git
+	url = git@github.com:practicalli/clojure-cli-config.git
