@@ -66,6 +66,8 @@ which argocd >/dev/null && source <(argocd completion zsh; echo "compdef _argocd
 which argo >/dev/null && source <(argo completion zsh; echo "compdef _argo argo")
 which istioctl >/dev/null && source <(istioctl completion zsh; echo "compdef _istioctl istioctl")
 which starship >/dev/null && eval "$(starship init zsh)"
+which atuin >/dev/null && eval "$(atuin init zsh)"
+
 
 # TODO: Needs api server?
 # which tfctl >/dev/null && source <(tfctl completion zsh; echo "compdef _tfctl tfctl")
