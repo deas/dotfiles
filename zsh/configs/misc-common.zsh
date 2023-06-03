@@ -66,6 +66,9 @@ which argocd >/dev/null && source <(argocd completion zsh; echo "compdef _argocd
 which argo >/dev/null && source <(argo completion zsh; echo "compdef _argo argo")
 which istioctl >/dev/null && source <(istioctl completion zsh; echo "compdef _istioctl istioctl")
 which starship >/dev/null && eval "$(starship init zsh)"
+
+# Rust/Nix painful on ChromeOS: bash <(curl https://raw.githubusercontent.com/ellie/atuin/main/install.sh)
+# Appears to conflict a bit with https://github.com/marlonrichert/zsh-autocomplete
 which atuin >/dev/null && eval "$(atuin init zsh)"
 
 
