@@ -768,3 +768,5 @@ $env.config = {
 }
 
 source ~/.local/share/atuin/init.nu
+
+use ~/.config/nushell/starship.nu
