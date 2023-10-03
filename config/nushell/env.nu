@@ -92,8 +92,15 @@ ssh-agent -c
     | into record
     | load-env
 
-# TODO: Mostly from misc-common.zsh
+# Mostly from misc-common.zsh
 # TODO: Anything missing from /etc/profile.d?
+# TODO: How do we fix/recover with ssh-agent (forwarding)
+# SSH_AGENT_PID=2679456
+# SSH_AUTH_SOCK=/tmp/ssh-XXXXXXM3XK4Z/agent.2679454
+# SSH_CLIENT=...
+# SSH_CONNECTION=...
+# SSH_TTY=/dev/pts/7
+# TODO: Does prepend to path give us the order we expect?
 
 # # Harmonize with Crostini
 # # https://clojure.org/reference/deps_and_cli
@@ -141,8 +148,10 @@ if ((not $env.GEM_HOME + "/bin" in $env.PATH) and ($env.GEM_HOME + "/bin" | path
 if ((not $env.HOME + "/.nix-profile/bin" in $env.PATH) and ("/nix/var/nix/profiles/default" | path exists) ) {
     $env.NIX_PROFILES = "/nix/var/nix/profiles/default /home/deas/.nix-profile"
     $env.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt"
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.nix-profile/bin" ) | prepend "/nix/var/nix/profiles/default/bin/nix")
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.nix-profile/bin" ) | prepend "/nix/var/nix/profiles/default/bin")
 }
+
+# [ -x "/usr/bin/ksshaskpass" ] && export SSH_ASKPASS="/usr/bin/ksshaskpass"
 
 # $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
 # $env.ATUIN_CONFIG_DIR = $env.HOME + "/.config/atuin-nu"
