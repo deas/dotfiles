@@ -767,6 +767,11 @@ $env.config = {
     ]
 }
 
+# https://github.com/nushell/nushell/issues/4328#issuecomment-1004404081
+# def "env exists?" [string it] {
+#    each { $it in ((env).name) }
+# }
+
 source ~/.config/nushell/atuin.nu
 
 source ~/.config/nushell/zoxide.nu
