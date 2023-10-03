@@ -769,6 +769,8 @@ $env.config = {
 
 source ~/.config/nushell/atuin.nu
 
+source ~/.config/nushell/zoxide.nu
+
 use ~/.config/nushell/starship.nu
 
 # https://www.nushell.sh/book/configuration.html#configuring-nu-as-a-login-

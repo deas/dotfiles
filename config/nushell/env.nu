@@ -80,6 +80,10 @@ $env.NU_PLUGIN_DIRS = [
 
 # https://www.nushell.sh/cookbook/ssh_agent.html
 
+$env.DOCKER_BUILDKIT = 1
+
+$env.GEM_HOME = $env.HOME + "/gems"
+
 ssh-agent -c
     | lines
     | first 2
@@ -87,6 +91,16 @@ ssh-agent -c
     | transpose -r
     | into record
     | load-env
+
+# TODO: Mostly from misc-common.zsh
+# Tons of zsh completion
+
+# # Harmonize with Crostini
+# # https://clojure.org/reference/deps_and_cli
+# if [ -n "$XDG_CONFIG_HOME" ] ; then
+#     export CLJ_CONFIG=$HOME/.clojure
+# fi
+
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
 # $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
