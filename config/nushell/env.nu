@@ -101,12 +101,9 @@ ssh-agent -c
 #     export CLJ_CONFIG=$HOME/.clojure
 # fi
 
-
-# To add entries to PATH (on Windows you might use Path), you can use the following pattern:
-#if ((which flux | length) > 0) {
-#    $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
-#}
-
+if (not 'XDG_CONFIG_HOME' in $env) {
+    $env.CLJ_CONFIG = $env.PATH + "/.clojure"
+}
 
 if ($env.HOME + "/go" | path exists ) {
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/go") )
@@ -136,9 +133,9 @@ if ($env.HOME + "/.krew/bin" | path exists ) {
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.krew/bin") )
 }
 
-# if ($env.GEM_HOME + "/bin" | path exists ) {
-#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.GEM_HOME + "/bin") )
-# }
+if ($env.GEM_HOME + "/bin" | path exists ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.GEM_HOME + "/bin") )
+}
 
 # Ruby
 # if [ -d "$HOME/.rvm/bin" ] ; then
