@@ -771,16 +771,6 @@ source ~/.config/nushell/atuin.nu
 
 use ~/.config/nushell/starship.nu
 
-# https://www.nushell.sh/cookbook/ssh_agent.html
-#
-# ssh-agent -c
-#     | lines
-#     | first 2
-#     | parse "setenv {name} {value};"
-#     | transpose -r
-#     | into record
-#     | load-env
-
 # https://www.nushell.sh/book/configuration.html#configuring-nu-as-a-login-
 
 $env.ASDF_NU_DIR = ($env.HOME | path join '.asdf')
