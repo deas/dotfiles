@@ -781,6 +781,7 @@ use ~/.config/nushell/starship.nu
 # https://www.nushell.sh/book/configuration.html#configuring-nu-as-a-login-
 
 $env.ASDF_NU_DIR = ($env.HOME | path join '.asdf')
- source /home/deas/.asdf/asdf.nu
+
+source /home/deas/.asdf/asdf.nu
 
 # alias gcurl='curl -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json"'
