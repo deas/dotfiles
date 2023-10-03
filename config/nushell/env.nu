@@ -80,7 +80,7 @@ $env.NU_PLUGIN_DIRS = [
 
 # https://www.nushell.sh/cookbook/ssh_agent.html
 
-$env.DOCKER_BUILDKIT = 1
+$env.DOCKER_BUILDKIT = 1 
 
 $env.GEM_HOME = $env.HOME + "/gems"
 
@@ -103,5 +103,58 @@ ssh-agent -c
 
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
+#if ((which flux | length) > 0) {
+#    $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
+#}
+
+
+if ($env.HOME + "/go" | path exists ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/go") )
+}
+
+if ($env.HOME + "/.local/bin" | path exists ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.local/bin") )
+}
+
+if ($env.HOME + "/bin" | path exists ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/bin") )
+}
+
+# if ($env.HOME + "/.poetry/bin" | path exists ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.poetry/bin") )
+# }
+
+if ($env.HOME + "/.babashka/bbin/bin" | path exists ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.babashka/bbin/bin") )
+}
+
+if ($env.HOME + "/.crc/bin/oc" | path exists ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.crc/bin/oc") )
+}
+
+if ($env.HOME + "/.krew/bin" | path exists ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.krew/bin") )
+}
+
+# if ($env.GEM_HOME + "/bin" | path exists ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.GEM_HOME + "/bin") )
+# }
+
+# Ruby
+# if [ -d "$HOME/.rvm/bin" ] ; then
+#   PATH="$PATH:$HOME/.rvm/bin"
+# fi
+
+# export GEM_HOME="$HOME/gems"
+
+# if [ -d "$GEM_HOME/bin" ] ; then
+#   PATH="$PATH:$GEM_HOME/bin"
+# fi
+
+# if [ -d "$HOME/go" ] ; then
+#   PATH="$PATH:$HOME/go/bin"
+# fi
+
+
 # $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
 # $env.ATUIN_CONFIG_DIR = $env.HOME + "/.config/atuin-nu"
