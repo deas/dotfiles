@@ -38,6 +38,11 @@ if [ -d "$HOME/.crc/bin/oc" ] ; then
   PATH="$PATH:$HOME/.crc/bin/oc"
 fi
 
+if which fnm >/dev/null; then
+  PATH="/home/deas/.local/share/fnm:$PATH"
+  eval "`fnm env`"
+fi
+
 # Harmonize with Crostini
 # https://clojure.org/reference/deps_and_cli
 if [ -n "$XDG_CONFIG_HOME" ] ; then
@@ -109,7 +114,7 @@ fi
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 if [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] ; then
-  # export SDKMAN_DIR="$HOME/.sdkman"
+  export SDKMAN_DIR="$HOME/.sdkman"
   # source "${SDKMAN_DIR}/bin/sdkman-init.sh"
   source "${HOME}/.sdkman/bin/sdkman-init.sh"
 fi

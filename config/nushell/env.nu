@@ -101,6 +101,15 @@ ssh-agent -c
 # SSH_CONNECTION=...
 # SSH_TTY=/dev/pts/7
 # TODO: Does prepend to path give us the order we expect?
+# TODO: Basic sdkman support
+
+# /home/deas/.sdkman/candidates/
+
+# # if ((not $env.HOME + "/.nix-profile/bin" in $env.PATH) and ("/nix/var/nix/profiles/default" | path exists) ) {
+# if ( $env.HOME + "/.sdkman/candidates" | path exists ) {
+#     $env.HOME + "/.sdkman/candidates" | ls | each { |e| echo $e} 
+# #    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.nix-profile/bin" ) | prepend "/nix/var/nix/profiles/default/bin")
+# }
 
 # # Harmonize with Crostini
 # # https://clojure.org/reference/deps_and_cli
@@ -141,14 +150,37 @@ if ((not $env.HOME + "/.krew/bin" in $env.PATH) and ($env.HOME + "/.krew/bin" | 
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.krew/bin") )
 }
 
-if ((not $env.GEM_HOME + "/bin" in $env.PATH) and ($env.GEM_HOME + "/bin" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.GEM_HOME + "/bin") )
+if ((which fnm | length) == 1) {
+
+}
+
+# TODO: nvm posix based: https://dev.to/vaibhavdn/using-fnm-with-nushell-3kh1 appears to be best alternative unless we use nix
+if ((not $env.HOME + "/.local/share/fnm" in $env.PATH) and ($env.HOME + "/.local/share/fnm" | path exists) ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.local/share/fnm") )
+    load-env (fnm env --shell bash
+        | lines
+        | str replace 'export ' ''
+        | str replace -a '"' ''
+        | split column =
+        | rename name value
+        | where name != "FNM_ARCH" and name != "PATH"
+        | reduce -f {} {|it, acc| $acc | upsert $it.name $it.value }
+    )
+
+    $env.PATH = ($env.PATH
+        | split row (char esep)
+        | prepend $"($env.FNM_MULTISHELL_PATH)/bin"
+    )
 }
 
 if ((not $env.HOME + "/.nix-profile/bin" in $env.PATH) and ("/nix/var/nix/profiles/default" | path exists) ) {
     $env.NIX_PROFILES = "/nix/var/nix/profiles/default /home/deas/.nix-profile"
     $env.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt"
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.nix-profile/bin" ) | prepend "/nix/var/nix/profiles/default/bin")
+}
+
+if ((not $env.GEM_HOME + "/bin" in $env.PATH) and ($env.GEM_HOME + "/bin" | path exists) ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.GEM_HOME + "/bin") )
 }
 
 # [ -x "/usr/bin/ksshaskpass" ] && export SSH_ASKPASS="/usr/bin/ksshaskpass"
