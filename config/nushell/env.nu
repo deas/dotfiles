@@ -78,19 +78,24 @@ $env.NU_PLUGIN_DIRS = [
     # ($nu.default-config-dir | path join 'plugins') # add <nushell-config-dir>/plugins
 ]
 
-# https://www.nushell.sh/cookbook/ssh_agent.html
-
 $env.DOCKER_BUILDKIT = 1 
 
-$env.GEM_HOME = $env.HOME + "/gems"
+# Agent should be started by desktop only (-> .config/autostart)
+#
+# https://www.nushell.sh/cookbook/ssh_agent.html
+#
+# ssh-agent -c
+#     | lines
+#     | first 2
+#     | parse "setenv {name} {value};"
+#     | transpose -r
+#     | into record
+#     | load-env
 
-ssh-agent -c
-    | lines
-    | first 2
-    | parse "setenv {name} {value};"
-    | transpose -r
-    | into record
-    | load-env
+# How do we test whether file is executable?
+if ( ("/usr/bin/ksshaskpass" | path type) == "file") {
+    $env.SSH_ASKPASS = "/usr/bin/ksshaskpass"
+}
 
 # Mostly from misc-common.zsh
 # TODO: Anything missing from /etc/profile.d?
@@ -102,6 +107,8 @@ ssh-agent -c
 # SSH_TTY=/dev/pts/7
 # TODO: Does prepend to path give us the order we expect?
 # TODO: Basic sdkman support
+# TODO: direnv dotenv json .env | from json | load-env # (no hygiene!) # https://github.com/enerdgumen/nu_plugin_dotenv
+# TODO: .envrc/nix
 
 # /home/deas/.sdkman/candidates/
 
@@ -150,9 +157,6 @@ if ((not $env.HOME + "/.krew/bin" in $env.PATH) and ($env.HOME + "/.krew/bin" | 
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.krew/bin") )
 }
 
-if ((which fnm | length) == 1) {
-
-}
 
 # TODO: nvm posix based: https://dev.to/vaibhavdn/using-fnm-with-nushell-3kh1 appears to be best alternative unless we use nix
 if ((not $env.HOME + "/.local/share/fnm" in $env.PATH) and ($env.HOME + "/.local/share/fnm" | path exists) ) {
@@ -178,6 +182,8 @@ if ((not $env.HOME + "/.nix-profile/bin" in $env.PATH) and ("/nix/var/nix/profil
     $env.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt"
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.nix-profile/bin" ) | prepend "/nix/var/nix/profiles/default/bin")
 }
+
+$env.GEM_HOME = $env.HOME + "/gems"
 
 if ((not $env.GEM_HOME + "/bin" in $env.PATH) and ($env.GEM_HOME + "/bin" | path exists) ) {
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.GEM_HOME + "/bin") )
