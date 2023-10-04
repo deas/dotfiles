@@ -38,8 +38,8 @@ if [ -d "$HOME/.crc/bin/oc" ] ; then
   PATH="$PATH:$HOME/.crc/bin/oc"
 fi
 
-if which fnm >/dev/null; then
-  PATH="/home/deas/.local/share/fnm:$PATH"
+if [ -d "$HOME/.local/share/fnm" ] ; then
+  PATH="$HOME/.local/share/fnm:$PATH"
   eval "`fnm env`"
 fi
 
