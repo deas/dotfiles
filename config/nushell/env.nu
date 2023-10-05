@@ -157,6 +157,10 @@ if ((not $env.HOME + "/.krew/bin" in $env.PATH) and ($env.HOME + "/.krew/bin" | 
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.krew/bin") )
 }
 
+if ((not $env.HOME + "/.cargo/bin" in $env.PATH) and ($env.HOME + "/.cargo/bin" | path exists) ) {
+    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.cargo/bin") )
+}
+
 
 # TODO: nvm posix based: https://dev.to/vaibhavdn/using-fnm-with-nushell-3kh1 appears to be best alternative unless we use nix
 if ((not $env.HOME + "/.local/share/fnm" in $env.PATH) and ($env.HOME + "/.local/share/fnm" | path exists) ) {
