@@ -127,11 +127,51 @@ if ( ("/usr/bin/ksshaskpass" | path type) == "file") {
 if (not 'XDG_CONFIG_HOME' in $env) {
     $env.CLJ_CONFIG = $env.PATH + "/.clojure"
 }
+
+def setup-path [path: string] {
+    if ((not $path in $env.PATH) and ($path | path exists) ) {
+        return ($env.PATH | split row (char esep) | prepend ($path) )
+    }
+    return $env.PATH
+    # echo $path
+    # mut home = ""
+    # try {
+    #     if $nu.os-info.name == "windows" {
+    #         $home = $env.USERPROFILE
+    #     } else {
+    #         $home = $env.HOME
+    #     }
+    # }
+
+    # let dir = ([
+    #     ($env.PWD | str substring 0..($home | str length) | str replace $home "~"),
+    #     ($env.PWD | str substring ($home | str length)..)
+    # ] | str join)
+
+    # let path_color = (if (is-admin) { ansi red_bold } else { ansi green_bold })
+    # let separator_color = (if (is-admin) { ansi light_red_bold } else { ansi light_green_bold })
+    # let path_segment = $"($path_color)($dir)"
+
+    # $path_segment | str replace --all (char path_sep) $"($separator_color)/($path_color)"
+}
+
 # condition needs to cover both cases - login shell or not should probably
 # make a function here
-if ((not $env.HOME + "/go" in $env.PATH) and ($env.HOME + "/go" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/go") )
+
+let sdk_candidates = $env.HOME + "/.sdkman/candidates"
+
+if ($sdk_candidates | path exists) {
+    let paths = ls $sdk_candidates |
+     each { |it| $it.name + "/current/bin"} |
+     filter {|it| $it | path exists }
+     $env.PATH = ($env.PATH | split row (char esep) | prepend $paths)
 }
+
+$env.PATH = (setup-path ($env.HOME + "/go"))
+
+# if ((not $env.HOME + "/go" in $env.PATH) and ($env.HOME + "/go" | path exists) ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/go") )
+# }
 
 if ((not $env.HOME + "/.local/bin" in $env.PATH) and ($env.HOME + "/.local/bin" | path exists) ) {
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.local/bin") )
