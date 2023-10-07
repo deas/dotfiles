@@ -133,30 +133,27 @@ def setup-path [path: string] {
         return ($env.PATH | split row (char esep) | prepend ($path) )
     }
     return $env.PATH
-    # echo $path
-    # mut home = ""
-    # try {
-    #     if $nu.os-info.name == "windows" {
-    #         $home = $env.USERPROFILE
-    #     } else {
-    #         $home = $env.HOME
-    #     }
-    # }
-
     # let dir = ([
     #     ($env.PWD | str substring 0..($home | str length) | str replace $home "~"),
     #     ($env.PWD | str substring ($home | str length)..)
     # ] | str join)
-
-    # let path_color = (if (is-admin) { ansi red_bold } else { ansi green_bold })
-    # let separator_color = (if (is-admin) { ansi light_red_bold } else { ansi light_green_bold })
-    # let path_segment = $"($path_color)($dir)"
-
     # $path_segment | str replace --all (char path_sep) $"($separator_color)/($path_color)"
 }
 
 # condition needs to cover both cases - login shell or not should probably
 # make a function here
+
+
+$env.GEM_HOME = $env.HOME + "/gems"
+
+$env.PATH = (setup-path ($env.HOME + "/go"))
+$env.PATH = (setup-path ($env.HOME + "/.local/bin"))
+$env.PATH = (setup-path ($env.HOME + "/bin"))
+$env.PATH = (setup-path ($env.HOME + "/.babashka/bbin/bin"))
+$env.PATH = (setup-path ($env.HOME + "/.crc/bin/oc"))
+$env.PATH = (setup-path ($env.HOME + "/.krew/bin"))
+$env.PATH = (setup-path ($env.HOME + "/.cargo/bin"))
+$env.PATH = (setup-path ($env.GEM_HOME + "/bin"))
 
 let sdk_candidates = $env.HOME + "/.sdkman/candidates"
 
@@ -167,39 +164,37 @@ if ($sdk_candidates | path exists) {
      $env.PATH = ($env.PATH | split row (char esep) | prepend $paths)
 }
 
-$env.PATH = (setup-path ($env.HOME + "/go"))
-
 # if ((not $env.HOME + "/go" in $env.PATH) and ($env.HOME + "/go" | path exists) ) {
 #     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/go") )
 # }
 
-if ((not $env.HOME + "/.local/bin" in $env.PATH) and ($env.HOME + "/.local/bin" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.local/bin") )
-}
-
-if ((not $env.HOME + "/bin" in $env.PATH) and ($env.HOME + "/bin" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/bin") )
-}
+# if ((not $env.HOME + "/.local/bin" in $env.PATH) and ($env.HOME + "/.local/bin" | path exists) ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.local/bin") )
+# }
+# 
+# if ((not $env.HOME + "/bin" in $env.PATH) and ($env.HOME + "/bin" | path exists) ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/bin") )
+# }
 
 # if ($env.HOME + "/.poetry/bin" | path exists ) {
 #     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.poetry/bin") )
 # }
 
-if ((not $env.HOME + "/.babashka/bbin/bin" in $env.PATH) and ($env.HOME + "/.babashka/bbin/bin" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.babashka/bbin/bin") )
-}
-
-if ((not $env.HOME + "/.crc/bin/oc" in $env.PATH) and ($env.HOME + "/.crc/bin/oc" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.crc/bin/oc") )
-}
-
-if ((not $env.HOME + "/.krew/bin" in $env.PATH) and ($env.HOME + "/.krew/bin" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.krew/bin") )
-}
-
-if ((not $env.HOME + "/.cargo/bin" in $env.PATH) and ($env.HOME + "/.cargo/bin" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.cargo/bin") )
-}
+# if ((not $env.HOME + "/.babashka/bbin/bin" in $env.PATH) and ($env.HOME + "/.babashka/bbin/bin" | path exists) ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.babashka/bbin/bin") )
+# }
+# 
+# if ((not $env.HOME + "/.crc/bin/oc" in $env.PATH) and ($env.HOME + "/.crc/bin/oc" | path exists) ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.crc/bin/oc") )
+# }
+# 
+# if ((not $env.HOME + "/.krew/bin" in $env.PATH) and ($env.HOME + "/.krew/bin" | path exists) ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.krew/bin") )
+# }
+# 
+# if ((not $env.HOME + "/.cargo/bin" in $env.PATH) and ($env.HOME + "/.cargo/bin" | path exists) ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.cargo/bin") )
+# }
 
 
 # TODO: nvm posix based: https://dev.to/vaibhavdn/using-fnm-with-nushell-3kh1 appears to be best alternative unless we use nix
@@ -227,13 +222,11 @@ if ((not $env.HOME + "/.nix-profile/bin" in $env.PATH) and ("/nix/var/nix/profil
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.nix-profile/bin" ) | prepend "/nix/var/nix/profiles/default/bin")
 }
 
-$env.GEM_HOME = $env.HOME + "/gems"
-
-if ((not $env.GEM_HOME + "/bin" in $env.PATH) and ($env.GEM_HOME + "/bin" | path exists) ) {
-    $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.GEM_HOME + "/bin") )
-}
-
-# [ -x "/usr/bin/ksshaskpass" ] && export SSH_ASKPASS="/usr/bin/ksshaskpass"
+# $env.GEM_HOME = $env.HOME + "/gems"
+# 
+# if ((not $env.GEM_HOME + "/bin" in $env.PATH) and ($env.GEM_HOME + "/bin" | path exists) ) {
+#     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.GEM_HOME + "/bin") )
+# }
 
 # $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
 # $env.ATUIN_CONFIG_DIR = $env.HOME + "/.config/atuin-nu"
