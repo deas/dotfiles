@@ -125,7 +125,7 @@ if ( ("/usr/bin/ksshaskpass" | path type) == "file") {
 # fi
 
 if (not 'XDG_CONFIG_HOME' in $env) {
-    $env.CLJ_CONFIG = $env.PATH + "/.clojure"
+    $env.CLJ_CONFIG = $env.HOME + "/.clojure"
 }
 
 def setup-path [path: string] {
