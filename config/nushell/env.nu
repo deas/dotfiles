@@ -78,7 +78,9 @@ $env.NU_PLUGIN_DIRS = [
     # ($nu.default-config-dir | path join 'plugins') # add <nushell-config-dir>/plugins
 ]
 
-$env.DOCKER_BUILDKIT = 1 
+$env.DOCKER_BUILDKIT = 1
+
+$env.LIBVIRT_DEFAULT_URI = "qemu:///system"
 
 # Agent should be started by desktop only (-> .config/autostart)
 #
