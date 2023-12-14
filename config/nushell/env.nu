@@ -148,7 +148,7 @@ def setup-path [path: string] {
 
 $env.GEM_HOME = $env.HOME + "/gems"
 
-$env.PATH = (setup-path ($env.HOME + "/go"))
+$env.PATH = (setup-path ($env.HOME + "/go/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.local/bin"))
 $env.PATH = (setup-path ($env.HOME + "/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.babashka/bbin/bin"))
