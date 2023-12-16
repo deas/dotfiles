@@ -79,8 +79,8 @@ $env.NU_PLUGIN_DIRS = [
 ]
 
 $env.DOCKER_BUILDKIT = 1
-
 $env.LIBVIRT_DEFAULT_URI = "qemu:///system"
+$env.DOTNET_CLI_TELEMETRY_OPTOUT = 1
 
 # Agent should be started by desktop only (-> .config/autostart)
 #
@@ -149,7 +149,7 @@ def setup-path [path: string] {
 $env.GEM_HOME = $env.HOME + "/gems"
 
 $env.PATH = (setup-path ($env.HOME + "/go/bin"))
-$env.PATH = (setup-path ($env.HOME + "/.local/bin"))
+$env.PATH = (setup-path ($env.HOME + "/.local/bin")) # pip install uses this
 $env.PATH = (setup-path ($env.HOME + "/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.babashka/bbin/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.crc/bin/oc"))
