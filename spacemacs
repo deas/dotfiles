@@ -43,7 +43,9 @@ This function should only modify configuration layer settings."
      (python :variables python-backend 'lsp)
      markdown
      javascript
+     json
      clojure
+     emacs-lisp
      docker
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
@@ -56,7 +58,7 @@ This function should only modify configuration layer settings."
      emacs-lisp
      git
      react
-     ;; markdown
+     markdown
      org
      ;; (shell :variables
      ;;        shell-default-height 30
@@ -81,9 +83,9 @@ This function should only modify configuration layer settings."
      search-engine
      ;; version-control
      terraform
-     ;; dap
+     dap
      ;; lsp
-     ;; kubernetes
+     kubernetes
      ;; xclipboard
      nixos
      (java :variables java-backend 'lsp)
@@ -93,6 +95,11 @@ This function should only modify configuration layer settings."
      xkcd
      treemacs
      multiple-cursors
+     ansible
+     asm
+     twitch
+     hackernews
+     graphviz
      )
 
    ;; List of additional packages that will be installed without being wrapped
