@@ -100,6 +100,7 @@ This function should only modify configuration layer settings."
      twitch
      hackernews
      graphviz
+     dotnet
      )
 
    ;; List of additional packages that will be installed without being wrapped
