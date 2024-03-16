@@ -126,12 +126,12 @@ if ( ("/usr/bin/ksshaskpass" | path type) == "file") {
 #     export CLJ_CONFIG=$HOME/.clojure
 # fi
 
-if (not 'XDG_CONFIG_HOME' in $env) {
+if (not ('XDG_CONFIG_HOME' in $env)) {
     $env.CLJ_CONFIG = $env.HOME + "/.clojure"
 }
 
 def setup-path [path: string] {
-    if ((not $path in $env.PATH) and ($path | path exists) ) {
+    if ((not ($path in $env.PATH)) and ($path | path exists) ) {
         return ($env.PATH | split row (char esep) | prepend ($path) )
     }
     return $env.PATH
@@ -200,7 +200,7 @@ if ($sdk_candidates | path exists) {
 
 
 # TODO: nvm posix based: https://dev.to/vaibhavdn/using-fnm-with-nushell-3kh1 appears to be best alternative unless we use nix
-if ((not $env.HOME + "/.local/share/fnm" in $env.PATH) and ($env.HOME + "/.local/share/fnm" | path exists) ) {
+if ((not ($env.HOME + "/.local/share/fnm" in $env.PATH)) and ($env.HOME + "/.local/share/fnm" | path exists) ) {
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.local/share/fnm") )
     load-env (fnm env --shell bash
         | lines
@@ -218,7 +218,7 @@ if ((not $env.HOME + "/.local/share/fnm" in $env.PATH) and ($env.HOME + "/.local
     )
 }
 
-if ((not $env.HOME + "/.nix-profile/bin" in $env.PATH) and ("/nix/var/nix/profiles/default" | path exists) ) {
+if ((not ($env.HOME + "/.nix-profile/bin" in $env.PATH)) and ("/nix/var/nix/profiles/default" | path exists) ) {
     $env.NIX_PROFILES = "/nix/var/nix/profiles/default /home/deas/.nix-profile"
     $env.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt"
     $env.PATH = ($env.PATH | split row (char esep) | prepend ($env.HOME + "/.nix-profile/bin" ) | prepend "/nix/var/nix/profiles/default/bin")
