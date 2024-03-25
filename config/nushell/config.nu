@@ -807,3 +807,17 @@ source /home/deas/.asdf/asdf.nu
 
 # https://just.systems/man/en/chapter_68.html
 alias .j = just --justfile ~/.user.justfile --working-directory .
+
+# https://www.nushell.sh/book/aliases.html#replacing-existing-commands-using-aliases
+
+def --env __emacs  [...rest:string] {
+    if (($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh") | path exists) {
+        sh ($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh") ...$rest
+    } else {
+        ^emacs
+    }
+}
+
+alias emacs = __emacs
+
+# alias emacs = sh ($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh")
