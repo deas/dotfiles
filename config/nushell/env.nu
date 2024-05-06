@@ -157,6 +157,9 @@ $env.PATH = (setup-path ($env.HOME + "/.krew/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.cargo/bin"))
 $env.PATH = (setup-path ($env.GEM_HOME + "/bin"))
 
+$env.PNPM_HOME = $env.HOME + "/.local/share/pnpm" # TODO: Could be ~/.local/bin as well?
+$env.PATH = (setup-path $env.PNPM_HOME)
+
 let sdk_candidates = $env.HOME + "/.sdkman/candidates"
 
 if ($sdk_candidates | path exists) {
