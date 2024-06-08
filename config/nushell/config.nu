@@ -850,3 +850,4 @@ def --env __emacs  [...rest:string] {
 alias emacs = __emacs
 
 # alias emacs = sh ($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh")
+use mise.nu
