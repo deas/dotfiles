@@ -238,5 +238,5 @@ if ((not ($env.HOME + "/.nix-profile/bin" in $env.PATH)) and ("/nix/var/nix/prof
 
 # $env.NU_LIB_DIRS ++= ($mise_path | path dirname | to nuon)
 
-let mise_path = $nu.default-config-dir | path join mise.nu
-^mise activate nu | save $mise_path --force
+# let mise_path = $nu.default-config-dir | path join mise.nu
+# ^mise activate nu | save $mise_path --force
