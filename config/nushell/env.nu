@@ -148,6 +148,7 @@ def setup-path [path: string] {
 
 $env.GEM_HOME = $env.HOME + "/gems"
 
+$env.PATH = (setup-path "/snap/bin") # /etc/environment or /etc/profile.d/apps-bin-path.sh usually bring it in - except on Crostini using nushell as login shell
 $env.PATH = (setup-path ($env.HOME + "/go/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.local/bin")) # pip install uses this
 $env.PATH = (setup-path ($env.HOME + "/bin"))
