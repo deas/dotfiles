@@ -52,7 +52,7 @@ plugins=(
   python
 #  virtualenv
   virtualenvwrapper
-  poetry
+#  poetry
   httpie
   yarn
   kubectl
@@ -69,7 +69,7 @@ plugins=(
   fzf
   zsh-autosuggestions
   rust
-  ripgrep
+#  ripgrep
   vscode
 #  nix-zsh-completions
 #  vi-mode
@@ -134,3 +134,5 @@ export NVM_DIR="$HOME/.nvm"
 
 
 eval "$(atuin init zsh)"
+
+. "$HOME/.atuin/bin/env"
