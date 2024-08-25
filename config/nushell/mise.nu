@@ -37,7 +37,8 @@ export def --wrapped main [command?: string, --help, ...rest: string] {
 def --env "update-env" [] {
   for $var in $in {
     if $var.op == "set" {
-      load-env {($var.name): $var.value}
+      let val = if $var.name == "PATH" { $var.value | split row ":" } else { $var.value }
+      load-env {($var.name): $val}
     } else if $var.op == "hide" {
       hide-env $var.name
     }
