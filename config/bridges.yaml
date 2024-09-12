@@ -1,0 +1,11 @@
+# https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#adding-ansible-command-shell-completion
+#
+ansible: argcomplete
+ansible-config: argcomplete
+ansible-console: argcomplete
+ansible-doc: argcomplete
+ansible-galaxy: argcomplete
+ansible-inventory: argcomplete
+ansible-playbook: argcomplete
+ansible-pull: argcomplete
+ansible-vault: argcomplete
