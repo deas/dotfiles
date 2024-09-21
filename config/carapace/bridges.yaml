@@ -9,3 +9,4 @@ ansible-inventory: argcomplete
 ansible-playbook: argcomplete
 ansible-pull: argcomplete
 ansible-vault: argcomplete
+pipx: argcomplete
