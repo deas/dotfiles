@@ -4,3 +4,5 @@
 # exclude patterns (uncomment them if you want to use them):
 # *.[oa]
 # *~
+# Trunk is in single player mode. See https://docs.trunk.io
+/.trunk
