@@ -11,6 +11,26 @@ require("lazy").setup({
   spec = {
     -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+    -- override nvim-cmp and add cmp-emoji
+    {
+      "hrsh7th/nvim-cmp",
+      dependencies = { "hrsh7th/cmp-emoji" },
+      ---@param opts cmp.ConfigSchema
+      opts = function(_, opts)
+        table.insert(opts.sources, { name = "emoji" })
+      end,
+    },
+    {
+      "someone-stole-my-name/yaml-companion.nvim",
+      requires = {
+        { "neovim/nvim-lspconfig" },
+        { "nvim-lua/plenary.nvim" },
+        { "nvim-telescope/telescope.nvim" },
+      },
+      config = function()
+        require("telescope").load_extension("yaml_schema")
+      end,
+    },
     { "towolf/vim-helm" },
     { "ThePrimeagen/vim-be-good" },
     -- import any extras modules here
