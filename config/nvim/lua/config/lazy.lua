@@ -31,7 +31,7 @@ require("lazy").setup({
         require("telescope").load_extension("yaml_schema")
       end,
     },
-    { "towolf/vim-helm" },
+    -- { "towolf/vim-helm" },
     { "ThePrimeagen/vim-be-good" },
     -- import any extras modules here
     -- { import = "lazyvim.plugins.extras.lang.typescript" },
