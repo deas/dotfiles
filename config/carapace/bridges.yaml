@@ -10,4 +10,5 @@ ansible-playbook: argcomplete
 ansible-pull: argcomplete
 ansible-vault: argcomplete
 argocd: cobra
+oc: cobra
 pipx: argcomplete
