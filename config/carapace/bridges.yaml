@@ -1,5 +1,5 @@
 # https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#adding-ansible-command-shell-completion
-#
+# https://carapace-sh.github.io/carapace-bin/bridges.html
 ansible: argcomplete
 ansible-config: argcomplete
 ansible-console: argcomplete
@@ -11,4 +11,7 @@ ansible-pull: argcomplete
 ansible-vault: argcomplete
 argocd: cobra
 oc: cobra
+opentofu: complete
+minikube: cobra
+incus: cobra
 pipx: argcomplete

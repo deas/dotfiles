@@ -20,17 +20,18 @@ require("lazy").setup({
         table.insert(opts.sources, { name = "emoji" })
       end,
     },
-    {
-      "someone-stole-my-name/yaml-companion.nvim",
-      requires = {
-        { "neovim/nvim-lspconfig" },
-        { "nvim-lua/plenary.nvim" },
-        { "nvim-telescope/telescope.nvim" },
-      },
-      config = function()
-        require("telescope").load_extension("yaml_schema")
-      end,
-    },
+    -- TODO: Regression after update: "module 'telescope' not found"
+    --{
+    --  "someone-stole-my-name/yaml-companion.nvim",
+    --  requires = {
+    --    { "neovim/nvim-lspconfig" },
+    --    { "nvim-lua/plenary.nvim" },
+    --    { "nvim-telescope/telescope.nvim" },
+    --  },
+    --  config = function()
+    --    require("telescope").load_extension("yaml_schema")
+    --  end,
+    --},
     -- { "towolf/vim-helm" },
     { "ThePrimeagen/vim-be-good" },
     -- import any extras modules here
