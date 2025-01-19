@@ -11,14 +11,27 @@ require("lazy").setup({
   spec = {
     -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
-    -- override nvim-cmp and add cmp-emoji
+    -- blink.cmp is the new nvim : https://github.com/LazyVim/LazyVim/releases/tag/v14.0.0
     {
-      "hrsh7th/nvim-cmp",
-      dependencies = { "hrsh7th/cmp-emoji" },
-      ---@param opts cmp.ConfigSchema
-      opts = function(_, opts)
-        table.insert(opts.sources, { name = "emoji" })
-      end,
+      "saghen/blink.cmp",
+      dependencies = {
+        "moyiz/blink-emoji.nvim",
+      },
+      opts = {
+        sources = {
+          default = {
+            "emoji",
+          },
+          providers = {
+            emoji = {
+              module = "blink-emoji",
+              name = "Emoji",
+              score_offset = 15, -- Tune by preference
+              opts = { insert = true }, -- Insert emoji (default) or complete its name
+            },
+          },
+        },
+      },
     },
     -- TODO: Regression after update: "module 'telescope' not found"
     --{
