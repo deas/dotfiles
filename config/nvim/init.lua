@@ -10,3 +10,6 @@ require("config.lazy")
 
 -- Source the .vimrc file
 -- vim.cmd("source ~/.vimrc")
+
+-- Hide the HUD log popup that is otherwise shown when Conjure connects to the REPL process
+vim.g["conjure#log#hud#enabled"] = false
