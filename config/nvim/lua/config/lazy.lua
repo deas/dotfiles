@@ -17,6 +17,12 @@ require("lazy").setup({
       dependencies = {
         "moyiz/blink-emoji.nvim",
       },
+      {
+        "julienvincent/nvim-paredit",
+        config = function()
+          require("nvim-paredit").setup()
+        end,
+      },
       opts = {
         sources = {
           default = {
