@@ -868,3 +868,6 @@ export-env {
 }
 use fzf.nu
 # source fzf.nu
+
+# uv generate-shell-completion nushell | save -f uv.nu
+source uv.nu
