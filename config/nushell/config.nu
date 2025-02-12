@@ -858,3 +858,13 @@ alias emacs = __emacs
 
 # alias emacs = sh ($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh")
 use mise.nu
+
+export-env {
+  $env.FZF_ALT_C_COMMAND = "fd --type directory --hidden"
+  $env.FZF_ALT_C_OPTS = "--preview 'tree -C {} | head -n 200'"
+  $env.FZF_CTRL_T_COMMAND = "fd --type file --hidden"
+  $env.FZF_CTRL_T_OPTS = "--preview 'bat --color=always --style=full --line-range=:500 {}' "
+  $env.FZF_DEFAULT_COMMAND = "fd --type file --hidden"
+}
+use fzf.nu
+# source fzf.nu
