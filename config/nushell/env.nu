@@ -82,6 +82,12 @@ $env.DOCKER_BUILDKIT = 1
 $env.LIBVIRT_DEFAULT_URI = "qemu:///system"
 $env.DOTNET_CLI_TELEMETRY_OPTOUT = 1
 
+# https://unix.stackexchange.com/questions/4859/visual-vs-editor-what-s-the-difference
+$env.VISUAL = "nvim"
+
+# EDITOR (or KUBE_EDITOR) is used by kubectl
+$env.EDITOR = $env.VISUAL
+
 # Agent should be started by desktop only (-> .config/autostart)
 #
 # https://www.nushell.sh/cookbook/ssh_agent.html
