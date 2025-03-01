@@ -27,7 +27,16 @@ return {
     -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/blob/main/lua/CopilotChat/config.lua
     "CopilotC-Nvim/CopilotChat.nvim",
     opts = function(_, opts)
-      opts.model = "claude-3.5-sonnet"
+      -- opts.model = "claude-3.5-sonnet"
+      --[[
+      opts.prompts = {
+        CustomPrompt = {
+          prompt = "Explain how it works.",
+          system_prompt = "You are very good at explaining stuff",
+          -- mapping = "<leader>ccmc",
+          description = "My custom prompt description",
+        },
+      }--]]
       -- level "info" does not appear to create CopilogChat.log
       -- opts.log_level = "trace"
       -- opts.debug = false -- Enable debug logging (same as 'log_level = 'debug')
