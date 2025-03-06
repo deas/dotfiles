@@ -17,12 +17,6 @@ require("lazy").setup({
       dependencies = {
         "moyiz/blink-emoji.nvim",
       },
-      {
-        "julienvincent/nvim-paredit",
-        config = function()
-          require("nvim-paredit").setup()
-        end,
-      },
       opts = {
         sources = {
           default = {
@@ -38,6 +32,12 @@ require("lazy").setup({
           },
         },
       },
+    },
+    {
+      "julienvincent/nvim-paredit",
+      config = function()
+        require("nvim-paredit").setup()
+      end,
     },
     -- TODO: Regression after update: "module 'telescope' not found"
     --{
@@ -57,6 +57,7 @@ require("lazy").setup({
     -- { import = "lazyvim.plugins.extras.lang.typescript" },
     -- { import = "lazyvim.plugins.extras.lang.json" },
     -- { import = "lazyvim.plugins.extras.ui.mini-animate" },
+    --[[ 
     {
       "christoomey/vim-tmux-navigator",
       cmd = {
@@ -74,6 +75,7 @@ require("lazy").setup({
         { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
       },
     },
+    --]]
     -- import/override with your plugins
     { import = "plugins" },
   },
