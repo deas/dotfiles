@@ -1,0 +1,14 @@
+{
+    "name": "personal-code-snippets",
+    "displayName": "Personal Code Snippets",
+    "description": "Personal Snippets - borrowed https://github.com/JohnGomez/clojure-snippets.git",
+
+    "contributes": {
+        "snippets": [
+            {
+                "language": "clojure",
+                "path": "./clojure.json"
+            }
+        ]
+    }
+}

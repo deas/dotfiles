@@ -1,0 +1,483 @@
+{
+
+	"ns": {
+		"prefix": "ns",
+		"body": [
+			"(ns $0)"
+		],
+		"description": "Namespace definition"
+	},
+
+	"require": {
+		"prefix": "require",
+		"body": [
+			"(require '$0)"
+		],
+		"description": "Loads libs, skipping any that are already loaded."
+	},
+	
+	":require": {
+		"prefix": "require-as", 
+		"body": [
+			"(:require [${1:namespace} :as ${2:alias}])"
+		],
+		"description": "Use :require in the ns macro in preference to calling this directly"
+	},
+
+	":use": {
+		"prefix": "use", 
+		"body": [
+			"(:use [$0])"
+		],
+		"description": "Like 'require, but also refers to each lib's namespace using clojure.core/refer"
+	},
+
+	"print": {
+		"prefix": "print", 
+		"body": [
+			"(print $0)"
+		],
+		"description": ""
+	},
+
+	"println": {
+		"prefix": "println", 
+		"body": [
+			"(println $0)"
+		],
+		"description": ""
+	},
+
+    "str": {
+		"prefix": "str", 
+		"body": [
+			"(str $0)"
+		],
+		"description": ""
+	},
+
+	"equals-zero": {
+		"prefix": "zero?",
+		"body": [
+			"(zero? $0)"
+		],
+		"description": "Returns true if num is zero, else false"
+	},
+
+    "is-empty": {
+		"prefix": "empty?",
+		"body": [
+			"(empty? $0)"
+		],
+		"description": "Returns true if arg is empty, else false"
+	},
+
+	"is-nil": {
+		"prefix": "nil?",
+		"body": [
+			"(nil? $0)"
+		],
+		"description": "Returns true if arg is nil, false otherwise."
+	},
+
+	"is-a-number": {
+		"prefix": "number?",
+		"body": [
+			"(number? $0)"
+		],
+		"description": "Returns true if arg is a Number"
+	},
+
+	"is-positive-number": {
+		"prefix": "pos?",
+		"body": [
+			"(pos? $0)"
+		],
+		"description": "if is a positive number, return true"
+	},
+
+	"is-negative-number": {
+		"prefix": "neg?",
+		"body": [
+			"(neg? $0)"
+		],
+		"description": "if is a negative number, return true"
+	},
+
+	"is-even": {
+		"prefix": "even?",
+		"body": [
+			"(even? $0)"
+		],
+		"description": "if is a even number, return true"
+	},
+
+    "and": {
+		"prefix": "and",
+		"body": [
+			"(and $1 $2)"
+		],
+		"description": ""
+	},
+
+    "or": {
+		"prefix": "and",
+		"body": [
+			"(and $1 $2)"
+		],
+		"description": ""
+	},
+
+    "not": {
+		"prefix": "not",
+		"body": [
+			"(not $0)"
+		],
+		"description": ""
+	},
+
+	"def": {
+		"prefix": "def",
+		"body": [
+			"(def ${1:name} ${2:val})"
+		],
+		"description": "Define a global symbol"
+	},
+
+	"defn": {
+		"prefix": "defn",
+		"body": [
+			"(defn ${1:name} [${2:args}] \n $3)"
+		],
+		"description": "Define a global function"
+	},
+
+    "anonymus-function": {
+		"prefix": "fn",
+		"body": [
+			"(fn [${1:args}] $2)"
+		],
+		"description": "Create a anonymous function"
+	},
+
+	"let": {
+		"prefix": "let",
+		"body": [
+			"(let [$0] \n)"
+		],
+		"description": "Define locals symbols"
+	},
+
+	"atom": {
+		"prefix": "atom",
+		"body": [
+			"(atom $0)"
+		],
+		"description": "Create a atom"
+	},
+
+	"swap!": {
+		"prefix": "swap!",
+		"body": [
+			"(swap! ${1:atom} ${2:f})"
+		],
+		"description": "Atomically swaps the value of atom"
+	},
+
+	"if": {
+		"prefix": "if",
+		"body": [
+			"(if ${1:test} \n ${2:then} \n ${3:else})"
+		],
+		"description": "Evaluates test. If logical true, evaluates and returns then expr, otherwise else expr"
+	},
+
+	"if-do": {
+		"prefix": "ifd",
+		"body": [
+			"(if ${1:test} \n (do $2 $3))"
+		],
+		"description": "Evaluates test. If logical true, evaluates and returns then expr, otherwise else expr"
+	},
+
+	"if-not": {
+		"prefix": "ifn",
+		"body": [
+			"(if-not ${1:test} ${2:then} ${3:else})"
+		],
+		"description": "Evaluates test. If logical false, evaluates and returns then expr, otherwise else expr, if supplied, else nil."
+	},
+
+    "if-let": {
+		"prefix": "ifl",
+		"body": [
+			"(if-let [${1:bindings}] ${2:then})"
+		],
+		"description": " If test is true, evaluates then with binding-form bound to the value of test, if not, yields else"
+	},
+
+    "if-some": {
+		"prefix": "ifs",
+		"body": [
+			"(if-some [${1:bindings}] \n ${2:then} \n ${3:else})"
+		],
+		"description": "If test is not nil, evaluates then with binding-form bound to the value of test, if not, yields else"
+	},
+
+	"cond": {
+		"prefix": "cond",
+		"body": [
+			"(cond ${1:test1} ${2:then} ${3:test2} ${4:then} :else ${5:then})"
+		],
+		"description": "Takes a set of test/expr pairs. It evaluates each test one at a time.  If a test returns logical true, cond evaluates and returns the value of the corresponding expr and doesn't evaluate any of the other tests or exprs. (cond) returns nil"
+	},
+
+	"when": {
+		"prefix": "when",
+		"body": [
+			"(when ${1:test} ${2:then})"
+		],
+		"description": "Evaluates test. If logical true, evaluates body in an implicit do."
+	},
+
+	"when-not": {
+		"prefix": "wheno",
+		"body": [
+			"(when-not ${1:test} ${2:then})"
+		],
+		"description": "Evaluates test. If logical false, evaluates body in an implicit do."
+	},
+
+	"when-let": {
+		"prefix": "whenl",
+		"body": [
+			"(when-let [${1:bindings}] ${2:then})"
+		],
+		"description": "When test is true, evaluates body with binding-form bound to the value of test"
+	},
+
+	"when-some": {
+		"prefix": "whens",
+		"body": [
+			"(when-some [${1:bindings}] ${2:then})"
+		],
+		"description": "When test is not nil, evaluates body with binding-form bound to the value of test"
+	},
+
+	"when-first": {
+		"prefix": "whenf",
+		"body": [
+			"(when-first [${1:bindings}] ${2:then})"
+		],
+		"description": "When test is not nil, evaluates body with binding-form bound to the value of test"
+	},
+
+	"loop": {
+		"prefix": "loop",
+		"body": [
+			"(loop [$1] $2)"
+		],
+		"description": "Loop"
+	},
+
+	"recur": {
+		"prefix": "recur",
+		"body": [
+			"(recur $0)"
+		],
+		"description": "Loop"
+	},
+
+	"nth": {
+		"prefix": "nth",
+		"body": [
+			"(nth ${1:coll} ${2:i})"
+		],
+		"description": "get by index"
+	},
+
+	"get": {
+		"prefix": "get",
+		"body": [
+			"(get ${1:map} ${2::key})"
+		],
+		"description": "Get value by Key"
+	},
+
+    "first": {
+		"prefix": "first",
+		"body": [
+			"(first ${0:coll})"
+		],
+		"description": "Return first value"
+	},
+
+    "second": {
+		"prefix": "second",
+		"body": [
+			"(second ${0:coll})"
+		],
+		"description": "Return second value"
+	},
+
+    "rest": {
+		"prefix": "rest",
+		"body": [
+			"(rest ${0:coll})"
+		],
+		"description": "Returns a possibly empty seq of the items after the first. Calls seq on its argument."
+	},
+
+    "next": {
+		"prefix": "next",
+		"body": [
+			"(next ${0:coll})"
+		],
+		"description": "Returns a seq of the items after the first. Calls seq on it argument.  If there are no more items, returns nil."
+	},
+
+    "last": {
+		"prefix": "last",
+		"body": [
+			"(last ${0:coll})"
+		],
+		"description": "Return the last item in coll, in linear time"
+	},
+
+    "take": {
+		"prefix": "take",
+		"body": [
+			"(take ${1:n} ${2:coll})"
+		],
+		"description": "Returns a lazy sequence of the first n items in coll, or all items if there are fewer than n"
+	},
+
+    "peek": {
+		"prefix": "peek",
+		"body": [
+			"(take ${1:coll})"
+		],
+		"description": "Returns a lazy sequence of the first n items in coll, or all items if there are fewer than n"
+	},
+
+    "pop": {
+		"prefix": "pop",
+		"body": [
+			"(pop ${1:coll})"
+		],
+		"description": "Returns a lazy sequence of the first n items in coll, or all items if there are fewer than n"
+	},
+
+    "drop": {
+		"prefix": "drop",
+		"body": [
+			"(drop ${1:n} ${2:coll})"
+		],
+		"description": "Returns a lazy sequence of all but the first n items in coll."
+	},
+
+	"conj": {
+		"prefix": "conj",
+		"body": [
+			"(conj ${1:coll} ${2:val})"
+		],
+		"description": "Returns a new collection with the xs 'added'"
+	},
+
+    "assoc": {
+		"prefix": "assoc",
+		"body": [
+			"(assoc ${1:map} ${2::key} ${3:val})"
+		],
+		"description": "Returns a new collection with the xs 'added'"
+	},
+
+    "dissoc": {
+		"prefix": "dissoc",
+		"body": [
+			"(dissoc ${1:map} ${2::key})"
+		],
+		"description": "dissoc[iate]. Returns a new map of the same (hashed/sorted) type, that does not contain a mapping for key(s)"
+	},
+
+	"seq": {
+		"prefix": "seq",
+		"body": [
+			"(seq ${0:coll})"
+		],
+		"description": "Get value by Key"
+	},
+
+	"update": {
+		"prefix": "update",
+		"body": [
+			"(update ${1:map} ${2::key} ${3:f})"
+		],
+		"description": "Get value by Key"
+	},
+
+    "update-in": {
+		"prefix": "update-in",
+		"body": [
+			"(update-in ${1:map} [${2:i} ${3::key}] ${4:f})"
+		],
+		"description": "Get value by Key"
+	},
+
+	"map": {
+		"prefix": "map",
+		"body": [
+			"(map ${1:f} ${2:coll})"
+		],
+		"description": "map simbol"
+	},
+
+	"filter": {
+		"prefix": "filter",
+		"body": [
+			"(filter ${1:pred}  ${2:coll})"
+		],
+		"description": "Aplication filter on  Collection"
+	},
+
+	"reduce": {
+		"prefix": "reduce",
+		"body": [
+			"(reduce ${1:f}  ${2:coll})"
+		],
+		"description": "Reduce"
+	},
+
+	"queue": {
+		"prefix": 
+			"queue",
+		"body": [
+			"(clojure.lang.PersistentQueue/EMPTY)"
+		],
+		"description": "Persistent Queue Empty"
+	},
+
+    "throw": {
+		"prefix": "throw",
+		"body": [
+			"(throw (${1:Exception. $2}))"
+		],
+		"description": ""
+	},
+
+    "try-catch": {
+		"prefix": "tryc",
+		"body": [
+			"(try $0 \n (catch Exception e ))"
+		],
+		"description": ""
+	},
+
+    "try-catch-finally": {
+		"prefix": "tryf",
+		"body": [
+			"(try $0 \n (catch Exception e ) \n (finally ))"
+		],
+		"description": ""
+	}
+}
