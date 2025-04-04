@@ -14,5 +14,7 @@ oc: cobra
 opentofu: complete
 minikube: cobra
 incus: cobra
+hcloud: cobra
 helmfile: cobra
 pipx: argcomplete
+#uv: clap
