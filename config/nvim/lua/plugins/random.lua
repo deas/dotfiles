@@ -9,6 +9,9 @@
 
 -- Alternative lua debug adapter
 -- https://tamerlan.dev/a-guide-to-debugging-applications-in-neovim/
+--
+-- Launch debug server: require('osv').launch({port = 8086})
+--
 --[[ 
 local dap = require("dap")
 -- Adapters
@@ -81,7 +84,7 @@ return {
     -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/blob/main/lua/CopilotChat/config.lua
     "CopilotC-Nvim/CopilotChat.nvim",
     opts = function(_, opts)
-      opts.model = "claude-3.7-sonnet"
+      -- opts.model = "claude-3.7-sonnet"
       --[[
       opts.prompts = {
         CustomPrompt = {
@@ -117,6 +120,31 @@ return {
       formatters_by_ft = {
         ["clojure"] = { "cljfmt" },
       },
+    },
+    --  TODO: Workaround for https://github.com/LazyVim/LazyVim/issues/5899
+    {
+      "nvim-lualine/lualine.nvim",
+      optional = true,
+      opts = function()
+        require("copilot.api").status = require("copilot.status") -- TODO: Smart override
+      end,
+      --[[
+      event = "VeryLazy",
+      opts = function(_, opts)
+        table.insert(
+          opts.sections.lualine_x,
+          2,
+          LazyVim.lualine.status(LazyVim.config.icons.kinds.Copilot, function()
+            local clients = package.loaded["copilot"] and LazyVim.lsp.get_clients({ name = "copilot", bufnr = 0 }) or {}
+            if #clients > 0 then
+              local status = require("copilot.status").data.status -- TODO: Actual fix
+              return (status == "InProgress" and "pending") or (status == "Warning" and "error") or "ok"
+            end
+          end)
+        )
+      end,
+      ]]
+      --
     },
   },
 }
