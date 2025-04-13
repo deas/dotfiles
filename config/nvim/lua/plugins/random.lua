@@ -115,20 +115,29 @@ return {
     -- },
   },
   {
+    "olimorris/codecompanion.nvim",
+    opts = {},
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+  },
+  {
     "stevearc/conform.nvim",
     opts = {
       formatters_by_ft = {
         ["clojure"] = { "cljfmt" },
       },
     },
-    --  TODO: Workaround for https://github.com/LazyVim/LazyVim/issues/5899
-    {
-      "nvim-lualine/lualine.nvim",
-      optional = true,
-      opts = function()
-        require("copilot.api").status = require("copilot.status") -- TODO: Smart override
-      end,
-      --[[
+  },
+  --  TODO: Workaround for https://github.com/LazyVim/LazyVim/issues/5899
+  {
+    "nvim-lualine/lualine.nvim",
+    optional = true,
+    opts = function()
+      require("copilot.api").status = require("copilot.status") -- TODO: Smart override
+    end,
+    --[[
       event = "VeryLazy",
       opts = function(_, opts)
         table.insert(
@@ -144,7 +153,6 @@ return {
         )
       end,
       ]]
-      --
-    },
+    --
   },
 }
