@@ -1,4 +1,111 @@
 local log = require("plenary.log")
+
+local mcp_opts = {
+  -- foo and bar or baz -> lua if expression
+  config = vim.fn.getenv("HOME") and vim.fn.expand("~/.config/mcphub/servers.json"), -- We may want this host specific, overriding the default
+  -- TODO:
+  -- on_ready = function(hub) end,
+}
+
+local function update_chat(hub, chat)
+  -- local mcp = require("mcphub")
+  local async = require("plenary.async")
+  local call_tool = async.wrap(function(server, tool, input, callback)
+    hub:call_tool(server, tool, input, {
+      callback = function(res, err)
+        callback(res, err)
+      end,
+    })
+  end, 4)
+
+  local access_resource = async.wrap(function(server, uri, callback)
+    hub:access_resource(server, uri, {
+      callback = function(res, err)
+        callback(res, err)
+      end,
+    })
+  end, 3)
+
+  local resources = hub:get_resources()
+  for _, resource in ipairs(resources) do
+    local name = resource.name:lower():gsub(" ", "_"):gsub(":", "")
+    chat.config.functions[name] = {
+      uri = resource.uri,
+      description = type(resource.description) == "string" and resource.description or "",
+      resolve = function()
+        local res, err = access_resource(resource.server_name, resource.uri)
+        if err then
+          error(err)
+        end
+
+        res = res or {}
+        local result = res.result or {}
+        local content = result.contents or {}
+        local out = {}
+
+        for _, message in ipairs(content) do
+          if message.text then
+            table.insert(out, {
+              uri = message.uri,
+              data = message.text,
+              mimetype = message.mimeType,
+            })
+          end
+        end
+
+        return out
+      end,
+    }
+  end
+
+  local tools = hub:get_tools()
+  for _, tool in ipairs(tools) do
+    -- vim.print("Tool name: " .. tool.name)
+    chat.config.functions[tool.name] = {
+      group = tool.server_name,
+      description = tool.description,
+      schema = tool.inputSchema,
+      resolve = function(input)
+        local res, err = call_tool(tool.server_name, tool.name, input)
+        if err then
+          error(err)
+        end
+
+        res = res or {}
+        local result = res.result or {}
+        local content = result.content or {}
+        local out = {}
+
+        for _, message in ipairs(content) do
+          if message.type == "text" then
+            table.insert(out, {
+              data = message.text,
+            })
+          elseif message.type == "resource" and message.resource and message.resource.text then
+            table.insert(out, {
+              uri = message.resource.uri,
+              data = message.resource.text,
+              mimetype = message.resource.mimeType,
+            })
+          end
+        end
+
+        return out
+      end,
+    }
+  end
+end
+
+local function update_mcp(mcp, chat)
+  return function()
+    local hub = mcp.get_hub_instance()
+    if not hub then
+      return
+    end
+    update_chat(hub, chat)
+  end
+end
+
 -- every spec file under the "plugins" directory will be loaded automatically by lazy.nvim
 --
 -- In your plugin files, you can:
@@ -88,6 +195,23 @@ return {
     -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/discussions/420
     -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/blob/main/lua/CopilotChat/config.lua
     "CopilotC-Nvim/CopilotChat.nvim",
+    config = function(opts)
+      local chat = require("CopilotChat")
+      chat.setup(opts)
+
+      local status, mcp = pcall(require, "mcphub")
+
+      if not status then
+        -- Module couldn't be loaded
+        vim.notify("Couldn't load module_name: " .. mcp, vim.log.levels.WARN)
+        -- my_module now contains the error message
+        return -- or provide fallback functionality
+      end
+      mcp.setup(mcp_opts)
+      -- TODO: Sould fire mcp on_ready as well. Otherwise we won't see things when MCPHub comes up first
+      -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/pull/1029#issuecomment-2782794141
+      mcp.on({ "servers_updated", "tool_list_changed", "resource_list_changed" }, update_mcp(mcp, chat))
+    end,
     opts = function(_, opts)
       -- opts.model = "claude-3.7-sonnet"
       --[[
@@ -111,7 +235,31 @@ return {
 
       -- Or add new options
       -- opts.custom_option = "value"
-
+      -- TODO: Should probably add functions like this: https://github.com/ravitemer/mcphub.nvim/wiki/CodeCompanion
+      opts.functions = {
+        birthday = {
+          description = "Retrieves birthday information for a person",
+          schema = {
+            type = "object",
+            required = { "name" },
+            properties = {
+              name = {
+                type = "string",
+                enum = { "Alice", "Bob", "Charlie" },
+                description = "Person's name",
+              },
+            },
+          },
+          resolve = function(input)
+            return {
+              {
+                type = "text",
+                data = input.name .. " birthday info",
+              },
+            }
+          end,
+        },
+      }
       return opts
     end,
     -- Add or override keymaps
@@ -138,6 +286,8 @@ return {
     -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
     -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
     config = function()
+      require("mcphub").setup(mcp_opts)
+      --[[
       require("mcphub").setup({
         -- foo and bar or baz -> lua if expression
         config = vim.fn.getenv("HOME") and vim.fn.expand("~/.config/mcphub/servers.json"), -- We may want this host specific, overriding the default
@@ -160,25 +310,26 @@ return {
             -- my_module now contains the error message
             return -- or provide fallback functionality
           end
-          local chat = copilot_chat.chat
+          local chat_functions = copilot_chat.config.functions
           for _, tool in ipairs(tools) do
             vim.print("Tool name: " .. tool.name)
             -- log.debug("Tool name: " .. tool.name)
-            --[[
-            chat.config.tools[tool.name] = {
+            chat_functions[tool.name] = {
+              agent = "dunno",
+              uri = "dunno",
               description = tool.description,
               schema = tool.inputSchema,
-              resolve = function(input, source)
+              resolve = function(input, source, prompt)
                 local out = call_tool(tool.server, tool.name, input)
                 vim.print(out)
                 return {}
               end,
             }
-            ]]
-            --
           end
         end,
       })
+        ]]
+      --
     end,
   },
   {
