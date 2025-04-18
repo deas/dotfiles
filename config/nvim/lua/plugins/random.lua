@@ -221,7 +221,7 @@ return {
         -- my_module now contains the error message
         return -- or provide fallback functionality
       end
-      mcp.setup(mcp_opts)
+      -- mcp.setup(mcp_opts) -- TODO beware - setup returns immediately - mcp_opts effectively ignored
       -- TODO: Sould fire mcp on_ready as well. Otherwise we won't see things when MCPHub comes up first
       -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/pull/1029#issuecomment-2782794141
       mcp.on({ "servers_updated", "tool_list_changed", "resource_list_changed" }, update_mcp(mcp, chat))
@@ -299,10 +299,10 @@ return {
     build = "npm install -g mcp-hub@latest", -- Installs required mcp-hub npm module
     -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
     -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
-    opts = mcp_opts,
+    -- opts = mcp_opts, -- Not what it appears to be - opts wont be mcp_opts in function config
     config = function(opts)
       -- vim.print(vim.inspect(opts))
-      require("mcphub").setup(opts)
+      require("mcphub").setup(vim.tbl_extend("force", opts, mcp_opts))
     end,
   },
   {
