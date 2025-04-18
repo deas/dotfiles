@@ -235,6 +235,12 @@ if ("/nix/var/nix/profiles" | path exists) {
     $env.PATH = (setup-path ($env.HOME + "/.nix-profile/bin"))
 }
 
+# $env.HOSTNAME = sys host | get hostname
+if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
+  # TODO: Should use password manager - only to get started with mcphub
+    $env.GITHUB_TOKEN = open ($env.HOME + "/.config/gh/hosts.yml") | get "github.com".oauth_token
+}
+
 #if ((not ($env.HOME + "/.nix-profile/bin" in $env.PATH)) and ("/nix/var/nix/profiles/default" | path exists) ) {
 #    $env.NIX_PROFILES = "/nix/var/nix/profiles/default " + $env.HOME + "/.nix-profile"
 #    $env.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt"
