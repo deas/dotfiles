@@ -1,12 +1,5 @@
 local log = require("plenary.log")
 
-local mcp_opts = {
-  -- foo and bar or baz -> lua if expression
-  config = vim.fn.getenv("HOME") and vim.fn.expand("~/.config/mcphub/servers.json"), -- We may want this host specific, overriding the default
-  -- TODO:
-  -- on_ready = function(hub) end,
-}
-
 local function update_chat(hub, chat)
   -- local mcp = require("mcphub")
   local async = require("plenary.async")
@@ -95,6 +88,28 @@ local function update_chat(hub, chat)
     }
   end
 end
+
+local function mcp_servers_config()
+  local root = vim.fn.expand("~/.config/mcphub")
+  return vim.loop.fs_stat(root .. "/servers-local.json") and root .. "/servers-local.json" or root .. "/servers.json"
+end
+
+local mcp_opts = {
+  -- foo and bar or baz -> lua if expression
+  config = mcp_servers_config(), -- This is the default location for the config file - which appears to be ignored
+  -- config = vim.fn.getenv("HOME") and vim.fn.expand("~/.config/mcphub/servers-local.json"), -- We may want this host specific, overriding the default
+  -- TODO:
+  on_ready = function(hub)
+    local status, chat = pcall(require, "CopilotChat")
+
+    if not status then
+      vim.notify("Couldn't load module_name: " .. chat, vim.log.levels.WARN)
+      -- my_module now contains the error message
+      return -- or provide fallback functionality
+    end
+    update_chat(hub, chat)
+  end,
+}
 
 local function update_mcp(mcp, chat)
   return function()
@@ -202,7 +217,6 @@ return {
       local status, mcp = pcall(require, "mcphub")
 
       if not status then
-        -- Module couldn't be loaded
         vim.notify("Couldn't load module_name: " .. mcp, vim.log.levels.WARN)
         -- my_module now contains the error message
         return -- or provide fallback functionality
@@ -285,51 +299,10 @@ return {
     build = "npm install -g mcp-hub@latest", -- Installs required mcp-hub npm module
     -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
     -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
-    config = function()
-      require("mcphub").setup(mcp_opts)
-      --[[
-      require("mcphub").setup({
-        -- foo and bar or baz -> lua if expression
-        config = vim.fn.getenv("HOME") and vim.fn.expand("~/.config/mcphub/servers.json"), -- We may want this host specific, overriding the default
-        on_ready = function(hub)
-          local async = require("plenary.async")
-          local call_tool = async.wrap(function(server, tool, input, callback)
-            hub:call_tool(server, tool, input, {
-              callback = function(response)
-                callback(response)
-              end,
-            })
-          end, 4)
-
-          local tools = hub:get_tools()
-          local status, copilot_chat = pcall(require, "CopilotChat")
-
-          if not status then
-            -- Module couldn't be loaded
-            vim.notify("Couldn't load module_name: " .. copilot_chat, vim.log.levels.WARN)
-            -- my_module now contains the error message
-            return -- or provide fallback functionality
-          end
-          local chat_functions = copilot_chat.config.functions
-          for _, tool in ipairs(tools) do
-            vim.print("Tool name: " .. tool.name)
-            -- log.debug("Tool name: " .. tool.name)
-            chat_functions[tool.name] = {
-              agent = "dunno",
-              uri = "dunno",
-              description = tool.description,
-              schema = tool.inputSchema,
-              resolve = function(input, source, prompt)
-                local out = call_tool(tool.server, tool.name, input)
-                vim.print(out)
-                return {}
-              end,
-            }
-          end
-        end,
-      })
-        ]]
-      --
+    opts = mcp_opts,
+    config = function(opts)
+      -- vim.print(vim.inspect(opts))
+      require("mcphub").setup(opts)
     end,
   },
   {
