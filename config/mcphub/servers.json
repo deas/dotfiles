@@ -1,1 +1,54 @@
-{"mcpServers":[]}
+{
+  "mcpServers": {
+    "fetch": {
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "disabled_prompts": [
+        
+      ],
+      "command": "uvx"
+    },
+    "puppeteer": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "-e",
+        "DOCKER_CONTAINER=true",
+        "mcp/puppeteer"
+      ],
+      "disabled": false,
+      "command": "docker"
+    },
+    "github": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--env-file=env.github",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "disabled": false,
+      "command": "docker"
+    },
+    "gdrive": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-v",
+        "mcp-gdrive:/gdrive-server",
+        "-e",
+        "GDRIVE_CREDENTIALS_PATH=/gdrive-server/credentials.json",
+        "mcp/gdrive"
+      ],
+      "disabled": true,
+      "command": "docker"
+    }
+  },
+  "nativeMCPServers": [
+    
+  ]
+}

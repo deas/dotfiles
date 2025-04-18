@@ -1,4 +1,5 @@
 !bin
 vim/bundle/
 config/nushell/history.txt
+config/mcphub/env.*
 noscm.zsh
