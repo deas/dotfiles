@@ -201,6 +201,8 @@ end
 --]]
 
 return {
+  -- TODO: Remove the following once the fix is in Lazyvim https://github.com/LazyVim/LazyVim/pull/5876
+  { "PaterJason/nvim-treesitter-sexp", enabled = false },
   {
     "Olical/nfnl",
     ft = "fennel",
