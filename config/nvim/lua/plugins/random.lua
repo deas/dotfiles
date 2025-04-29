@@ -285,7 +285,46 @@ return {
   },
   {
     "olimorris/codecompanion.nvim",
-    opts = {},
+    opts = {
+      strategies = {
+        chat = {
+          tools = {
+            -- Breaking Changes since codecompanion v15
+            -- Remove old mcp tool which will be auto added as a tool group with two individual tools.
+            --[[
+            ["mcp"] = {
+              -- Prevent mcphub from loading before needed
+              callback = function()
+                return require("mcphub.extensions.codecompanion")
+              end,
+              description = "Call tools and resources from the MCP Servers",
+            },
+            ]]
+            --
+          },
+          extensions = {
+            mcphub = {
+              callback = "mcphub.extensions.codecompanion",
+              opts = {
+                make_vars = true,
+                make_slash_commands = true,
+                show_result_in_chat = true,
+              },
+            },
+          },
+        },
+      },
+      --[[
+      strategies = {
+        -- Change the default chat adapter
+        chat = {
+          adapter = "anthropic",
+        },
+      },
+      ]]
+      --
+      log_level = "DEBUG", -- TRACE|DEBUG|ERROR|INFO
+    },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
@@ -302,6 +341,18 @@ return {
     -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
     -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
     -- opts = mcp_opts, -- Not what it appears to be - opts wont be mcp_opts in function config
+    opts = {
+      extensions = {
+        codecompanion = {
+          -- Show the mcp tool result in the chat buffer
+          show_result_in_chat = true,
+          -- Make chat #variables from MCP server resources
+          make_vars = true,
+          -- Create slash commands for prompts
+          make_slash_commands = true,
+        },
+      },
+    },
     config = function(opts)
       -- vim.print(vim.inspect(opts))
       require("mcphub").setup(vim.tbl_extend("force", opts, mcp_opts))
@@ -310,6 +361,7 @@ return {
   {
     -- avante.nvim is a Neovim plugin designed to emulate the behaviour of the Cursor
     "yetone/avante.nvim",
+    enabled = false,
     event = "VeryLazy",
     version = false, -- Never set this value to "*"! Never!
     opts = {
