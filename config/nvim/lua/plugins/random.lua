@@ -341,6 +341,9 @@ return {
     -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
     -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
     -- opts = mcp_opts, -- Not what it appears to be - opts wont be mcp_opts in function config
+    -- https://github.com/ravitemer/mcphub.nvim/discussions/110
+    -- mcphub.config.extensions.codecompanion is deprecated as the options are now declared at codecompanion extension itself.
+    --[[
     opts = {
       extensions = {
         codecompanion = {
@@ -353,6 +356,8 @@ return {
         },
       },
     },
+    ]]
+    --
     config = function(opts)
       -- vim.print(vim.inspect(opts))
       require("mcphub").setup(vim.tbl_extend("force", opts, mcp_opts))
