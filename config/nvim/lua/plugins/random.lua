@@ -323,7 +323,9 @@ return {
           },
         },
       },
-      log_level = "DEBUG", -- TRACE|DEBUG|ERROR|INFO
+      opts = {
+        log_level = "DEBUG", -- TRACE|DEBUG|ERROR|INFO
+      },
     },
     dependencies = {
       "nvim-lua/plenary.nvim",
