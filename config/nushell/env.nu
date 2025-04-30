@@ -236,11 +236,11 @@ if ("/nix/var/nix/profiles" | path exists) {
 }
 
 # $env.HOSTNAME = sys host | get hostname
-#if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
-#  # TODO: Should use password manager - only to get started with mcphub
+if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
+  # TODO: Should use password manager - only to get started with mcphub
 #  # Not honoured by typescript-sdk/src/client/stdio.ts / getDefaultEnvironment() 
-#  $env.GITHUB_PERSONAL_ACCESS_TOKEN = open ($env.HOME + "/.config/gh/hosts.yml") | get "github.com".oauth_token
-#}
+   $env.GITHUB_PERSONAL_ACCESS_TOKEN = open ($env.HOME + "/.config/gh/hosts.yml") | get "github.com".oauth_token
+}
 
 #if ((not ($env.HOME + "/.nix-profile/bin" in $env.PATH)) and ("/nix/var/nix/profiles/default" | path exists) ) {
 #    $env.NIX_PROFILES = "/nix/var/nix/profiles/default " + $env.HOME + "/.nix-profile"
