@@ -1,5 +1,11 @@
 local log = require("plenary.log")
 
+local function mcp_servers_config()
+  local root = vim.fn.expand("~/.config/mcphub")
+  return vim.loop.fs_stat(root .. "/servers-local.json") and root .. "/servers-local.json" or root .. "/servers.json"
+end
+
+--[[
 local function update_chat(hub, chat)
   -- local mcp = require("mcphub")
   local async = require("plenary.async")
@@ -89,11 +95,6 @@ local function update_chat(hub, chat)
   end
 end
 
-local function mcp_servers_config()
-  local root = vim.fn.expand("~/.config/mcphub")
-  return vim.loop.fs_stat(root .. "/servers-local.json") and root .. "/servers-local.json" or root .. "/servers.json"
-end
-
 local mcp_opts = {
   -- foo and bar or baz -> lua if expression
   config = mcp_servers_config(), -- This is the default location for the config file - which appears to be ignored
@@ -120,6 +121,8 @@ local function update_mcp(mcp, chat)
     update_chat(hub, chat)
   end
 end
+]]
+--
 
 -- every spec file under the "plugins" directory will be loaded automatically by lazy.nvim
 --
@@ -207,6 +210,7 @@ return {
     "Olical/nfnl",
     ft = "fennel",
   },
+  --[[
   {
     -- copilot-chat extra spec overrides
     -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/discussions/420
@@ -230,15 +234,14 @@ return {
     end,
     opts = function(_, opts)
       -- opts.model = "claude-3.7-sonnet"
-      --[[
-      opts.prompts = {
-        CustomPrompt = {
-          prompt = "Explain how it works.",
-          system_prompt = "You are very good at explaining stuff",
-          -- mapping = "<leader>ccmc",
-          description = "My custom prompt description",
-        },
-      }--]]
+      --opts.prompts = {
+      --  CustomPrompt = {
+      --    prompt = "Explain how it works.",
+      --    system_prompt = "You are very good at explaining stuff",
+      --    -- mapping = "<leader>ccmc",
+      --    description = "My custom prompt description",
+      --  },
+      --}
       opts.debug = true
       -- level "info" does not appear to create CopilogChat.log
       -- opts.log_level = "trace"
@@ -283,6 +286,8 @@ return {
     -- your custom keymaps
     -- },
   },
+  ]]
+  --
   {
     "olimorris/codecompanion.nvim",
     opts = {
@@ -362,7 +367,10 @@ return {
     --
     config = function(opts)
       -- vim.print(vim.inspect(opts))
-      require("mcphub").setup(vim.tbl_extend("force", opts, mcp_opts))
+      -- require("mcphub").setup(vim.tbl_extend("force", opts, mcp_opts))
+      require("mcphub").setup(vim.tbl_extend("force", opts, {
+        config = mcp_servers_config(),
+      }))
     end,
   },
   {
