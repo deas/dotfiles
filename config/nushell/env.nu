@@ -240,6 +240,9 @@ if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
   # TODO: Should use password manager - only to get started with mcphub
 #  # Not honoured by typescript-sdk/src/client/stdio.ts / getDefaultEnvironment() 
    $env.GITHUB_PERSONAL_ACCESS_TOKEN = open ($env.HOME + "/.config/gh/hosts.yml") | get "github.com".oauth_token
+   # https://aider.chat/docs/llms/github.html#configure-your-environment
+   $env.OPENAI_API_KEY = $env.GITHUB_PERSONAL_ACCESS_TOKEN
+   $env.OPENAI_API_BASE = "https://api.githubcopilot.com"
 }
 
 #if ((not ($env.HOME + "/.nix-profile/bin" in $env.PATH)) and ("/nix/var/nix/profiles/default" | path exists) ) {
