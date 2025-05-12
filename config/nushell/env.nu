@@ -240,10 +240,19 @@ if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
   # TODO: Should use password manager - only to get started with mcphub
 #  # Not honoured by typescript-sdk/src/client/stdio.ts / getDefaultEnvironment() 
    $env.GITHUB_PERSONAL_ACCESS_TOKEN = open ($env.HOME + "/.config/gh/hosts.yml") | get "github.com".oauth_token
+}
+
+
+if ($env.HOME + "/.config/github-copilot/apps.json" | path exists) {
+  # TODO: Should use password manager - only to get started with mcphub
    # https://aider.chat/docs/llms/github.html#configure-your-environment
-   $env.OPENAI_API_KEY = $env.GITHUB_PERSONAL_ACCESS_TOKEN
+   # https://aider.chat/docs/llms/github.html
+   # Then token from the gh cli lacks permission
+   $env.OPENAI_API_KEY = open ($env.HOME + "/.config/github-copilot/apps.json") | get ($in | columns | where {|col| $col =~ "github.com:"} | first) | get oauth_token
    $env.OPENAI_API_BASE = "https://api.githubcopilot.com"
 }
+
+# open ($env.HOME + "/.config/github-copilot/apps.json")
 
 #if ((not ($env.HOME + "/.nix-profile/bin" in $env.PATH)) and ("/nix/var/nix/profiles/default" | path exists) ) {
 #    $env.NIX_PROFILES = "/nix/var/nix/profiles/default " + $env.HOME + "/.nix-profile"
