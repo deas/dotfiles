@@ -521,6 +521,7 @@ return {
   },
   ]]
   --
+  { "echasnovski/mini.test", version = false },
   {
     "stevearc/conform.nvim",
     opts = {
