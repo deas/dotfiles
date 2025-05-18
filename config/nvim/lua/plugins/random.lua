@@ -521,6 +521,12 @@ return {
   },
   ]]
   --
+  {
+    "m4xshen/hardtime.nvim",
+    lazy = false,
+    dependencies = { "MunifTanjim/nui.nvim" },
+    opts = {},
+  },
   { "echasnovski/mini.test", version = false },
   {
     "stevearc/conform.nvim",
