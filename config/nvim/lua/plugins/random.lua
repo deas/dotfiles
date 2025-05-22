@@ -390,8 +390,10 @@ return {
   {
     "Davidyz/VectorCode",
     version = "*", -- optional, depending on whether you're on nightly or release
-    build = "uv tool install --upgrade vectorcode", -- pipx upgrade fails when it is not installed already
-    -- build = "pipx upgrade vectorcode", -- optional but recommended. This keeps your CLI up-to-date.
+    -- TODO: : uv tool installs 6GB (mostly due to torch/cuda we don't need for non gpu version)
+    -- PIP_INDEX_URL="https://download.pytorch.org/whl/cpu" PIP_EXTRA_INDEX_URL="https://pypi.org/simple" pipx install vectorcode
+    -- build = "uv tool install --upgrade vectorcode", -- pipx upgrade fails when it is not installed already
+    build = "pipx upgrade vectorcode", -- optional but recommended. This keeps your CLI up-to-date.
     dependencies = { "nvim-lua/plenary.nvim" },
     -- enabled = false,
   },
