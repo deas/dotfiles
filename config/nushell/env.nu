@@ -252,6 +252,13 @@ if ($env.HOME + "/.config/github-copilot/apps.json" | path exists) {
    $env.OPENAI_API_BASE = "https://api.githubcopilot.com"
 }
 
+# TODO: : argocd-conductr in kind, token should probably be pulled from keepass
+$env.ARGOCD_BASE_URL = "http://localhost:11080"
+
+if ($env.HOME + "/.config/argocd/auth.json" | path exists) {
+  $env.ARGOCD_API_TOKEN = open ($env.HOME + "/.config/argocd/auth.json") | get $env.ARGOCD_BASE_URL
+}
+
 # open ($env.HOME + "/.config/github-copilot/apps.json")
 
 #if ((not ($env.HOME + "/.nix-profile/bin" in $env.PATH)) and ("/nix/var/nix/profiles/default" | path exists) ) {

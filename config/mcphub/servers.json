@@ -1,14 +1,6 @@
 {
+  "nativeMCPServers": [],
   "mcpServers": {
-    "fetch": {
-      "args": [
-        "mcp-server-fetch"
-      ],
-      "disabled_prompts": [
-        
-      ],
-      "command": "uvx"
-    },
     "puppeteer": {
       "args": [
         "run",
@@ -19,19 +11,43 @@
         "DOCKER_CONTAINER=true",
         "mcp/puppeteer"
       ],
-      "disabled": false,
-      "command": "docker"
+      "command": "docker",
+      "disabled": false
     },
     "github": {
       "args": [
         "run",
         "-i",
         "--rm",
-        "--env-file=env.github",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
         "ghcr.io/github/github-mcp-server"
       ],
-      "disabled": false,
-      "command": "docker"
+      "command": "docker",
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+      },
+      "disabled": false
+    },
+    "jetbrains": {
+      "command": "npx",
+      "args": ["-y", "@jetbrains/mcp-proxy"]
+    },
+    "clojure-mcp": {
+      "args": [
+        "-c",
+        "cd ${HOME}/work/projects/3rd-party/clojure-mcp && clojure -X:mcp :port 7888"
+      ],
+      "command": "/bin/sh",
+      "disabled": true
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking": {
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "command": "npx"
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/memory": {
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "command": "npx"
     },
     "gdrive": {
       "args": [
@@ -44,11 +60,33 @@
         "GDRIVE_CREDENTIALS_PATH=/gdrive-server/credentials.json",
         "mcp/gdrive"
       ],
-      "disabled": true,
-      "command": "docker"
+      "command": "docker",
+      "disabled": true
+    },
+    "github.com/upstash/context7-mcp": {
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "command": "npx"
+    },
+    "argocd-mcp": {
+      "args": ["argocd-mcp@latest", "stdio"],
+      "env": {
+        "ARGOCD_API_TOKEN": "",
+        "ARGOCD_BASE_URL": "http://localhost:11080"
+      },
+      "command": "npx"
+    },
+    "github.com/tavily-ai/tavily-mcp": {
+      "args": ["-y", "tavily-mcp@0.1.4"],
+      "command": "npx",
+      "env": {
+        "TAVILY_API_KEY": "null"
+      },
+      "disabled": true
+    },
+    "fetch": {
+      "args": ["mcp-server-fetch"],
+      "disabled_prompts": [],
+      "command": "uvx"
     }
-  },
-  "nativeMCPServers": [
-    
-  ]
+  }
 }
