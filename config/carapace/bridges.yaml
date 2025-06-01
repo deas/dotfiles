@@ -10,6 +10,7 @@ ansible-playbook: argcomplete
 ansible-pull: argcomplete
 ansible-vault: argcomplete
 argocd: cobra
+kargo: cobra
 oc: cobra
 opentofu: complete
 minikube: cobra
