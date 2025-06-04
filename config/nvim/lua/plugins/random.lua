@@ -320,6 +320,7 @@ return {
             },
             ]]
             --
+            -- auto_submit_success = true, -- Send any successful output to the LLM automatically?
           },
         },
       },
@@ -371,11 +372,12 @@ return {
             },
           },
         },
-        vectorcode = {
+        --[[vectorcode = {
           opts = {
             add_tool = true,
           },
-        },
+        },]]
+        --
       },
       opts = {
         log_level = "TRACE", -- TRACE|DEBUG|ERROR|INFO
@@ -390,13 +392,13 @@ return {
   {
     "Davidyz/VectorCode",
     version = "*", -- optional, depending on whether you're on nightly or release
-    -- build = "uv tool install --upgrade vectorcode", -- pipx upgrade fails when it is not installed already
+    build = "uv tool install --upgrade vectorcode --index https://download.pytorch.org/whl/cpu", -- pipx upgrade fails when it is not installed already
     -- uv tool install vectorcode --index https://download.pytorch.org/whl/cpu
-    build = "uv tool upgrade vectorcode", -- This helps keeping the CLI up-to-date
+    -- build = "uv tool upgrade vectorcode", -- This helps keeping the CLI up-to-date
     -- PIP_INDEX_URL="https://download.pytorch.org/whl/cpu" PIP_EXTRA_INDEX_URL="https://pypi.org/simple" pipx install vectorcode
     -- build = "pipx upgrade vectorcode", -- optional but recommended. This keeps your CLI up-to-date.
     dependencies = { "nvim-lua/plenary.nvim" },
-    -- enabled = false,
+    enabled = false,
   },
   {
     "ravitemer/mcphub.nvim",
