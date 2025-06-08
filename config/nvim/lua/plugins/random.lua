@@ -5,134 +5,6 @@ local function mcp_servers_config()
   return vim.loop.fs_stat(root .. "/servers-local.json") and root .. "/servers-local.json" or root .. "/servers.json"
 end
 
---[[
-local function update_chat(hub, chat)
-  -- local mcp = require("mcphub")
-  local async = require("plenary.async")
-  local call_tool = async.wrap(function(server, tool, input, callback)
-    hub:call_tool(server, tool, input, {
-      callback = function(res, err)
-        callback(res, err)
-      end,
-    })
-  end, 4)
-
-  local access_resource = async.wrap(function(server, uri, callback)
-    hub:access_resource(server, uri, {
-      callback = function(res, err)
-        callback(res, err)
-      end,
-    })
-  end, 3)
-
-  local resources = hub:get_resources()
-  for _, resource in ipairs(resources) do
-    local name = resource.name:lower():gsub(" ", "_"):gsub(":", "")
-    chat.config.functions[name] = {
-      uri = resource.uri,
-      description = type(resource.description) == "string" and resource.description or "",
-      resolve = function()
-        local res, err = access_resource(resource.server_name, resource.uri)
-        if err then
-          error(err)
-        end
-
-        res = res or {}
-        local result = res.result or {}
-        local content = result.contents or {}
-        local out = {}
-
-        for _, message in ipairs(content) do
-          if message.text then
-            table.insert(out, {
-              uri = message.uri,
-              data = message.text,
-              mimetype = message.mimeType,
-            })
-          end
-        end
-
-        return out
-      end,
-    }
-  end
-
-  local tools = hub:get_tools()
-  for _, tool in ipairs(tools) do
-    -- vim.print("Tool name: " .. tool.name)
-    chat.config.functions[tool.name] = {
-      group = tool.server_name,
-      description = tool.description,
-      schema = tool.inputSchema,
-      resolve = function(input)
-        local res, err = call_tool(tool.server_name, tool.name, input)
-        if err then
-          error(err)
-        end
-
-        res = res or {}
-        local result = res.result or {}
-        local content = result.content or {}
-        local out = {}
-
-        for _, message in ipairs(content) do
-          if message.type == "text" then
-            table.insert(out, {
-              data = message.text,
-            })
-          elseif message.type == "resource" and message.resource and message.resource.text then
-            table.insert(out, {
-              uri = message.resource.uri,
-              data = message.resource.text,
-              mimetype = message.resource.mimeType,
-            })
-          end
-        end
-
-        return out
-      end,
-    }
-  end
-end
-
-local mcp_opts = {
-  -- foo and bar or baz -> lua if expression
-  config = mcp_servers_config(), -- This is the default location for the config file - which appears to be ignored
-  -- config = vim.fn.getenv("HOME") and vim.fn.expand("~/.config/mcphub/servers-local.json"), -- We may want this host specific, overriding the default
-  -- TODO:
-  on_ready = function(hub)
-    local status, chat = pcall(require, "CopilotChat")
-
-    if not status then
-      vim.notify("Couldn't load module_name: " .. chat, vim.log.levels.WARN)
-      -- my_module now contains the error message
-      return -- or provide fallback functionality
-    end
-    update_chat(hub, chat)
-  end,
-}
-
-local function update_mcp(mcp, chat)
-  return function()
-    local hub = mcp.get_hub_instance()
-    if not hub then
-      return
-    end
-    update_chat(hub, chat)
-  end
-end
-]]
---
-
--- every spec file under the "plugins" directory will be loaded automatically by lazy.nvim
---
--- In your plugin files, you can:
--- * add extra plugins
--- * disable/enabled LazyVim plugins
--- * override the configuration of LazyVim plugins
---
--- See example.lua for more examples
-
 -- Alternative lua debug adapter
 -- https://tamerlan.dev/a-guide-to-debugging-applications-in-neovim/
 --
@@ -210,84 +82,6 @@ return {
     "Olical/nfnl",
     ft = "fennel",
   },
-  --[[
-  {
-    -- copilot-chat extra spec overrides
-    -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/discussions/420
-    -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/blob/main/lua/CopilotChat/config.lua
-    "CopilotC-Nvim/CopilotChat.nvim",
-    config = function(opts)
-      local chat = require("CopilotChat")
-      chat.setup(opts)
-
-      local status, mcp = pcall(require, "mcphub")
-
-      if not status then
-        vim.notify("Couldn't load module_name: " .. mcp, vim.log.levels.WARN)
-        -- my_module now contains the error message
-        return -- or provide fallback functionality
-      end
-      -- mcp.setup(mcp_opts) -- TODO beware - setup returns immediately - mcp_opts effectively ignored
-      -- TODO: Sould fire mcp on_ready as well. Otherwise we won't see things when MCPHub comes up first
-      -- https://github.com/CopilotC-Nvim/CopilotChat.nvim/pull/1029#issuecomment-2782794141
-      mcp.on({ "servers_updated", "tool_list_changed", "resource_list_changed" }, update_mcp(mcp, chat))
-    end,
-    opts = function(_, opts)
-      -- opts.model = "claude-3.7-sonnet"
-      --opts.prompts = {
-      --  CustomPrompt = {
-      --    prompt = "Explain how it works.",
-      --    system_prompt = "You are very good at explaining stuff",
-      --    -- mapping = "<leader>ccmc",
-      --    description = "My custom prompt description",
-      --  },
-      --}
-      opts.debug = true
-      -- level "info" does not appear to create CopilogChat.log
-      -- opts.log_level = "trace"
-      -- opts.debug = false -- Enable debug logging (same as 'log_level = 'debug')
-      -- opts.log_level = "info" -- Log level to use, 'trace', 'debug', 'info', 'warn', 'error', 'fatal'
-      -- Modify existing opts
-      --opts.window = {
-      -- your custom window settings
-      -- }
-
-      -- Or add new options
-      -- opts.custom_option = "value"
-      -- TODO: Should probably add functions like this: https://github.com/ravitemer/mcphub.nvim/wiki/CodeCompanion
-      opts.functions = {
-        birthday = {
-          description = "Retrieves birthday information for a person",
-          schema = {
-            type = "object",
-            required = { "name" },
-            properties = {
-              name = {
-                type = "string",
-                enum = { "Alice", "Bob", "Charlie" },
-                description = "Person's name",
-              },
-            },
-          },
-          resolve = function(input)
-            return {
-              {
-                type = "text",
-                data = input.name .. " birthday info",
-              },
-            }
-          end,
-        },
-      }
-      return opts
-    end,
-    -- Add or override keymaps
-    -- keys = {
-    -- your custom keymaps
-    -- },
-  },
-  ]]
-  --
   {
     "olimorris/codecompanion.nvim",
     opts = {
@@ -357,7 +151,8 @@ return {
             opts = {
               add_tool = true,
             },
-          },]]
+          },
+          ]]
           --
         },
         history = {
@@ -399,7 +194,7 @@ return {
     -- PIP_INDEX_URL="https://download.pytorch.org/whl/cpu" PIP_EXTRA_INDEX_URL="https://pypi.org/simple" pipx install vectorcode
     -- build = "pipx upgrade vectorcode", -- optional but recommended. This keeps your CLI up-to-date.
     dependencies = { "nvim-lua/plenary.nvim" },
-    -- enabled = false,
+    enabled = false,
   },
   {
     "ravitemer/mcphub.nvim",
@@ -414,24 +209,23 @@ return {
     -- opts = mcp_opts, -- Not what it appears to be - opts wont be mcp_opts in function config
     -- https://github.com/ravitemer/mcphub.nvim/discussions/110
     -- mcphub.config.extensions.codecompanion is deprecated as the options are now declared at codecompanion extension itself.
-    --[[
-    opts = {
-      extensions = {
-        codecompanion = {
-          -- Show the mcp tool result in the chat buffer
-          show_result_in_chat = true,
-          -- Make chat #variables from MCP server resources
-          make_vars = true,
-          -- Create slash commands for prompts
-          make_slash_commands = true,
-        },
-      },
-    },
-    ]]
-    --
+    -- opts = {
+    -- },
+    -- },
     config = function(opts)
       -- vim.print(vim.inspect(opts))
       -- require("mcphub").setup(vim.tbl_extend("force", opts, mcp_opts))
+      -- Detault goes to notifications and is very noisy
+      --[[
+      opts.log = {
+        -- (vim.log.levels.ERROR, WARN, INFO, DEBUG, TRACE)
+        level = vim.log.levels.WARN,
+        -- to_file = false,
+        -- file_path = nil,
+        -- prefix = "MCPHub",
+      }
+      ]]
+      --
       require("mcphub").setup(vim.tbl_extend("force", opts, {
         config = mcp_servers_config(),
       }))
