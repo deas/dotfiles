@@ -239,9 +239,14 @@ if ("/nix/var/nix/profiles" | path exists) {
 if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
   # TODO: Should use password manager - only to get started with mcphub
 #  # Not honoured by typescript-sdk/src/client/stdio.ts / getDefaultEnvironment() 
-   $env.GITHUB_PERSONAL_ACCESS_TOKEN = open ($env.HOME + "/.config/gh/hosts.yml") | get "github.com".oauth_token
+  # $env.GITHUB_PERSONAL_ACCESS_TOKEN = open ($env.HOME + "/.config/gh/hosts.yml") | get "github.com".oauth_token
 }
 
+try {
+  $env.VLT_PASSWORD = (kwallet-query -r keepass kdewallet | from json | get password)
+} catch {
+  print "Failed to set VLT_PASSWORD from kwallet-query. Ensure kwallet is running and configured."
+}
 
 if ($env.HOME + "/.config/github-copilot/apps.json" | path exists) {
   # TODO: Should use password manager - only to get started with mcphub
