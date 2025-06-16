@@ -146,15 +146,15 @@ return {
             make_slash_commands = true,
             show_result_in_chat = true,
           },
-          --[[
-          vectorcode = {
-            opts = {
-              add_tool = true,
-            },
-          },
-          ]]
-          --
         },
+        --[[
+        vectorcode = {
+          opts = {
+            add_tool = true,
+          },
+        },
+        ]]
+        --
         history = {
           enabled = true,
           opts = {
