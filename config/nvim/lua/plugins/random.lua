@@ -188,7 +188,7 @@ return {
   {
     "Davidyz/VectorCode",
     version = "*", -- optional, depending on whether you're on nightly or release
-    build = "uv tool install --upgrade vectorcode --index https://download.pytorch.org/whl/cpu", -- pipx upgrade fails when it is not installed already
+    build = "uv tool install --upgrade vectorcode --index https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match", -- pipx upgrade fails when it is not installed already
     -- uv tool install vectorcode --index https://download.pytorch.org/whl/cpu
     -- build = "uv tool upgrade vectorcode", -- This helps keeping the CLI up-to-date
     -- PIP_INDEX_URL="https://download.pytorch.org/whl/cpu" PIP_EXTRA_INDEX_URL="https://pypi.org/simple" pipx install vectorcode
