@@ -72,8 +72,9 @@ const ctrl_t =  {
 
 # Update the $env.config
 export-env {
-  if not ($env.__keybindings_loaded? | default false) {
-    $env.__keybindings_loaded = true
+  let keybindings_loaded = ($env.__keybindings_loaded? | default "false") == "true"
+  if not $keybindings_loaded {
+    $env.__keybindings_loaded = "true"
     $env.config.keybindings = $env.config.keybindings | append [
       $alt_c
       #      $ctrl_r
