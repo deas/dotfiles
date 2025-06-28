@@ -18,4 +18,5 @@ incus: cobra
 hcloud: cobra
 helmfile: cobra
 pipx: argcomplete
+gemini: yargs
 #uv: clap
