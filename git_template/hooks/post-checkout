@@ -4,3 +4,14 @@ local_hook="$HOME"/.git_template.local/hooks/post-checkout
 [ -f "$local_hook" ] && . "$local_hook"
 
 .git/hooks/ctags >/dev/null 2>&1 &
+# VECTORCODE_HOOK_START
+if [ -z "$(echo $1 | grep [^0])" ]; then
+  files=""
+  ([ -f .vectorcode/vectorcode.include ] || [ -f ~/.config/vectorcode/vectorcode.include ]) && vectorcode vectorise || true
+else
+  files=$(git diff --name-only "$1" "$2")
+fi
+if [ -d ".vectorcode" ] && [ ! -z "$files" ]; then
+  vectorcode vectorise $files
+fi
+# VECTORCODE_HOOK_END

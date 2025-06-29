@@ -5,3 +5,9 @@ local_hook="$HOME"/.git_template.local/hooks/pre-commit
 if [ -f "$local_hook" ]; then
   . "$local_hook"
 fi
+# VECTORCODE_HOOK_START
+diff_files=$(git diff --cached --name-only)
+if [ -d ".vectorcode" ] && [ ! -z "$diff_files" ]; then
+  vectorcode vectorise $diff_files
+fi
+# VECTORCODE_HOOK_END
