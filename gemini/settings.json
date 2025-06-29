@@ -1,5 +1,13 @@
 {
   "theme": "ANSI",
   "selectedAuthType": "oauth-personal",
-  "preferredEditor": "vim"
+  "preferredEditor": "vim",
+  "contextFileName": ["GEMINI.md", "AGENTS.md" ],
+  "mcpServers": {
+    "github.com/upstash/context7-mcp": {
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "command": "npx"
+    }
+  }
 }
+
