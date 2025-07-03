@@ -172,7 +172,7 @@ let sdk_candidates = $env.HOME + "/.sdkman/candidates"
 if ($sdk_candidates | path exists) {
     let paths = ls $sdk_candidates |
      each { |it| $it.name + "/current/bin"} |
-     filter {|it| $it | path exists }
+     where {|it| $it | path exists }
      $env.PATH = ($env.PATH | split row (char esep) | prepend $paths)
 }
 
