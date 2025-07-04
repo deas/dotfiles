@@ -100,8 +100,23 @@ return {
       },
       -- ]]
       strategies = {
+        --[[
+        inline = {
+          adapter = "gemini",
+        },
+        cmd = {
+          adapter = "gemini",
+        },
+        ]]
+        --
         chat = {
+          -- adapter = "gemini",
           tools = {
+            opts = {
+              default_tools = {
+                "full_stack_dev",
+              },
+            },
             -- Breaking Changes since codecompanion v15
             -- Remove old mcp tool which will be auto added as a tool group with two individual tools.
             --[[
@@ -112,10 +127,11 @@ return {
               end,
               description = "Call tools and resources from the MCP Servers",
             },
+            -- auto_submit_success = true, -- Send any successful output to the LLM automatically?
             ]]
             --
-            -- auto_submit_success = true, -- Send any successful output to the LLM automatically?
           },
+          --
         },
       },
       --[[
