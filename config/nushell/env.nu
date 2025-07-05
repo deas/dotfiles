@@ -244,6 +244,17 @@ if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
 
 try {
   $env.VLT_PASSWORD = (kwallet-query -r keepass kdewallet | from json | get password)
+  let bb_path = ($env.HOME + "/.local/share/mise/installs/babashka/latest")
+  # TODO codecompanion taviliy adapter expects this
+  # Cannot use vlt.clj here as bb comes in late via mise
+  $env.PATH = ($env.PATH | prepend $bb_path)
+  try {
+    $env.TAVILY_API_KEY = ^vlt.clj get /automation/TAVILY_API_KEY
+  } catch {
+    print "Failed to set TAVILY_API_KEY"
+  }
+  $env.PATH = ($env.PATH | where $it != $bb_path)
+
 } catch {
   print "Failed to set VLT_PASSWORD from kwallet-query. Ensure kwallet is running and configured."
 }
