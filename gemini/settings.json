@@ -2,7 +2,7 @@
   "theme": "ANSI",
   "selectedAuthType": "oauth-personal",
   "preferredEditor": "vim",
-  "contextFileName": ["GEMINI.md", "AGENTS.md" ],
+  "contextFileName": ["GEMINI.md", "AGENTS.md", "CONVENTIONS.md"],
   "mcpServers": {
     "github.com/upstash/context7-mcp": {
       "args": ["-y", "@upstash/context7-mcp@latest"],
@@ -10,4 +10,3 @@
     }
   }
 }
-

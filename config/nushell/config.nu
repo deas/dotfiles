@@ -860,10 +860,6 @@ alias .j = just --justfile ~/.user.justfile --working-directory .
 # alias emacs = sh ($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh")
 use mise.nu
 
-print "mise"
-print $env.PATH
-print "mise"
-
 export-env {
   $env.FZF_ALT_C_COMMAND = "fd --type directory --hidden"
   $env.FZF_ALT_C_OPTS = "--preview 'tree -C {} | head -n 200'"
