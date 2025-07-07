@@ -1,3 +1,7 @@
+if ($env.DISPLAY? == null) and ((tty) == "/dev/tty1") and (which Hyprland | is-not-empty) {
+    exec Hyprland
+}
+
 # Nushell Config File
 #
 # version = "0.84.0"
