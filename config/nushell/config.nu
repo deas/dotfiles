@@ -834,11 +834,12 @@ source ~/.config/nushell/zoxide.nu
 
 use ~/.config/nushell/starship.nu
 
-if ("~/.asdf/asdf.nu" | path exists) {
-  # TODO: asdf should be obsoleted by mise
-  $env.ASDF_NU_DIR = ($env.HOME | path join '.asdf')
-  source ~/.asdf/asdf.nu
-}
+# TODO: Condition always true - appears to be releated to parse time vs runtime
+#if ("~/.asdf/asdf.nu" | path exists) {
+#  # TODO: asdf should be obsoleted by mise
+#  $env.ASDF_NU_DIR = ($env.HOME | path join '.asdf')
+#  source ~/.asdf/asdf.nu
+#}
 
 # alias gcurl = curl -H "Authorization: Bearer $"(gcloud auth print-access-token)"" -H "Content-Type: application/json"
 
