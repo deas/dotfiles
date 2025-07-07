@@ -834,11 +834,11 @@ source ~/.config/nushell/zoxide.nu
 
 use ~/.config/nushell/starship.nu
 
-# https://www.nushell.sh/book/configuration.html#configuring-nu-as-a-login-
-# TODO: asdf should be obsoleted by mise
-$env.ASDF_NU_DIR = ($env.HOME | path join '.asdf')
-
-source ~/.asdf/asdf.nu
+if ("~/.asdf/asdf.nu" | path exists) {
+  # TODO: asdf should be obsoleted by mise
+  $env.ASDF_NU_DIR = ($env.HOME | path join '.asdf')
+  source ~/.asdf/asdf.nu
+}
 
 # alias gcurl = curl -H "Authorization: Bearer $"(gcloud auth print-access-token)"" -H "Content-Type: application/json"
 
