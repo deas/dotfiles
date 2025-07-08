@@ -152,8 +152,6 @@ def setup-path [path: string, prepend = true] {
 # make a function here
 
 
-$env.GEM_HOME = $env.HOME + "/gems"
-
 $env.PATH = (setup-path "/snap/bin" false) # /etc/environment or /etc/profile.d/apps-bin-path.sh usually bring it in - except on Crostini using nushell as login shell
 $env.PATH = (setup-path ($env.HOME + "/go/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.local/bin")) # pip install uses this
@@ -162,10 +160,14 @@ $env.PATH = (setup-path ($env.HOME + "/.babashka/bbin/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.crc/bin/oc"))
 $env.PATH = (setup-path ($env.HOME + "/.krew/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.cargo/bin"))
+
+$env.GEM_HOME = $env.HOME + "/gems"
 $env.PATH = (setup-path ($env.GEM_HOME + "/bin"))
 
 $env.PNPM_HOME = $env.HOME + "/.local/share/pnpm" # TODO: Could be ~/.local/bin as well?
 $env.PATH = (setup-path $env.PNPM_HOME)
+
+$env.PATH = (setup-path ($env.HOME + "/.local/share/omarchy/bin"))
 
 let sdk_candidates = $env.HOME + "/.sdkman/candidates"
 
