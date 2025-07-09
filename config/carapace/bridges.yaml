@@ -19,4 +19,5 @@ hcloud: cobra
 helmfile: cobra
 pipx: argcomplete
 gemini: yargs
+obsidian-cli: cobra
 #uv: clap
