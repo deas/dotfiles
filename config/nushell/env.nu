@@ -277,6 +277,8 @@ if ($env.HOME + "/.config/argocd/auth.json" | path exists) {
   $env.ARGOCD_API_TOKEN = open ($env.HOME + "/.config/argocd/auth.json") | get $env.ARGOCD_BASE_URL
 }
 
+$env.OBSIDIAN_VAULT = $env.HOME + "/Documents/obsidian"
+
 # open ($env.HOME + "/.config/github-copilot/apps.json")
 
 #if ((not ($env.HOME + "/.nix-profile/bin" in $env.PATH)) and ("/nix/var/nix/profiles/default" | path exists) ) {
