@@ -1,87 +1,41 @@
 {
-  "nativeMCPServers": [],
   "mcpServers": {
-    "obsidian": {
-      "command": "npx",
-      "args": ["-y", "mcp-obsidian", "${OBSIDIAN_VAULT}"]
-    },
-    "jetbrains": {
-      "args": ["-y", "@jetbrains/mcp-proxy"],
-      "command": "npx"
-    },
-    "github": {
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${cmd: vlt.clj get /automation/GITHUB_PERSONAL_ACCESS_TOKEN}"
-      },
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "GITHUB_PERSONAL_ACCESS_TOKEN",
-        "ghcr.io/github/github-mcp-server"
-      ],
-      "disabled": true
-    },
-    "github.com/tavily-ai/tavily-mcp": {
-      "env": {
-        "TAVILY_API_KEY": "${cmd: vlt.clj get /automation/TAVILY_API_KEY}"
-      },
-      "command": "npx",
-      "args": ["-y", "tavily-mcp@0.1.4"],
-      "disabled": true
-    },
-    "wordpress-mcp": {
-      "env": {
-        "WP_API_PASSWORD": "${cmd: vlt.clj get /automation/WP_API_PASSWORD}",
-        "WP_API_URL": "https://www.aiautomationisgoinggreat.com",
-        "WP_API_USERNAME": "deas"
-      },
-      "command": "npx",
-      "args": ["-y", "@automattic/mcp-wordpress-remote@latest"],
-      "disabled": false
-    },
-    "github.com/modelcontextprotocol/servers/tree/main/src/memory": {
-      "args": ["-y", "@modelcontextprotocol/server-memory"],
-      "command": "npx"
-    },
-    "terraform": {
-      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"],
-      "command": "docker"
-    },
     "github-remote": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "type": "http",
       "headers": {
         "Authorization": "Bearer ${cmd: vlt.clj get /automation/GITHUB_PERSONAL_ACCESS_TOKEN}"
-      },
-      "url": "https://api.githubcopilot.com/mcp/",
-      "type": "http"
+      }
     },
-    "hf-mcp-server": {
-      "headers": {
-        "Authorization": "Bearer ${cmd: vlt.clj get /automation/HF_TOKEN_READ}"
-      },
-      "url": "https://huggingface.co/mcp",
-      "disabled": false
-    },
-    "puppeteer": {
-      "command": "docker",
+    "clojure-mcp": {
       "args": [
-        "run",
-        "-i",
-        "--rm",
-        "--init",
-        "-e",
-        "DOCKER_CONTAINER=true",
-        "mcp/puppeteer"
+        "-c",
+        "cd ${HOME}/work/projects/3rd-party/clojure-mcp && clojure -X:mcp :port 7888"
       ],
-      "disabled": false
+      "disabled": true,
+      "command": "/bin/sh"
+    },
+    "wordpress-mcp": {
+      "args": [
+        "-y",
+        "@automattic/mcp-wordpress-remote@latest"
+      ],
+      "env": {
+        "WP_API_URL": "https://www.aiautomationisgoinggreat.com",
+        "WP_API_PASSWORD": "${cmd: vlt.clj get /automation/WP_API_PASSWORD}",
+        "WP_API_USERNAME": "deas"
+      },
+      "disabled": false,
+      "command": "npx"
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/memory": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "command": "npx"
     },
     "gdrive": {
-      "env": {
-        "GDRIVE_CREDENTIALS": "${cmd: vlt.clj get /automation/GDRIVE_CREDENTIALS}"
-      },
-      "command": "docker",
       "args": [
         "run",
         "-i",
@@ -98,37 +52,121 @@
         "-c",
         "echo $GDRIVE_CREDENTIALS | base64 -d > $GDRIVE_CREDENTIALS_PATH && node dist/index.js"
       ],
-      "disabled": false
+      "env": {
+        "GDRIVE_CREDENTIALS": "${cmd: vlt.clj get /automation/GDRIVE_CREDENTIALS}"
+      },
+      "disabled": false,
+      "command": "docker"
     },
-    "github.com/upstash/context7-mcp": {
-      "args": ["-y", "@upstash/context7-mcp@latest"],
+    "puppeteer": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "-e",
+        "DOCKER_CONTAINER=true",
+        "mcp/puppeteer"
+      ],
+      "disabled": false,
+      "command": "docker"
+    },
+    "jetbrains": {
+      "args": [
+        "-y",
+        "@jetbrains/mcp-proxy"
+      ],
+      "command": "npx"
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
       "command": "npx"
     },
     "argocd-mcp": {
+      "args": [
+        "argocd-mcp@latest",
+        "stdio"
+      ],
       "env": {
-        "ARGOCD_BASE_URL": "http://localhost:11080",
-        "ARGOCD_API_TOKEN": ""
+        "ARGOCD_API_TOKEN": "",
+        "ARGOCD_BASE_URL": "http://localhost:11080"
       },
-      "command": "npx",
-      "args": ["argocd-mcp@latest", "stdio"]
+      "command": "npx"
+    },
+    "github.com/tavily-ai/tavily-mcp": {
+      "args": [
+        "-y",
+        "tavily-mcp@0.1.4"
+      ],
+      "env": {
+        "TAVILY_API_KEY": "${cmd: vlt.clj get /automation/TAVILY_API_KEY}"
+      },
+      "disabled": true,
+      "command": "npx"
+    },
+    "github": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${cmd: vlt.clj get /automation/GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "disabled": true,
+      "command": "docker"
+    },
+    "terraform": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "hashicorp/terraform-mcp-server"
+      ],
+      "command": "docker"
+    },
+    "hf-mcp-server": {
+      "disabled": false,
+      "url": "https://huggingface.co/mcp",
+      "headers": {
+        "Authorization": "Bearer ${cmd: vlt.clj get /automation/HF_TOKEN_READ}"
+      }
+    },
+    "obsidian": {
+      "args": [
+        "mcp-obsidian"
+      ],
+      "env": {
+        "OBSIDIAN_API_KEY": "${cmd: vlt.clj get /automation/OBSIDIAN_API_KEY}"
+      },
+      "disabled": false,
+      "command": "uvx"
     },
     "fetch": {
-      "command": "uvx",
-      "args": ["mcp-server-fetch"],
-      "disabled_prompts": [],
-      "disabled": true
-    },
-    "clojure-mcp": {
-      "command": "/bin/sh",
       "args": [
-        "-c",
-        "cd ${HOME}/work/projects/3rd-party/clojure-mcp && clojure -X:mcp :port 7888"
+        "mcp-server-fetch"
       ],
-      "disabled": true
+      "disabled_prompts": [
+        
+      ],
+      "disabled": true,
+      "command": "uvx"
     },
-    "github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking": {
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+    "github.com/upstash/context7-mcp": {
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
       "command": "npx"
     }
-  }
+  },
+  "nativeMCPServers": [
+    
+  ]
 }
