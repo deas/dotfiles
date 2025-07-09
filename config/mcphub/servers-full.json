@@ -1,51 +1,19 @@
 {
+  "nativeMCPServers": [],
   "mcpServers": {
-    "argocd-mcp": {
-      "env": {
-        "ARGOCD_BASE_URL": "http://localhost:11080",
-        "ARGOCD_API_TOKEN": ""
-      },
-      "args": ["argocd-mcp@latest", "stdio"],
-      "command": "npx"
-    },
-    "github.com/tavily-ai/tavily-mcp": {
-      "args": ["-y", "tavily-mcp@0.1.4"],
-      "env": {
-        "TAVILY_API_KEY": "${cmd: vlt.clj get /automation/TAVILY_API_KEY}"
-      },
-      "command": "npx"
-    },
-    "wordpress-mcp": {
+    "obsidian": {
       "command": "npx",
-      "args": ["-y", "@automattic/mcp-wordpress-remote@latest"],
-      "env": {
-        "WP_API_URL": "https://www.contentreich.de/",
-        "JWT_TOKEN": "${cmd: vlt.clj get /automation/WP_JWT_TOKEN}"
-      }
+      "args": ["-y", "mcp-obsidian", "${OBSIDIAN_VAULT}"]
     },
-    "github.com/modelcontextprotocol/servers/tree/main/src/memory": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"]
-    },
-    "hf-mcp-server": {
-      "headers": {
-        "Authorization": "Bearer ${cmd: vlt.clj get /automation/HF_TOKEN_READ}"
-      },
-      "url": "https://huggingface.co/mcp",
-      "disabled": false
-    },
-    "github-remote": {
-      "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/",
-      "headers": {
-        "Authorization": "Bearer ${cmd: vlt.clj get /automation/GITHUB_PERSONAL_ACCESS_TOKEN}"
-      }
+    "jetbrains": {
+      "args": ["-y", "@jetbrains/mcp-proxy"],
+      "command": "npx"
     },
     "github": {
-      "disabled": true,
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${cmd: vlt.clj get /automation/GITHUB_PERSONAL_ACCESS_TOKEN}"
       },
+      "command": "docker",
       "args": [
         "run",
         "-i",
@@ -54,10 +22,66 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN",
         "ghcr.io/github/github-mcp-server"
       ],
+      "disabled": true
+    },
+    "github.com/tavily-ai/tavily-mcp": {
+      "env": {
+        "TAVILY_API_KEY": "${cmd: vlt.clj get /automation/TAVILY_API_KEY}"
+      },
+      "command": "npx",
+      "args": ["-y", "tavily-mcp@0.1.4"],
+      "disabled": true
+    },
+    "wordpress-mcp": {
+      "env": {
+        "WP_API_PASSWORD": "${cmd: vlt.clj get /automation/WP_API_PASSWORD}",
+        "WP_API_URL": "https://www.aiautomationisgoinggreat.com",
+        "WP_API_USERNAME": "deas"
+      },
+      "command": "npx",
+      "args": ["-y", "@automattic/mcp-wordpress-remote@latest"],
+      "disabled": false
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/memory": {
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "command": "npx"
+    },
+    "terraform": {
+      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"],
       "command": "docker"
     },
+    "github-remote": {
+      "headers": {
+        "Authorization": "Bearer ${cmd: vlt.clj get /automation/GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "url": "https://api.githubcopilot.com/mcp/",
+      "type": "http"
+    },
+    "hf-mcp-server": {
+      "headers": {
+        "Authorization": "Bearer ${cmd: vlt.clj get /automation/HF_TOKEN_READ}"
+      },
+      "url": "https://huggingface.co/mcp",
+      "disabled": false
+    },
+    "puppeteer": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "-e",
+        "DOCKER_CONTAINER=true",
+        "mcp/puppeteer"
+      ],
+      "disabled": false
+    },
     "gdrive": {
-      "disabled": false,
+      "env": {
+        "GDRIVE_CREDENTIALS": "${cmd: vlt.clj get /automation/GDRIVE_CREDENTIALS}"
+      },
+      "command": "docker",
       "args": [
         "run",
         "-i",
@@ -74,53 +98,37 @@
         "-c",
         "echo $GDRIVE_CREDENTIALS | base64 -d > $GDRIVE_CREDENTIALS_PATH && node dist/index.js"
       ],
+      "disabled": false
+    },
+    "github.com/upstash/context7-mcp": {
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "command": "npx"
+    },
+    "argocd-mcp": {
       "env": {
-        "GDRIVE_CREDENTIALS": "${cmd: vlt.clj get /automation/GDRIVE_CREDENTIALS}"
+        "ARGOCD_BASE_URL": "http://localhost:11080",
+        "ARGOCD_API_TOKEN": ""
       },
-      "command": "docker"
+      "command": "npx",
+      "args": ["argocd-mcp@latest", "stdio"]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "disabled_prompts": [],
+      "disabled": true
     },
     "clojure-mcp": {
-      "disabled": true,
+      "command": "/bin/sh",
       "args": [
         "-c",
         "cd ${HOME}/work/projects/3rd-party/clojure-mcp && clojure -X:mcp :port 7888"
       ],
-      "command": "/bin/sh"
-    },
-    "github.com/upstash/context7-mcp": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@latest"]
-    },
-    "jetbrains": {
-      "command": "npx",
-      "args": ["-y", "@jetbrains/mcp-proxy"]
-    },
-    "terraform": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
-    },
-    "puppeteer": {
-      "disabled": false,
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "--init",
-        "-e",
-        "DOCKER_CONTAINER=true",
-        "mcp/puppeteer"
-      ],
-      "command": "docker"
+      "disabled": true
     },
     "github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
-    },
-    "fetch": {
-      "disabled_prompts": [],
-      "args": ["mcp-server-fetch"],
-      "command": "uvx"
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "command": "npx"
     }
-  },
-  "nativeMCPServers": []
+  }
 }
