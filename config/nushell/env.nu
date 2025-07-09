@@ -279,11 +279,11 @@ if ($env.HOME + "/.config/argocd/auth.json" | path exists) {
 
 $env.OBSIDIAN_VAULT = $env.HOME + "/Documents/obsidian"
 
-# TODO: : Should set ssh env via hyprland https://www.lorenzobettini.it/2023/09/hyprland-and-ssh-agent/ to avoid conflict with agent forwarding
+# Should set ssh env via hyprland https://www.lorenzobettini.it/2023/09/hyprland-and-ssh-agent/ to avoid conflict with agent forwarding
 # env = SSH_AUTH_SOCK,$XDG_RUNTIME_DIR/ssh-agent.socket
-if not ("SSH_AUTH_SOCK" in $env) and ("XDG_RUNTIME_DIR" in $env) {
-  $env.SSH_AUTH_SOCK = $env.XDG_RUNTIME_DIR + "/ssh-agent.socket"
-}
+#if not ("SSH_AUTH_SOCK" in $env) and ("XDG_RUNTIME_DIR" in $env) {
+#  $env.SSH_AUTH_SOCK = $env.XDG_RUNTIME_DIR + "/ssh-agent.socket"
+#}
 # $env.SSH_ASKPASS=/usr/bin/ksshaskpass
 #
 # open ($env.HOME + "/.config/github-copilot/apps.json")

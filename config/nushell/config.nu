@@ -1,5 +1,5 @@
 if ($env.DISPLAY? == null) and ((tty) == "/dev/tty1") and (which Hyprland | is-not-empty) {
-    exec Hyprland
+    exec Hyprland -c $"($env.HOME)/.config/hypr/deas.conf"
 }
 
 # Nushell Config File
