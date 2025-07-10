@@ -5,6 +5,16 @@
 help:
   @just --list
 
+# git sync
+git-sync:
+  git pull
+  git submodule update --init --recursive
+
+# rcm sync
+rcm-sync:
+  env RCRC=$HOME/dotfiles/rcrc rcup
+
+
 # Create a repomix output file
 [no-cd]
 repomix:

@@ -16,10 +16,7 @@
       "command": "/bin/sh"
     },
     "wordpress-mcp": {
-      "args": [
-        "-y",
-        "@automattic/mcp-wordpress-remote@latest"
-      ],
+      "args": ["-y", "@automattic/mcp-wordpress-remote@latest"],
       "env": {
         "WP_API_URL": "https://www.aiautomationisgoinggreat.com",
         "WP_API_PASSWORD": "${cmd: vlt.clj get /automation/WP_API_PASSWORD}",
@@ -29,11 +26,13 @@
       "command": "npx"
     },
     "github.com/modelcontextprotocol/servers/tree/main/src/memory": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
       "command": "npx"
+    },
+    "blender": {
+      "command": "uvx",
+      "args": ["blender-mcp"],
+      "disabled": true
     },
     "gdrive": {
       "args": [
@@ -72,24 +71,15 @@
       "command": "docker"
     },
     "jetbrains": {
-      "args": [
-        "-y",
-        "@jetbrains/mcp-proxy"
-      ],
+      "args": ["-y", "@jetbrains/mcp-proxy"],
       "command": "npx"
     },
     "github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
       "command": "npx"
     },
     "argocd-mcp": {
-      "args": [
-        "argocd-mcp@latest",
-        "stdio"
-      ],
+      "args": ["argocd-mcp@latest", "stdio"],
       "env": {
         "ARGOCD_API_TOKEN": "",
         "ARGOCD_BASE_URL": "http://localhost:11080"
@@ -97,10 +87,7 @@
       "command": "npx"
     },
     "github.com/tavily-ai/tavily-mcp": {
-      "args": [
-        "-y",
-        "tavily-mcp@0.1.4"
-      ],
+      "args": ["-y", "tavily-mcp@0.1.4"],
       "env": {
         "TAVILY_API_KEY": "${cmd: vlt.clj get /automation/TAVILY_API_KEY}"
       },
@@ -123,12 +110,7 @@
       "command": "docker"
     },
     "terraform": {
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "hashicorp/terraform-mcp-server"
-      ],
+      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"],
       "command": "docker"
     },
     "hf-mcp-server": {
@@ -139,9 +121,7 @@
       }
     },
     "obsidian": {
-      "args": [
-        "mcp-obsidian"
-      ],
+      "args": ["mcp-obsidian"],
       "env": {
         "OBSIDIAN_API_KEY": "${cmd: vlt.clj get /automation/OBSIDIAN_API_KEY}"
       },
@@ -149,24 +129,15 @@
       "command": "uvx"
     },
     "fetch": {
-      "args": [
-        "mcp-server-fetch"
-      ],
-      "disabled_prompts": [
-        
-      ],
+      "args": ["mcp-server-fetch"],
+      "disabled_prompts": [],
       "disabled": true,
       "command": "uvx"
     },
     "github.com/upstash/context7-mcp": {
-      "args": [
-        "-y",
-        "@upstash/context7-mcp@latest"
-      ],
+      "args": ["-y", "@upstash/context7-mcp@latest"],
       "command": "npx"
     }
   },
-  "nativeMCPServers": [
-    
-  ]
+  "nativeMCPServers": []
 }
