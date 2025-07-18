@@ -1,0 +1,15 @@
+[Unit]
+Description=MCP Context7 Docker Container
+After=network.target
+
+[Service]
+Restart=always
+RestartSec=5
+ExecStartPre=-/usr/bin/docker stop %n
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStartPre=/usr/bin/docker pull mcp/context7
+ExecStart=/usr/bin/docker run --rm --name %n -p 127.0.0.1:8080:8080 mcp/context7
+ExecStop=/usr/bin/docker stop %n
+
+[Install]
+WantedBy=default.target
