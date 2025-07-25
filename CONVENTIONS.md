@@ -2,6 +2,10 @@
 
 This folder is a git dotfiles repository.
 
+## General Guidance
+
+Use tools to work with files and folders.
+
 ## What is a dotfiles git repository?
 
 A dotfiles git repository is a Git repository used to store and manage a user's configuration files (dotfiles). Dotfiles are files and directories on Unix-like systems that start with a dot (`.`), which makes them hidden by default in directory listings. They are used to control the behavior of various applications and shells. For example, `.bashrc` for the Bash shell, `.vimrc` for the Vim editor, and `.gitconfig` for Git.
