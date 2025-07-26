@@ -413,6 +413,10 @@ return {
 
     -- see below for full list of options 👇
   },
+  {
+    "sphamba/smear-cursor.nvim",
+    opts = {},
+  },
   --[[
   {
     "epwalsh/obsidian.nvim",
