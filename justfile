@@ -12,7 +12,7 @@ git-sync:
 
 # rcm sync
 rcm-sync:
-  env RCRC=$HOME/dotfiles/rcrc rcup -v
+  cd $HOME && env RCRC=$HOME/dotfiles/rcrc rcup -v
 
 
 # Create a repomix output file
