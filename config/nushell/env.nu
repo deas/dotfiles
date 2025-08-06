@@ -248,7 +248,7 @@ if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
 }
 
 try {
-  $env.VLT_PASSWORD = (secret-tool lookup tool keepass)
+  # $env.VLT_PASSWORD = (secret-tool lookup tool keepass)
   # $env.VLT_PASSWORD = (kwallet-query -r keepass kdewallet | from json | get password)
   let bb_path = ($env.HOME + "/.local/share/mise/installs/babashka/latest")
   # TODO codecompanion taviliy adapter expects this
