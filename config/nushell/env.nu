@@ -101,8 +101,11 @@ $env.EDITOR = $env.VISUAL
 #     | load-env
 
 # How do we test whether file is executable?
-if ( ("/usr/bin/ksshaskpass" | path type) == "file") {
-    $env.SSH_ASKPASS = "/usr/bin/ksshaskpass"
+let sshaskpass_path = "/usr/lib/seahorse/ssh-askpass"
+# "/usr/bin/ksshaskpass"
+
+if ( ($sshaskpass_path | path type) == "file") {
+    $env.SSH_ASKPASS = $sshaskpass_path
 }
 
 # Mostly from misc-common.zsh
@@ -245,7 +248,8 @@ if ($env.HOME + "/.config/gh/hosts.yml" | path exists) {
 }
 
 try {
-  $env.VLT_PASSWORD = (kwallet-query -r keepass kdewallet | from json | get password)
+  $env.VLT_PASSWORD = (secret-tool lookup tool keepass)
+  # $env.VLT_PASSWORD = (kwallet-query -r keepass kdewallet | from json | get password)
   let bb_path = ($env.HOME + "/.local/share/mise/installs/babashka/latest")
   # TODO codecompanion taviliy adapter expects this
   # Cannot use vlt.clj here as bb comes in late via mise
@@ -253,7 +257,7 @@ try {
   try {
     $env.TAVILY_API_KEY = ^vlt.clj get /automation/TAVILY_API_KEY
   } catch {
-    print "Failed to set TAVILY_API_KEY"
+    print "Failed to get TAVILY_API_KEY"
   }
   $env.PATH = ($env.PATH | where $it != $bb_path)
 
