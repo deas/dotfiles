@@ -865,11 +865,12 @@ alias .j = just --justfile ~/.user.justfile --working-directory .
 # alias emacs = sh ($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh")
 #
 #if (which yay | is-not-empty) {
-def "yayf" [] {
-  yay -Slq |
-  fzf --multi --preview 'yay -Sii {1}' --preview-window=down:75% |
-  yay -S -
-}
+# Superceeded by omarchy-pkg-install
+# def "yayf" [] {
+#   yay -Slq |
+#   fzf --multi --preview 'yay -Sii {1}' --preview-window=down:75% |
+#   yay -S -
+# }
 #}
 
 use mise.nu
