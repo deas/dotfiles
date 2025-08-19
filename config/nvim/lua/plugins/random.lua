@@ -76,6 +76,24 @@ end
 --]]
 
 return {
+  {
+    "nvim-neotest/neotest",
+    optional = true,
+    dependencies = {
+      "nvim-neotest/neotest-python",
+    },
+    opts = {
+      adapters = {
+        ["neotest-python"] = {
+          -- Here you can specify the settings for the adapter, i.e.
+          -- runner = "pytest",
+          -- python = ".venv/bin/python",
+          -- No idea why this is not default and so hard to figure out
+          dap = { justMyCode = false },
+        },
+      },
+    },
+  },
   -- TODO: Remove the following once the fix is in Lazyvim https://github.com/LazyVim/LazyVim/pull/5876
   { "PaterJason/nvim-treesitter-sexp", enabled = false },
   {
