@@ -303,7 +303,7 @@ return {
       "nvim-lua/plenary.nvim",
       "MunifTanjim/nui.nvim",
       --- The below dependencies are optional,
-      "echasnovski/mini.pick", -- for file_selector provider mini.pick
+      "nvim-mini/mini.pick", -- for file_selector provider mini.pick
       "nvim-telescope/telescope.nvim", -- for file_selector provider telescope
       "hrsh7th/nvim-cmp", -- autocompletion for avante commands and mentions -- TODO : Should be blink
       "ibhagwan/fzf-lua", -- for file_selector provider fzf
@@ -337,7 +337,7 @@ return {
     },
   },
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     opts = function(_, opts)
       vim.list_extend(opts.ensure_installed, {
         "clojure-lsp", -- Not covered by Clojure Extra
@@ -361,7 +361,7 @@ return {
     dependencies = { "MunifTanjim/nui.nvim" },
     opts = {},
   },
-  { "echasnovski/mini.test", version = false },
+  { "nvim-mini/mini.test", version = false },
   {
     "stevearc/conform.nvim",
     opts = {
