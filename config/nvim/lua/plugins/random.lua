@@ -1,11 +1,9 @@
-local log = require("plenary.log")
+-- local log = require("plenary.log")
 
---[[
-local function mcp_servers_config()
-  local root = vim.fn.expand("~/.config/mcphub")
-  return vim.loop.fs_stat(root .. "/servers-local.json") and root .. "/servers-local.json" or root .. "/servers.json"
-end
-]]
+-- local function mcp_servers_config()
+--   local root = vim.fn.expand("~/.config/mcphub")
+--   return vim.loop.fs_stat(root .. "/servers-local.json") and root .. "/servers-local.json" or root .. "/servers.json"
+-- end
 --
 -- Alternative lua debug adapter
 -- https://tamerlan.dev/a-guide-to-debugging-applications-in-neovim/
@@ -210,6 +208,7 @@ return {
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
+      "ravitemer/mcphub.nvim",
       "ravitemer/codecompanion-history.nvim",
     },
   },
@@ -236,9 +235,9 @@ return {
     -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
     -- opts = mcp_opts, -- Not what it appears to be - opts wont be mcp_opts in function config
     -- https://github.com/ravitemer/mcphub.nvim/discussions/110
-    -- mcphub.config.extensions.codecompanion is deprecated as the options are now declared at codecompanion extension itself.
-    -- opts = {
-    -- },
+    opts = {
+      config = vim.fn.expand("~/.config/mcphub/servers.json"),
+    },
     -- },
     --[[
     config = function(opts)
