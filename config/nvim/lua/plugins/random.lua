@@ -1,10 +1,12 @@
 local log = require("plenary.log")
 
+--[[
 local function mcp_servers_config()
   local root = vim.fn.expand("~/.config/mcphub")
   return vim.loop.fs_stat(root .. "/servers-local.json") and root .. "/servers-local.json" or root .. "/servers.json"
 end
-
+]]
+--
 -- Alternative lua debug adapter
 -- https://tamerlan.dev/a-guide-to-debugging-applications-in-neovim/
 --
@@ -103,20 +105,25 @@ return {
   {
     "olimorris/codecompanion.nvim",
     opts = {
-      --[[
-      adapters = {
-        copilot = function()
-          return require("codecompanion.adapters").extend("copilot", {
-            schema = {
-              model = {
-                -- "gpt-4o", "o1", "claude-3.5-sonnet", "gemini-2.5-pro", "claude-3.7-sonnet", "o4-mini", "gpt-4.1", "o3-mini", "claude-3.7-sonnet-thought", "gemini-2.0-flash-001",
-                default = "claude-3.7-sonnet",
-              },
-            },
-          })
-        end,
+      opts = {
+        log_level = "TRACE", -- TRACE|DEBUG|ERROR|INFO
       },
-      -- ]]
+      adapters = {
+        -- opts = {
+        --   allow_insecure = true,
+        --   proxy = "http://localhost:3128",
+        -- },
+        -- copilot = function()
+        --   return require("codecompanion.adapters").extend("copilot", {
+        --     schema = {
+        --       model = {
+        --         -- "gpt-4o", "o1", "claude-3.5-sonnet", "gemini-2.5-pro", "claude-3.7-sonnet", "o4-mini", "gpt-4.1", "o3-mini", "claude-3.7-sonnet-thought", "gemini-2.0-flash-001",
+        --         default = "claude-3.7-sonnet",
+        --       },
+        --     },
+        --   })
+        -- end,
+      },
       strategies = {
         --[[
         inline = {
@@ -162,16 +169,6 @@ return {
         },
       },
       --]]
-      --
-      --[[
-      strategies = {
-        -- Change the default chat adapter
-        chat = {
-          adapter = "anthropic",
-        },
-      },
-      ]]
-      --
       extensions = {
         mcphub = {
           callback = "mcphub.extensions.codecompanion",
@@ -209,9 +206,6 @@ return {
           },
         },
       },
-      opts = {
-        log_level = "TRACE", -- TRACE|DEBUG|ERROR|INFO
-      },
     },
     dependencies = {
       "nvim-lua/plenary.nvim",
@@ -246,6 +240,7 @@ return {
     -- opts = {
     -- },
     -- },
+    --[[
     config = function(opts)
       -- vim.print(vim.inspect(opts))
       -- require("mcphub").setup(vim.tbl_extend("force", opts, mcp_opts))
@@ -258,12 +253,12 @@ return {
         -- file_path = nil,
         -- prefix = "MCPHub",
       }
-      ]]
-      --
       require("mcphub").setup(vim.tbl_extend("force", opts, {
         config = mcp_servers_config(),
       }))
     end,
+    ]]
+    --
   },
   {
     "joshuavial/aider.nvim",
@@ -340,21 +335,10 @@ return {
     "mason-org/mason.nvim",
     opts = function(_, opts)
       vim.list_extend(opts.ensure_installed, {
-        "clojure-lsp", -- Not covered by Clojure Extra
+        "clojure-lsp", -- TODO: Still not covered by Clojure Extra?
       })
     end,
   },
-  --[[
-  {
-    "neovim/nvim-lspconfig",
-    opts = {
-      servers = {
-        clojure_lsp = {},
-      },
-    },
-  },
-  ]]
-  --
   {
     "m4xshen/hardtime.nvim",
     lazy = false,
@@ -377,23 +361,6 @@ return {
     opts = function()
       require("copilot.api").status = require("copilot.status") -- TODO: Smart override
     end,
-    --[[
-      event = "VeryLazy",
-      opts = function(_, opts)
-        table.insert(
-          opts.sections.lualine_x,
-          2,
-          LazyVim.lualine.status(LazyVim.config.icons.kinds.Copilot, function()
-            local clients = package.loaded["copilot"] and LazyVim.lsp.get_clients({ name = "copilot", bufnr = 0 }) or {}
-            if #clients > 0 then
-              local status = require("copilot.status").data.status -- TODO: Actual fix
-              return (status == "InProgress" and "pending") or (status == "Warning" and "error") or "ok"
-            end
-          end)
-        )
-      end,
-      ]]
-    --
   },
   {
     "neoclide/coc.nvim",
@@ -428,8 +395,6 @@ return {
         path = "~/vaults/work",
       },
     },
-
-    -- see below for full list of options 👇
   },
   {
     "sphamba/smear-cursor.nvim",
