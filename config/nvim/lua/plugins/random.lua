@@ -100,6 +100,8 @@ return {
     "Olical/nfnl",
     ft = "fennel",
   },
+  -- Covered by extra
+  --[[
   {
     "folke/sidekick.nvim",
     opts = {
@@ -165,6 +167,8 @@ return {
       },
     },
   },
+  ]]
+  --
   {
     "olimorris/codecompanion.nvim",
     opts = {
