@@ -1,0 +1,16 @@
+[Unit]
+Description=MCP Playwright Docker Container
+After=network.target
+
+[Service]
+Restart=always
+RestartSec=5
+# docker run -d -i --rm --init --pull=always --entrypoint node --name playwright -p 8931:8931 mcr.microsoft.com/playwright/mcp cli.js --headless --browser chromium --no-sandbox --port 8931
+ExecStartPre=-/usr/bin/docker stop %n
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStartPre=/usr/bin/docker pull mcr.microsoft.com/playwright/mcp
+# mcp/context7
+ExecStart=/usr/bin/docker run --rm --name %n -i --init --entrypoint node --name playwright -p 8931:8931 mcr.microsoft.com/playwright/mcp cli.js --headless --browser chromium --no-sandbox --port 8931
+ExecStop=/usr/bin/docker stop %n
+[Install]
+WantedBy=default.target
