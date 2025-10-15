@@ -256,6 +256,13 @@ return {
           --
         },
       },
+      memory = {
+        opts = {
+          chat = {
+            enabled = true,
+          },
+        },
+      },
       --[[
       display = {
         chat = {
