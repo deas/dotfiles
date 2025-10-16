@@ -260,7 +260,7 @@ return {
         conventions = {
           description = "My conventions",
           files = {
-            "CONVENSIONS.md",
+            "CONVENTIONS.md",
             -- "CLAUDE.md",
             -- "~/Code/Helpers/my_project_specific_help.md",
           },
