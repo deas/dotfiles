@@ -257,8 +257,17 @@ return {
         },
       },
       memory = {
+        conventions = {
+          description = "My conventions",
+          files = {
+            "CONVENSIONS.md",
+            -- "CLAUDE.md",
+            -- "~/Code/Helpers/my_project_specific_help.md",
+          },
+        },
         opts = {
           chat = {
+            default_memory = "conventions",
             enabled = true,
           },
         },
