@@ -265,6 +265,7 @@ try {
   print "Failed to set VLT_PASSWORD from kwallet-query. Ensure kwallet is running and configured."
 }
 
+# TODO:: apps.json no longer used on omarchy - uses gnome keyring - maybe even dbus secret api
 if ($env.HOME + "/.config/github-copilot/apps.json" | path exists) {
   # TODO: Should use password manager - only to get started with mcphub
    # https://aider.chat/docs/llms/github.html#configure-your-environment

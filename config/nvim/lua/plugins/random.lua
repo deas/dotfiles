@@ -469,13 +469,14 @@ return {
     },
   },
   --  TODO: Workaround for https://github.com/LazyVim/LazyVim/issues/5899
+  --[[
   {
     "nvim-lualine/lualine.nvim",
     optional = true,
     opts = function()
       require("copilot.api").status = require("copilot.status") -- TODO: Smart override
     end,
-  },
+  },]]
   {
     "neoclide/coc.nvim",
     branch = "release",

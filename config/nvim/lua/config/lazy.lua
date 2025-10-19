@@ -1,9 +1,16 @@
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
-  -- bootstrap lazy.nvim
-  -- stylua: ignore
-  vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", "--branch=stable", lazypath })
+  local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+  if vim.v.shell_error ~= 0 then
+    vim.api.nvim_echo({
+      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+      { out, "WarningMsg" },
+      { "\nPress any key to exit..." },
+    }, true, {})
+    vim.fn.getchar()
+    os.exit(1)
+  end
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -11,71 +18,6 @@ require("lazy").setup({
   spec = {
     -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
-    -- blink.cmp is the new nvim : https://github.com/LazyVim/LazyVim/releases/tag/v14.0.0
-    {
-      "saghen/blink.cmp",
-      dependencies = {
-        "moyiz/blink-emoji.nvim",
-      },
-      opts = {
-        sources = {
-          default = {
-            "emoji",
-          },
-          providers = {
-            emoji = {
-              module = "blink-emoji",
-              name = "Emoji",
-              score_offset = 15, -- Tune by preference
-              opts = { insert = true }, -- Insert emoji (default) or complete its name
-            },
-          },
-        },
-      },
-    },
-    {
-      "julienvincent/nvim-paredit",
-      config = function()
-        require("nvim-paredit").setup()
-      end,
-    },
-    -- TODO: Regression after update: "module 'telescope' not found"
-    --{
-    --  "someone-stole-my-name/yaml-companion.nvim",
-    --  requires = {
-    --    { "neovim/nvim-lspconfig" },
-    --    { "nvim-lua/plenary.nvim" },
-    --    { "nvim-telescope/telescope.nvim" },
-    --  },
-    --  config = function()
-    --    require("telescope").load_extension("yaml_schema")
-    --  end,
-    --},
-    -- { "towolf/vim-helm" },
-    { "ThePrimeagen/vim-be-good" },
-    -- import any extras modules here
-    -- { import = "lazyvim.plugins.extras.lang.typescript" },
-    -- { import = "lazyvim.plugins.extras.lang.json" },
-    -- { import = "lazyvim.plugins.extras.ui.mini-animate" },
-    --[[ 
-    {
-      "christoomey/vim-tmux-navigator",
-      cmd = {
-        "TmuxNavigateLeft",
-        "TmuxNavigateDown",
-        "TmuxNavigateUp",
-        "TmuxNavigateRight",
-        "TmuxNavigatePrevious",
-      },
-      keys = {
-        { "<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>" },
-        { "<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>" },
-        { "<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>" },
-        { "<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>" },
-        { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
-      },
-    },
-    --]]
     -- import/override with your plugins
     { import = "plugins" },
   },
@@ -89,7 +31,10 @@ require("lazy").setup({
     -- version = "*", -- try installing the latest stable version for plugins that support semver
   },
   install = { colorscheme = { "tokyonight", "habamax" } },
-  checker = { enabled = true }, -- automatically check for plugin updates
+  checker = {
+    enabled = true, -- check for plugin updates periodically
+    notify = false, -- notify on update
+  }, -- automatically check for plugin updates
   performance = {
     rtp = {
       -- disable some rtp plugins
@@ -100,7 +45,7 @@ require("lazy").setup({
         -- "netrwPlugin",
         "tarPlugin",
         "tohtml",
-        -- "tutor",
+        "tutor",
         "zipPlugin",
       },
     },

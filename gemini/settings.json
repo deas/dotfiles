@@ -1,12 +1,29 @@
 {
-  "theme": "ANSI",
-  "selectedAuthType": "oauth-personal",
-  "preferredEditor": "vim",
-  "contextFileName": ["GEMINI.md", "AGENTS.md", "CONVENTIONS.md"],
+  "context": {
+    "fileName": [
+      "GEMINI.md",
+      "AGENTS.md",
+      "CONVENTIONS.md"
+    ]
+  },
   "mcpServers": {
     "github.com/upstash/context7-mcp": {
-      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
       "command": "npx"
     }
+  },
+  "general": {
+    "preferredEditor": "vim"
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "ui": {
+    "theme": "ANSI"
   }
 }
