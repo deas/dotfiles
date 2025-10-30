@@ -81,7 +81,9 @@ return {
     version = "*", -- Only update on tagged releases
     dependencies = {
       "MunifTanjim/nui.nvim",
-      "MeanderingProgrammer/render-markdown.nvim",
+      -- OPTIONAL: Choose your preferred markdown renderer (or omit for raw markdown)
+      "MeanderingProgrammer/render-markdown.nvim", -- Clean rendering
+      -- OR: "OXY2DEV/markview.nvim", -- Rich rendering with advanced features
     },
     opts = {
       -- OPTIONAL: Location of user defined tips (default value shown below)
@@ -93,7 +95,11 @@ return {
       -- OPTIONAL: Daily tip mode (default: 1)
       -- 0 = off, 1 = once per day, 2 = every startup
       daily_tip = 1,
+      -- OPTIONAL: Bookmark symbol (default: "🌟 ")
+      bookmark_symbol = "🌟 ",
     },
+    -- TODO Key mappings conflicts with lazyvim notifications
+    --[[
     init = function()
       -- OPTIONAL: Change to your liking or drop completely
       -- The plugin does not provide default key mappings, only commands
@@ -105,6 +111,18 @@ return {
       map("n", "<leader>ntr", ":NeovimTipsRandom<CR>", { desc = "Show random tip", noremap = true, silent = true })
       map("n", "<leader>ntp", ":NeovimTipsPdf<CR>", { desc = "Open Neovim tips PDF", noremap = true, silent = true })
     end,
+    ]]
+  },
+  {
+    "stevearc/oil.nvim",
+    ---@module 'oil'
+    ---@type oil.SetupOpts
+    opts = {},
+    -- Optional dependencies
+    dependencies = { { "nvim-mini/mini.icons", opts = {} } },
+    -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
+    -- Lazy loading is not recommended because it is very tricky to make it work correctly in all situations.
+    lazy = false,
   },
   {
     "nvim-neotest/neotest",
@@ -239,21 +257,7 @@ return {
                 "full_stack_dev",
               },
             },
-            -- Breaking Changes since codecompanion v15
-            -- Remove old mcp tool which will be auto added as a tool group with two individual tools.
-            --[[
-            ["mcp"] = {
-              -- Prevent mcphub from loading before needed
-              callback = function()
-                return require("mcphub.extensions.codecompanion")
-              end,
-              description = "Call tools and resources from the MCP Servers",
-            },
-            -- auto_submit_success = true, -- Send any successful output to the LLM automatically?
-            ]]
-            --
           },
-          --
         },
       },
       memory = {
