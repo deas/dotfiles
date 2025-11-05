@@ -1,30 +1,84 @@
--- transparent background
-vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none" })
-vim.api.nvim_set_hl(0, "Pmenu", { bg = "none" })
-vim.api.nvim_set_hl(0, "Terminal", { bg = "none" })
-vim.api.nvim_set_hl(0, "EndOfBuffer", { bg = "none" })
-vim.api.nvim_set_hl(0, "FoldColumn", { bg = "none" })
-vim.api.nvim_set_hl(0, "Folded", { bg = "none" })
-vim.api.nvim_set_hl(0, "SignColumn", { bg = "none" })
-vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
+--- Modifies the background of an existing highlight group to be transparent ('NONE').
+--- Preserves its foreground, style, and links.
+--- @param group_name string The name of the highlight group (e.g., "Normal")
+local function make_hl_transparent(group_name)
+  -- Mapping from nvim_get_hl_by_name keys to nvim_set_hl keys
+  local key_map = {
+    foreground = "fg",
+    background = "bg", -- We will explicitly set this to NONE later
+    cterm_fg = "ctermfg",
+    cterm_bg = "ctermbg", -- We will explicitly set this to NONE later
+    bold = "bold",
+    italic = "italic",
+    underline = "underline",
+  }
+
+  -- 1. Retrieve the existing highlight group definition (following links)
+  -- local hl_def = vim.api.nvim_get_hl_by_name(group_name, true)
+  local hl_def = vim.api.nvim_get_hl(0, { name = group_name })
+
+  -- 2. Create the new options table and copy attributes
+  local updated_opts = {}
+  for key, value in pairs(hl_def) do
+    local new_key = key_map[key]
+
+    if new_key then
+      if new_key == "fg" then
+        -- Convert decimal color (foreground) back to Hex string
+        updated_opts[new_key] = string.format("#%06x", value)
+      elseif new_key == "bg" or new_key == "ctermbg" then
+        -- SKIP the existing background; we will explicitly set it to none
+      else
+        -- Copy CTerm and style values directly
+        updated_opts[new_key] = value
+      end
+    end
+  end
+
+  -- 3. Overwrite only the background keys to none (transparent)
+  updated_opts.bg = "none"
+  updated_opts.ctermbg = "none"
+
+  -- 4. Register the new object (the modified table)
+  vim.api.nvim_set_hl(0, group_name, updated_opts)
+end
+
+local groups_to_update = {
+  "Normal",
+  "NormalFloat",
+  "FloatBorder",
+  "Pmenu",
+  "Terminal",
+  "EndOfBuffer",
+  "FoldColumn",
+  "Folded",
+  "SignColumn",
+  "NormalNC",
+  "TelescopeBorder",
+  "TelescopePromptBorder",
+
+  -- transparent background for neotree
+  "NeoTreeNormal",
+  "NeoTreeNormalNC",
+  "NeoTreeVertSplit",
+  "NeoTreeWinSeparator",
+  "NeoTreeEndOfBuffer",
+
+  -- transparent background for nvim-tree
+  "NvimTreeNormal",
+  "NvimTreeVertSplit",
+}
+
+-- Make existing groups transparent
+for _, group_name in ipairs(groups_to_update) do
+  make_hl_transparent(group_name)
+end
+
+-- Create additional transparent highlight groups
 vim.api.nvim_set_hl(0, "WhichKeyFloat", { bg = "none" })
-vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "none" })
 vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
-vim.api.nvim_set_hl(0, "TelescopePromptBorder", { bg = "none" })
 vim.api.nvim_set_hl(0, "TelescopePromptTitle", { bg = "none" })
 
--- transparent background for neotree
-vim.api.nvim_set_hl(0, "NeoTreeNormal", { bg = "none" })
-vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { bg = "none" })
-vim.api.nvim_set_hl(0, "NeoTreeVertSplit", { bg = "none" })
-vim.api.nvim_set_hl(0, "NeoTreeWinSeparator", { bg = "none" })
-vim.api.nvim_set_hl(0, "NeoTreeEndOfBuffer", { bg = "none" })
-
--- transparent background for nvim-tree
-vim.api.nvim_set_hl(0, "NvimTreeNormal", { bg = "none" })
-vim.api.nvim_set_hl(0, "NvimTreeVertSplit", { bg = "none" })
 vim.api.nvim_set_hl(0, "NvimTreeEndOfBuffer", { bg = "none" })
 
 -- transparent notify background
