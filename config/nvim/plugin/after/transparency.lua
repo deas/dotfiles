@@ -1,13 +1,13 @@
---- Modifies the background of an existing highlight group to be transparent ('NONE').
+--- Modifies the background of an existing highlight group to be transparent ('none').
 --- Preserves its foreground, style, and links.
 --- @param group_name string The name of the highlight group (e.g., "Normal")
 local function make_hl_transparent(group_name)
   -- Mapping from nvim_get_hl_by_name keys to nvim_set_hl keys
   local key_map = {
     foreground = "fg",
-    background = "bg", -- We will explicitly set this to NONE later
+    background = "bg", -- We will explicitly set this to none later
     cterm_fg = "ctermfg",
-    cterm_bg = "ctermbg", -- We will explicitly set this to NONE later
+    cterm_bg = "ctermbg", -- We will explicitly set this to non later
     bold = "bold",
     italic = "italic",
     underline = "underline",
@@ -74,14 +74,13 @@ for _, group_name in ipairs(groups_to_update) do
   make_hl_transparent(group_name)
 end
 
--- Create additional transparent highlight groups
+-- Create additional transparent highlights
 vim.api.nvim_set_hl(0, "WhichKeyFloat", { bg = "none" })
 vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
 vim.api.nvim_set_hl(0, "TelescopePromptTitle", { bg = "none" })
 
 vim.api.nvim_set_hl(0, "NvimTreeEndOfBuffer", { bg = "none" })
 
--- transparent notify background
 vim.api.nvim_set_hl(0, "NotifyINFOBody", { bg = "none" })
 vim.api.nvim_set_hl(0, "NotifyERRORBody", { bg = "none" })
 vim.api.nvim_set_hl(0, "NotifyWARNBody", { bg = "none" })
