@@ -62,8 +62,6 @@ dap.configurations = {
   },
 }
 --]]
--- Hide the HUD log popup that is otherwise shown when Conjure connects to the REPL process
-vim.g["conjure#log#hud#enabled"] = false
 
 --[[ 
 function _G.inspect_to_buffer(obj)
@@ -77,54 +75,16 @@ end
 
 return {
   {
-    "folke/snacks.nvim",
+    "ahkohd/difft.nvim",
+    config = function()
+      require("difft").setup()
+    end,
+  },
+  {
+    "nvim-treesitter/nvim-treesitter",
     opts = {
-      gh = {
-        -- your gh configuration comes here
-        -- or leave it empty to use the default settings
-        -- refer to the configuration section below
-      },
-      picker = {
-        sources = {
-          gh_issue = {
-            -- your gh_issue picker configuration comes here
-            -- or leave it empty to use the default settings
-          },
-          gh_pr = {
-            -- your gh_pr picker configuration comes here
-            -- or leave it empty to use the default settings
-          },
-        },
-      },
-    },
-    keys = {
-      {
-        "<leader>gi",
-        function()
-          Snacks.picker.gh_issue()
-        end,
-        desc = "GitHub Issues (open)",
-      },
-      {
-        "<leader>gI",
-        function()
-          Snacks.picker.gh_issue({ state = "all" })
-        end,
-        desc = "GitHub Issues (all)",
-      },
-      {
-        "<leader>gp",
-        function()
-          Snacks.picker.gh_pr()
-        end,
-        desc = "GitHub Pull Requests (open)",
-      },
-      {
-        "<leader>gP",
-        function()
-          Snacks.picker.gh_pr({ state = "all" })
-        end,
-        desc = "GitHub Pull Requests (all)",
+      ensure_installed = {
+        "fennel",
       },
     },
   },
@@ -505,7 +465,9 @@ return {
     "mason-org/mason.nvim",
     opts = function(_, opts)
       vim.list_extend(opts.ensure_installed, {
+        -- Could likely do ths a bit cleaner using "neovim/nvim-lspconfig" opts
         "clojure-lsp", -- TODO: Still not covered by Clojure Extra?
+        "fennel-language-server",
       })
     end,
   },

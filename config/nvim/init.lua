@@ -3,6 +3,9 @@ require("config.lazy")
 
 -- https://github.com/folke/snacks.nvim/blob/main/docs/debug.md
 
+-- Hide the HUD log popup that is otherwise shown when Conjure connects to the REPL process
+vim.g["conjure#log#hud#enabled"] = false
+
 _G.dd = function(...)
   Snacks.debug.inspect(...)
 end
