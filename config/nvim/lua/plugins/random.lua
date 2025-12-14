@@ -236,7 +236,7 @@ return {
   --
   {
     "olimorris/codecompanion.nvim",
-    branch = "v18",
+    -- branch = "v18",
     opts = {
       opts = {
         log_level = "TRACE", -- TRACE|DEBUG|ERROR|INFO
