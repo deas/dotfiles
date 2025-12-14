@@ -236,6 +236,7 @@ return {
   --
   {
     "olimorris/codecompanion.nvim",
+    branch = "v18",
     opts = {
       opts = {
         log_level = "TRACE", -- TRACE|DEBUG|ERROR|INFO
@@ -346,6 +347,8 @@ return {
       "nvim-treesitter/nvim-treesitter",
       "ravitemer/mcphub.nvim",
       "ravitemer/codecompanion-history.nvim",
+      -- { "ravitemer/mcphub.nvim", branch = "deas-v18" },
+      -- { "ravitemer/codecompanion-history.nvim", branch = "deas-v18" },
     },
   },
   {
