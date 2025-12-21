@@ -278,7 +278,7 @@ return {
           },
         },
       },
-      memory = {
+      rules = {
         conventions = {
           description = "My conventions",
           files = {
@@ -289,7 +289,7 @@ return {
         },
         opts = {
           chat = {
-            default_memory = "conventions",
+            autoload = { "conventions", "default" },
             enabled = true,
           },
         },
