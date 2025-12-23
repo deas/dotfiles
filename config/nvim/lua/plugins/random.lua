@@ -242,6 +242,33 @@ return {
         log_level = "TRACE", -- TRACE|DEBUG|ERROR|INFO
       },
       adapters = {
+        acp = {
+          opencode_sandbox = function()
+            return require("codecompanion.adapters").extend("opencode", {
+              commands = {
+                -- The default uses the opencode/config.json value
+                default = {
+                  "docker",
+                  "run",
+                  "-e",
+                  "OPENROUTER_API_KEY",
+                  "-m",
+                  "opencode/minimax/minimax-m2",
+                  "-it",
+                  "--rm",
+                  "ghcr.io/sst/opencode",
+                  "acp",
+                },
+                -- copilot_sonnet_4_5 = {
+                --   "opencode",
+                --   "acp",
+                --   "-m",
+                --   "github-copilot/claude-sonnet-4.5",
+                -- },
+              },
+            })
+          end,
+        },
         -- opts = {
         --   allow_insecure = true,
         --   proxy = "http://localhost:3128",
