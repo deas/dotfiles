@@ -247,17 +247,22 @@ return {
             return require("codecompanion.adapters").extend("opencode", {
               commands = {
                 -- The default uses the opencode/config.json value
+                -- ~/.config/opencode/
+                -- -m not supported in acp mode
+                -- "-m",
+                -- "opencode/minimax/minimax-m2",
                 default = {
                   "docker",
                   "run",
                   "-e",
                   "OPENROUTER_API_KEY",
-                  "-it",
+                  "-e",
+                  "OPENCODE_CONFIG=/opencode.jsonc",
+                  "-v",
+                  vim.fn.expand("~") .. "/.config/opencode/opencode.jsonc:/opencode.jsonc",
+                  "-i",
                   "--rm",
                   "ghcr.io/sst/opencode",
-                  -- -m not supported in acp mode
-                  -- "-m",
-                  -- "opencode/minimax/minimax-m2",
                   "acp",
                 },
                 -- copilot_sonnet_4_5 = {
