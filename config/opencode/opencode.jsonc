@@ -1,0 +1,6 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {},
+  "model": "openrouter/minimax/minimax-m2",
+  "small_model": "openrouter/minimax/minimax-m2",
+}

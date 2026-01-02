@@ -255,6 +255,11 @@ try {
   # Cannot use vlt.clj here as bb comes in late via mise
   $env.PATH = ($env.PATH | prepend $bb_path)
   try {
+    $env.OPENROUTER_API_KEY = ^vlt.clj get /automation/OPENROUTER_API_KEY
+  } catch {
+    print "Failed to get OPENROUTER_API_KEY"
+  }
+  try {
     $env.TAVILY_API_KEY = ^vlt.clj get /automation/TAVILY_API_KEY
   } catch {
     print "Failed to get TAVILY_API_KEY"

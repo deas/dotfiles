@@ -252,11 +252,12 @@ return {
                   "run",
                   "-e",
                   "OPENROUTER_API_KEY",
-                  "-m",
-                  "opencode/minimax/minimax-m2",
                   "-it",
                   "--rm",
                   "ghcr.io/sst/opencode",
+                  -- -m not supported in acp mode
+                  -- "-m",
+                  -- "opencode/minimax/minimax-m2",
                   "acp",
                 },
                 -- copilot_sonnet_4_5 = {

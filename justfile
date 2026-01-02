@@ -19,3 +19,7 @@ rcm-sync:
 [no-cd]
 repomix:
   repomix 
+
+# Create automation entry in gnome-keyring
+create-ks-secret key:
+  secret-tool store --label="auto {{key}}" path "/automation/{{key}}"
