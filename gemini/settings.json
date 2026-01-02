@@ -16,7 +16,10 @@
     }
   },
   "general": {
-    "preferredEditor": "vim"
+    "preferredEditor": "neovim",
+    "disableAutoUpdate": true,
+    "previewFeatures": true,
+    "vimMode": true
   },
   "security": {
     "auth": {
