@@ -1,0 +1,16 @@
+#!/bin/sh
+
+image=ghcr.io/sst/opencode
+terminal=""
+
+if [ -t 0 ]; then
+  terminal=-t
+fi
+
+exec docker run \
+  -e OPENROUTER_API_KEY \
+  -e OPENCODE_CONFIG=/opencode.jsonc \
+  -v "${HOME}/.config/opencode/opencode.jsonc:/opencode.jsonc" \
+  -i $terminal --rm ${image} \
+  "$@"
+#  acp
