@@ -3,3 +3,5 @@ vim/bundle/
 config/nushell/history.txt
 config/mcphub/env.*
 noscm.zsh
+.lsp/
+.clj-kondo/
