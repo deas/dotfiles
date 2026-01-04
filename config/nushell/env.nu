@@ -252,11 +252,11 @@ try {
   # $env.VLT_PASSWORD = (kwallet-query -r keepass kdewallet | from json | get password)
   let bb_path = ($env.HOME + "/.local/share/mise/installs/babashka/latest")
   $env.PATH = ($env.PATH | prepend $bb_path)
-  # try {
-  #   $env.OPENROUTER_API_KEY = ^vlt.clj get /automation/OPENROUTER_API_KEY
-  # } catch {
-  #   print "Failed to get OPENROUTER_API_KEY"
-  # }
+  try {
+    $env.OPENROUTER_API_KEY = ^vlt.clj get /automation/OPENROUTER_API_KEY
+  } catch {
+    print "Failed to get OPENROUTER_API_KEY"
+  }
   # TODO codecompanion taviliy adapter expects this
   # Cannot use vlt.clj here as bb comes in late via mise
   try {
