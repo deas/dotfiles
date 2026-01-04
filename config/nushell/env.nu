@@ -251,14 +251,14 @@ try {
   # $env.VLT_PASSWORD = (secret-tool lookup tool keepass)
   # $env.VLT_PASSWORD = (kwallet-query -r keepass kdewallet | from json | get password)
   let bb_path = ($env.HOME + "/.local/share/mise/installs/babashka/latest")
+  $env.PATH = ($env.PATH | prepend $bb_path)
+  # try {
+  #   $env.OPENROUTER_API_KEY = ^vlt.clj get /automation/OPENROUTER_API_KEY
+  # } catch {
+  #   print "Failed to get OPENROUTER_API_KEY"
+  # }
   # TODO codecompanion taviliy adapter expects this
   # Cannot use vlt.clj here as bb comes in late via mise
-  $env.PATH = ($env.PATH | prepend $bb_path)
-  try {
-    $env.OPENROUTER_API_KEY = ^vlt.clj get /automation/OPENROUTER_API_KEY
-  } catch {
-    print "Failed to get OPENROUTER_API_KEY"
-  }
   try {
     $env.TAVILY_API_KEY = ^vlt.clj get /automation/TAVILY_API_KEY
   } catch {
@@ -267,8 +267,13 @@ try {
   $env.PATH = ($env.PATH | where $it != $bb_path)
 
 } catch {
-  print "Failed to set VLT_PASSWORD from kwallet-query. Ensure kwallet is running and configured."
+  print "Failed to set VLT_PASSWORD"
 }
+
+# Gemini sandboxing options
+# GEMINI_SANDBOX=true|docker|podman|sandbox-exec
+# SANDBOX_FLAGS="--security-opt label=disable"
+# SANDBOX_SET_UID_GID=true   # Force host UID/GID
 
 # TODO:: apps.json no longer used on omarchy - uses gnome keyring - maybe even dbus secret api
 if ($env.HOME + "/.config/github-copilot/apps.json" | path exists) {
