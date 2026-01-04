@@ -1,0 +1,16 @@
+#!/bin/sh
+# Should be used from ~/.config/autostart/lastpass-agent.desktop
+
+set -e
+# set -xe
+
+LASTPASS_USER=a.steffan@contentreich.de
+WALLET_KEY=/automation/LASTPASS_PASSWORD
+# WALLET_KEY=lastpass
+# LPASS_ASKPASS=/usr/bin/ksshaskpass
+
+# kwallet-query -f Passwords -r ${WALLET_KEY} kdewallet |
+#   jq -r .password |
+secret-tool lookup path ${WALLET_KEY} |
+  LPASS_DISABLE_PINENTRY=1 LPASS_AGENT_TIMEOUT=0 lpass login --trust ${LASTPASS_USER}
+
