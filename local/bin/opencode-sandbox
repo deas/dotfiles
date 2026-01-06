@@ -1,16 +1,19 @@
 #!/bin/sh
 
 image=ghcr.io/sst/opencode
+io_root=/tmp/opencode-sandbox
 terminal=""
 
 if [ -t 0 ]; then
   terminal=-t
 fi
 
+# tee -p ${io_root}.in | docker run \
 exec docker run \
   -e OPENROUTER_API_KEY \
   -e OPENCODE_CONFIG=/opencode.jsonc \
   -v "${HOME}/.config/opencode/opencode.jsonc:/opencode.jsonc" \
   -i $terminal --rm ${image} \
   "$@"
+#  "$@" | tee ${io_root}.out
 #  acp
