@@ -12,8 +12,8 @@ git-sync:
 
 # rcm sync
 rcm-sync:
-  cd $HOME && env RCRC=$HOME/dotfiles/rcrc rcup -v
-
+  cd ~ && env RCRC=~/dotfiles/rcrc rcup -v
+  find ~ -maxdepth 3 -xtype l -ok rm {} \;
 
 # Create a repomix output file
 [no-cd]
