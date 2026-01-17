@@ -1,0 +1,13 @@
+[Unit]
+Description=Biffweb Application
+
+[Service]
+ExecStart=%h/.local/share/mise/installs/clojure-tools/latest/bin/clojure -M -m de.contentreich
+# -M:dev dev
+WorkingDirectory=%h/work/projects/contentreich/biffweb-sandbox
+Restart=always
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

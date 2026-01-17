@@ -27,7 +27,8 @@
 [rebase]
   autosquash = true
 [include]
-  path = ~/.gitconfig.local
+  # path = ~/.gitconfig.local
+  path = .gitdelta
 [diff]
   colorMoved = zebra
 [credential]

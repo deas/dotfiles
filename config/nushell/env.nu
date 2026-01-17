@@ -157,6 +157,7 @@ def setup-path [path: string, prepend = true] {
 
 $env.PATH = (setup-path "/snap/bin" false) # /etc/environment or /etc/profile.d/apps-bin-path.sh usually bring it in - except on Crostini using nushell as login shell
 $env.PATH = (setup-path ($env.HOME + "/go/bin"))
+# Also added to $HOME/.config/environment.d to make extended path available to systemd units as well
 $env.PATH = (setup-path ($env.HOME + "/.local/bin")) # pip install uses this
 $env.PATH = (setup-path ($env.HOME + "/bin"))
 $env.PATH = (setup-path ($env.HOME + "/.babashka/bbin/bin"))
