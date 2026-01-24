@@ -14,4 +14,10 @@
   ],
   // instructions should be harnomonic across clis
   "instructions": ["CONVENTIONS.md", "AGENTS.md"],
+  // "permission": "allow",
+  "permission": {
+    "*": "ask",
+    // "bash": "allow",
+    // "edit": "deny",
+  },
 }

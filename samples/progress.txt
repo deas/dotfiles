@@ -1,0 +1,8 @@
+# Progress Log
+
+This file tracks completed tasks from the PRD. Ralph will append to this file after each iteration.
+
+Format: [YYYY-MM-DD HH:MM] - Task description
+
+---
+
