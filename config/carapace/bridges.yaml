@@ -12,12 +12,13 @@ ansible-vault: argcomplete
 argocd: cobra
 kargo: cobra
 oc: cobra
-opentofu: complete
+#opentofu: complete
 minikube: cobra
 incus: cobra
 hcloud: cobra
 helmfile: cobra
 pipx: argcomplete
 gemini: yargs
+opencode: yargs
 obsidian-cli: cobra
 #uv: clap

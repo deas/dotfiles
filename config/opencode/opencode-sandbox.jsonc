@@ -1,0 +1,17 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {},
+  "model": "github-copilot/claude-sonnet-4.5",
+  "small_model": "github-copilot/claude-sonnet-4.5",
+  // "model": "openrouter/minimax/minimax-m2",
+  // "small_model": "openrouter/minimax/minimax-m2",
+  "plugin": [
+    // "opencode-pty",
+    // "oh-my-opencode",
+    // "opencode-notifier",
+    // "opencode-zellij-namer",
+    // "opencode-skillful",
+  ],
+  // instructions should be harnomonic across clis
+  "instructions": ["CONVENTIONS.md", "AGENTS.md"],
+}
