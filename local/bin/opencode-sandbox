@@ -15,6 +15,10 @@ fi
 exec docker run \
   -e OPENROUTER_API_KEY \
   -e OPENCODE_CONFIG=/opencode.jsonc \
+  -e GIT_CONFIG_GLOBAL=/gitconfig \
+  -w "$(pwd)" \
+  -v "$(pwd):$(pwd)" \
+  -v "$HOME/.gitconfig:/gitconfig:ro" \
   -v "${HOME}/.config/opencode/opencode-sandbox.jsonc:/opencode.jsonc" \
   -v "${HOME}/.local/share/opencode/auth.json:/root/.local/share/opencode/auth.json" \
   -i $terminal --rm ${image} \
