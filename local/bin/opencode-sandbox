@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
-image=ghcr.io/sst/opencode
+set -euo pipefail
+
+image=ghcr.io/anomalyco/opencode
 io_root=/tmp/opencode-sandbox
 terminal=""
 
