@@ -1,2 +1,2 @@
-EXCLUDES="*.md hyprland-wiki LICENSE zshrc-zplug vimrc vimrc.bundles clojure-sc zsh bash samples"
+EXCLUDES="*.md hyprland-wiki LICENSE zshrc-zplug vimrc vimrc.bundles clojure-sc zsh bash samples misc"
 DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles"
