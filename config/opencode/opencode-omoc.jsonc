@@ -1,0 +1,34 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {},
+  "model": "github-copilot/claude-sonnet-4.5",
+  "small_model": "github-copilot/claude-sonnet-4.5",
+  // "model": "openrouter/minimax/minimax-m2",
+  // "small_model": "openrouter/minimax/minimax-m2",
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "http://localhost:8080/mcp",
+      // "headers": {
+      //  "CONTEXT7_API_KEY": "YOUR_API_KEY"
+      // },
+      "enabled": true,
+    },
+  },
+  "plugin": [
+    "opencode-gemini-auth@latest",
+    "opencode-pty",
+    "oh-my-opencode",
+    // "opencode-notifier",
+    "opencode-zellij-namer",
+    // "opencode-skillful",
+  ],
+  // instructions should be harnomonic across clis
+  "instructions": ["CONVENTIONS.md", "AGENTS.md"],
+  // "permission": "allow",
+  "permission": {
+    "*": "ask",
+    // "bash": "allow",
+    // "edit": "deny",
+  },
+}

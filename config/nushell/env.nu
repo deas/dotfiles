@@ -294,6 +294,7 @@ if ($env.HOME + "/.config/argocd/auth.json" | path exists) {
 }
 
 $env.OBSIDIAN_VAULT = $env.HOME + "/Documents/obsidian"
+$env.OPENCODE_CONFIG = $env.HOME + "/.config/opencode/opencode-omoc.jsonc"
 
 # Should set ssh env via hyprland https://www.lorenzobettini.it/2023/09/hyprland-and-ssh-agent/ to avoid conflict with agent forwarding
 # env = SSH_AUTH_SOCK,$XDG_RUNTIME_DIR/ssh-agent.socket

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+  "agents": {
+    "sisyphus": {
+      "model": "openrouter/qwen/qwen3-max"
+    },
+    "atlas": {
+      "model": "openrouter/deepseek/deepseek-r1:free"
+    },
+    "oracle": {
+      "model": "openrouter/qwen/qwen3-coder"
+    },
+    "librarian": {
+      "model": "openrouter/moonshotai/kimi-k2.5"
+    },
+    "explore": {
+      "model": "openrouter/z-ai/glm-4.5-air"
+    },
+    "multimodal-looker": {
+      "model": "openrouter/qwen/qwen2.5-vl-72b-instruct"
+    },
+    "prometheus": {
+      "model": "openrouter/moonshotai/kimi-k2-thinking"
+    }
+  },
+  "categories": {}
+}
