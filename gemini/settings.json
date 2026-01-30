@@ -19,7 +19,8 @@
     "preferredEditor": "neovim",
     "disableAutoUpdate": true,
     "previewFeatures": true,
-    "vimMode": true
+    "vimMode": true,
+    "enableAutoUpdate": false
   },
   "security": {
     "auth": {

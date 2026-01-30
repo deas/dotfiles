@@ -1,4 +1,8 @@
 #!/bin/bash
+# Basic docker sandbox wrapper for OpenCode
+# Does not yet support reuse of sandboxes
+#
+# https://docs.docker.com/ai/sandboxes
 
 set -euo pipefail
 

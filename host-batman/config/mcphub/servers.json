@@ -12,7 +12,7 @@
     "blender": {
       "args": ["blender-mcp"],
       "command": "uvx",
-      "disabled": false
+      "disabled": true
     },
     "clojure": {
       "args": [
@@ -20,6 +20,14 @@
         "cd ${HOME}/work/projects/3rd-party/clojure-mcp && clojure -X:mcp :port 7888"
       ],
       "command": "/bin/sh",
+      "disabled": true
+    },
+    "mcp-discord": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "DISCORD_TOKEN", "mcp/mcp-discord"],
+      "env": {
+        "DISCORD_TOKEN": "YOUR_DISCORD_TOKEN"
+      },
       "disabled": true
     },
     "context7-attach": {
@@ -133,6 +141,7 @@
     },
     "jetbrains": {
       "command": "docker",
+      "disabled": true,
       "args": ["run", "-i", "--rm", "--network", "host", "mcp/jetbrains"]
     },
     "obsidian": {
@@ -143,9 +152,17 @@
         "OBSIDIAN_API_KEY": "${cmd: vlt.clj get /automation/OBSIDIAN_API_KEY}"
       }
     },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
     "playwright": {
       "command": "docker",
+      "disabled": true,
       "args": ["run", "-i", "--rm", "mcp/playwright"]
+    },
+    "playwright-remote": {
+      "url": "http://localhost:8931/mcp"
     },
     "puppeteer-archived": {
       "command": "docker",
