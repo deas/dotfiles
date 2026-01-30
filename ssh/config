@@ -2,6 +2,11 @@ ForwardX11 yes
 ForwardAgent yes
 # IdentitiesOnly yes
 
+Host *
+  # ServerAliveInterval 120
+  # PreferredAuthentications publickey,password
+  EnableEscapeCommandline yes
+
 #Host ssh.dev.azure.com
 #    User git
 #    PubkeyAcceptedAlgorithms +ssh-rsa
