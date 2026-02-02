@@ -1,0 +1,11 @@
+# 1. Set the JS Runtime
+--js-runtimes node:/home/deas/.local/share/mise/installs/node/24.3.0/bin/node
+
+# 2. Enable automatic script updates (Recommended)
+# This allows yt-dlp to download the latest challenge solvers
+# --remote-components ejs:github
+
+# 3. Standard quality/metadata options
+# --format "bestvideo+bestaudio/best"
+# --embed-metadata
+# --embed-thumbnail
