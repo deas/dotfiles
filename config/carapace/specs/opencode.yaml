@@ -1,0 +1,5 @@
+name: opencode
+description: bridged yargs completion
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Yargs([opencode])"]

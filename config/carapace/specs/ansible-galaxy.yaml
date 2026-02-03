@@ -1,0 +1,5 @@
+name: ansible-galaxy
+description: bridged argcomplete completion
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Argcomplete([ansible-galaxy])"]

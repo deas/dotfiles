@@ -1,0 +1,5 @@
+name: ansible-config
+description: bridged argcomplete completion
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Argcomplete([ansible-config])"]

@@ -1,0 +1,5 @@
+name: pipx
+description: bridged argcomplete completion
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Argcomplete([pipx])"]

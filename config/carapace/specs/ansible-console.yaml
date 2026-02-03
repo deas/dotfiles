@@ -1,0 +1,5 @@
+name: ansible-console
+description: bridged argcomplete completion
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Argcomplete([ansible-console])"]

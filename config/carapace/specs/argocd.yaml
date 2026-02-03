@@ -1,0 +1,5 @@
+name: argocd
+description: bridged cobra completion
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Cobra([argocd])"]

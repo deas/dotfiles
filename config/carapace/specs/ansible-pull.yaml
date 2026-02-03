@@ -1,0 +1,5 @@
+name: ansible-pull
+description: bridged argcomplete completion
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Argcomplete([ansible-pull])"]

@@ -1,0 +1,5 @@
+name: hcloud
+description: bridged cobra completion
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Cobra([hcloud])"]
