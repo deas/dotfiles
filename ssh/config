@@ -1,13 +1,17 @@
 ForwardX11 yes
 ForwardAgent yes
+EnableEscapeCommandline yes
+# ServerAliveInterval 120
 # IdentitiesOnly yes
 
-Host *
-  # ServerAliveInterval 120
-  # PreferredAuthentications publickey,password
-  EnableEscapeCommandline yes
+#Host *
+#  PreferredAuthentications publickey,password
 
 #Host ssh.dev.azure.com
 #    User git
 #    PubkeyAcceptedAlgorithms +ssh-rsa
 #    HostkeyAlgorithms +ssh-rsa
+#
+# includes ~/.ssh/config.d/*
+Include config.d/*
+
