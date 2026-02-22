@@ -14,24 +14,27 @@
       // },
       "enabled": true,
     },
+    // "tavily": {
+    //   "type": "local",
+    //   "enabled": true,
+    //   "command": ["npx", "-y", "tavily-mcp@latest"],
+    //   "environment": {
+    //     "TAVILY_API_KEY": "{env:TAVILY_API_KEY}",
+    //   },
+    // },
     "tavily": {
-      "type": "local",
-      "enabled": true,
-      "command": ["npx", "-y", "tavily-mcp@latest"],
-      "environment": {
-        "TAVILY_API_KEY": "{env:TAVILY_API_KEY}",
-      },
+      "type": "remote",
+      "url": "https://mcp.tavily.com/mcp/?tavilyApiKey={env:TAVILY_API_KEY}",
     },
-    "brave-search": {
-      "type": "local",
-      "enabled": false,
-      "command": ["npx", "-y", "@modelcontextprotocol/server-brave-search"],
-      "environment": {
-        // Need to register for Brave Search API key and set it in your environment variables for this to work:wq
-        // Free tier exists, but requires subscription with credit card
-        "BRAVE_API_KEY": "{env:BRAVE_API_KEY}",
-      },
-    },
+    // The following is vibe coded - idea is to use docker
+    // "tavily-sse": {
+    //  "enabled": false,
+    //  "type": "remote",
+    //  "url": "http://127.0.0.1:8001/sse",
+    //  "headers": {
+    //    "Authorization": "Bearer {env:TAVILY_API_KEY}",
+    //  },
+    // },
   },
   "plugin": [
     "opencode-gemini-auth@latest",
