@@ -23,3 +23,7 @@ repomix:
 # Create automation entry in gnome-keyring
 create-ks-secret key:
   secret-tool store --label="auto {{key}}" path "/automation/{{key}}"
+
+# Deep merge all JSON files - make sure to quote the glob "*.json"
+json-merge glob:
+    jq -s 'reduce .[] as $item ({}; . * $item)' {{glob}}

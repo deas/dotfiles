@@ -18,9 +18,14 @@ cursor-style-blink = false
 shell-integration-features = no-cursor
 
 # Keyboard bindings
+keybind = ctrl+shift+page_up=unbind
+keybind = ctrl+shift+page_down=unbind
 keybind = f11=toggle_fullscreen
 keybind = shift+insert=paste_from_clipboard
 keybind = control+insert=copy_to_clipboard
 
 # Slowdown mouse scrolling
 mouse-scroll-multiplier = 0.95
+
+# Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
+async-backend = epoll

@@ -5,13 +5,14 @@
   // WHY: Currently the gold standard for Chinese coding models.
   // It rivals Claude 3.5/4.5 on SWE-bench (73.1% success rate)
   // and is significantly cheaper for deep debugging and refactoring.
-  "model": "openrouter/deepseek/deepseek-v3.2",
+  // "model": "openrouter/deepseek/deepseek-v3.2",
+  "model": "openrouter/moonshotai/kimi-k2.5",
 
   // CHOICE: MiniMax M2.1 or MiMo-V2-Flash
   // WHY: M2.1 is optimized for agentic tool use and speed.
   // If you want a free alternative that is surprisingly capable
   // for small edits, use "xiaomi/mimo-v2-flash:free".
-  "small_model": "openrouter/minimax/minimax-m2.1",
+  // "small_model": "openrouter/minimax/minimax-m2.1",
   "mcp": {
     "context7": {
       "type": "remote",
