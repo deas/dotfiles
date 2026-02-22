@@ -110,6 +110,7 @@
     "scroll-step": 5,
     "format-muted": "",
     "format-icons": {
+      "headset": "",
       "default": ["", "", ""]
     }
   },
