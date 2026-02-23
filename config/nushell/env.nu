@@ -253,6 +253,7 @@ try {
   # $env.VLT_PASSWORD = (kwallet-query -r keepass kdewallet | from json | get password)
   let bb_path = ($env.HOME + "/.local/share/mise/installs/babashka/latest")
   $env.PATH = ($env.PATH | prepend $bb_path)
+  # We want some secrets shared across agents and projects
   try {
     $env.OPENROUTER_API_KEY = ^vlt.clj get /automation/OPENROUTER_API_KEY
   } catch {
@@ -264,6 +265,16 @@ try {
     $env.TAVILY_API_KEY = ^vlt.clj get /automation/TAVILY_API_KEY
   } catch {
     print "Failed to get TAVILY_API_KEY"
+  }
+  try {
+    $env.HF_TOKEN_READ = ^vlt.clj get /automation/HF_TOKEN_READ
+  } catch {
+    print "Failed to get HF_TOKEN_READ"
+  }
+  try {
+    $env.GITHUB_PERSONAL_ACCESS_TOKEN = ^vlt.clj get /automation/GITHUB_PERSONAL_ACCESS_TOKEN
+  } catch {
+    print "Failed to get GITHUB_PERSONAL_ACCESS_TOKEN"
   }
   $env.PATH = ($env.PATH | where $it != $bb_path)
 
