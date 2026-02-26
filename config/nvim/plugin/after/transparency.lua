@@ -33,6 +33,8 @@ local groups_to_update = {
   "FoldColumn",
   "Folded",
   "SignColumn",
+  "LineNr",
+  "CursorLineNr",
   "NormalNC",
   "TelescopeBorder",
   "TelescopePromptBorder",
