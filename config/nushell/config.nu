@@ -852,6 +852,23 @@ alias .j = just --justfile ~/.user.justfile --working-directory .
 
 # https://www.nushell.sh/book/aliases.html#replacing-existing-commands-using-aliases
 
+def omarchy-function [...args: string] {
+    let cmd = $"source ~/.local/share/omarchy/default/bash/functions; ($args | str join ' ')"
+    bash -c $cmd
+}
+
+def tdlm [...args: string] {
+  omarchy-function "tdlm" ...$args
+}
+
+def tdl [...args: string] {
+    omarchy-function "tdl" ...$args
+}
+
+def tsl [...args: string] {
+    omarchy-function "tsl" ...$args
+}
+
 #def --env __emacs  [...rest:string] {
 #    if (($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh") | path exists) {
 #        sh ($env.HOME + "/.oh-my-zsh/plugins/emacs/emacsclient.sh") ...$rest
