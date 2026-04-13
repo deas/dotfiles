@@ -42,6 +42,14 @@ def create_right_prompt [] {
     ([$last_exit_code, (char space), $time_segment] | str join)
 }
 
+def --env prompt-llm [] {
+    $env.STARSHIP_CONFIG = $"($env.HOME)/.config/starship-llm.toml"
+}
+
+def --env prompt-full [] {
+    hide-env STARSHIP_CONFIG
+}
+
 # Use nushell functions to define your right and left prompt
 $env.PROMPT_COMMAND = {|| create_left_prompt }
 # $env.PROMPT_COMMAND_RIGHT = {|| create_right_prompt }
