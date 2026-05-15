@@ -18,6 +18,9 @@ require("lazy").setup({
   spec = {
     -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+    -- The following entry is needed to override settings from the import - yes, a second line for LazyVim
+    -- Initial cloning (s. at top was stable branch - not sure if this is somehow related)
+    { "LazyVim/LazyVim", version = false, branch = "main" },
     -- import/override with your plugins
     { import = "plugins" },
   },
