@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cmd_from_argo() {
+  yq eval '.status.resources[] |
+  (
+    select(.group != "").apiVersion = .group + "/" + .version
+  ) // (
+    select(.group == "").apiVersion = .version
+  ) |
+  {
+    "apiVersion": .apiVersion,
+    "kind": .kind,
+    "metadata": {
+      "name": .name,
+      "namespace": .namespace
+    }
+  } | split_doc' -
+}
+
+cmd_group() {
+  yq ea '
+  [.] | map(select(. != null) | {
+    "group": (.apiVersion | sub("/?[^/]*$", "")),
+    "kind": .kind,
+    "ref": ((.metadata.namespace // "") + "/" + .metadata.name)
+  })
+  | group_by(.group + "/" + .kind)
+  | map({
+      "key": ((.[0].group + "/" + .[0].kind) | sub("^/", "")),
+      "value": [.[].ref]
+    })
+  | from_entries
+  '
+}
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 {from-argo|group}" >&2
+  exit 1
+fi
+
+case "$1" in
+from-argo) cmd_from_argo ;;
+group) cmd_group ;;
+*)
+  echo "Unknown command: $1" >&2
+  echo "Usage: $0 {from-argo|group}" >&2
+  exit 1
+  ;;
+esac
