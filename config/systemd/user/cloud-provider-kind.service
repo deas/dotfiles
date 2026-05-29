@@ -1,0 +1,18 @@
+[Unit]
+Description=cloud-provider-kind (LoadBalancer support for kind clusters)
+Documentation=https://github.com/kubernetes-sigs/cloud-provider-kind
+
+[Service]
+ExecStartPre=-/usr/bin/docker rm -f cloud-provider-kind
+ExecStart=/usr/bin/docker run --rm --name cloud-provider-kind \
+    --network kind \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
+ExecStop=/usr/bin/docker stop cloud-provider-kind
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
