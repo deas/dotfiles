@@ -1,0 +1,536 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+d3-kind — create a local kind cluster with a prerequisite operator stack, an
+in-cluster git daemon, and a self-contained ArgoCD smoke test that proves the
+"ArgoCD pulls from in-cluster git" path end to end.
+
+The smoke test is independent of any repo: the script GENERATES a trivial app
+(a tiny Deployment), pushes it into the in-cluster git daemon, points an ArgoCD
+Application at it, and asserts the sync succeeds. Nothing here reads or deploys
+the surrounding project.
+
+Usage:
+  d3-kind [-h|--help]
+
+Idempotent: safe to re-run any time. The git daemon stores its repo on ephemeral
+volume, so a cluster/pod restart wipes the in-cluster repo and ArgoCD goes
+"Unknown" (it will NOT prune live resources). Recovery is just to re-run this
+script: it regenerates and reseeds the app and ArgoCD reconciles again. A script
+can't run itself after a reboot, so this makes recovery a single uniform command,
+not automatic.
+
+Phases (each gated by an env var = "yes"/"no"; default in brackets):
+  INSTALL_KPS        kube-prometheus-stack (CRDs + operator only)    [yes]
+  INSTALL_GRAFANA    grafana-operator                                [yes]
+  INSTALL_ECK        elastic eck-operator                            [yes]
+  INSTALL_TRAEFIK    traefik (NodePort)                              [yes]
+  INSTALL_ARGOCD     argo-cd                                         [yes]
+  INSTALL_GITSERVER  in-cluster git daemon (ephemeral storage)       [yes]
+  SEED_GIT           generate + push the smoke app into the daemon   [yes]
+  INSTALL_APP        apply the smoke ArgoCD Application               [yes]
+  ARGOCD_SMOKE       poll until the sync op Succeeds (+ Healthy)      [yes]
+
+Key knobs (see the variable block below for the full set):
+  CLUSTER_NAME       kind cluster name                               [d3]
+  SEED_BRANCH        branch created in the in-cluster repo           [kind-test]
+  APP_NAME           smoke Application + Deployment name              [d3-smoke]
+  APP_NAMESPACE      destination namespace for the smoke app         [d3-smoke]
+  APP_SELFHEAL       enable ArgoCD selfHeal                          [no]
+  ARGOCD_SMOKE_TIMEOUT           seconds to wait for the sync         [300]
+  ARGOCD_SMOKE_REQUIRE_HEALTHY   also require health=Healthy          [yes]
+
+Examples:
+  d3-kind                        # full bring-up + seed + smoke
+  INSTALL_APP=no d3-kind         # cluster + git daemon only, deploy by hand
+  INSTALL_GITSERVER=no SEED_GIT=no INSTALL_APP=no d3-kind   # bare prereqs only
+EOF
+}
+
+case "${1:-}" in
+  -h | --help)
+    usage
+    exit 0
+    ;;
+esac
+
+CLUSTER_NAME="${CLUSTER_NAME:-d3}"
+
+INSTALL_KPS="${INSTALL_KPS:-yes}"
+KPS_RELEASE_NAME="${KPS_RELEASE_NAME:-kps}"
+KPS_NAMESPACE="${KPS_NAMESPACE:-monitoring}"
+KPS_CHART_VERSION="${KPS_CHART_VERSION:-}"
+
+INSTALL_GRAFANA="${INSTALL_GRAFANA:-yes}"
+GRAFANA_RELEASE_NAME="${GRAFANA_RELEASE_NAME:-grafana-operator}"
+GRAFANA_NAMESPACE="${GRAFANA_NAMESPACE:-grafana}"
+GRAFANA_CHART_VERSION="${GRAFANA_CHART_VERSION:-}"
+GRAFANA_CHART_REF="${GRAFANA_CHART_REF:-oci://ghcr.io/grafana/helm-charts/grafana-operator}"
+
+INSTALL_ECK="${INSTALL_ECK:-yes}"
+ECK_RELEASE_NAME="${ECK_RELEASE_NAME:-elastic-operator}"
+ECK_NAMESPACE="${ECK_NAMESPACE:-elastic-system}"
+ECK_CHART_VERSION="${ECK_CHART_VERSION:-}"
+
+INSTALL_TRAEFIK="${INSTALL_TRAEFIK:-yes}"
+TRAEFIK_RELEASE_NAME="${TRAEFIK_RELEASE_NAME:-traefik}"
+TRAEFIK_NAMESPACE="${TRAEFIK_NAMESPACE:-traefik}"
+TRAEFIK_CHART_VERSION="${TRAEFIK_CHART_VERSION:-}"
+
+INSTALL_ARGOCD="${INSTALL_ARGOCD:-yes}"
+ARGOCD_RELEASE_NAME="${ARGOCD_RELEASE_NAME:-argocd}"
+ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
+ARGOCD_CHART_VERSION="${ARGOCD_CHART_VERSION:-}"
+
+# In-cluster git daemon (ephemeral): ArgoCD pulls the smoke app from here instead
+# of an external git host.
+INSTALL_GITSERVER="${INSTALL_GITSERVER:-yes}"
+GITSERVER_NAMESPACE="${GITSERVER_NAMESPACE:-git-server}"
+GITSERVER_NAME="${GITSERVER_NAME:-git-daemon}"
+GITSERVER_IMAGE="${GITSERVER_IMAGE:-alpine:3.20}"
+GITSERVER_PORT="${GITSERVER_PORT:-9418}"
+
+# Seed step: generate the smoke app and push it into the daemon's repo. No host
+# repo is read — the app is synthesized fresh each run.
+SEED_GIT="${SEED_GIT:-yes}"
+SEED_LOCAL_PORT="${SEED_LOCAL_PORT:-9418}"
+SEED_REPO="${SEED_REPO:-app}"
+SEED_BRANCH="${SEED_BRANCH:-kind-test}"
+
+# The self-contained smoke ArgoCD Application (a plain-manifest directory source).
+INSTALL_APP="${INSTALL_APP:-yes}"
+APP_NAME="${APP_NAME:-d3-smoke}"
+APP_NAMESPACE="${APP_NAMESPACE:-d3-smoke}"
+APP_PATH="${APP_PATH:-app}"
+APP_SELFHEAL="${APP_SELFHEAL:-no}"
+
+# ArgoCD smoke test: prove ArgoCD pulled from the in-cluster daemon and synced the
+# generated app.
+ARGOCD_SMOKE="${ARGOCD_SMOKE:-yes}"
+ARGOCD_SMOKE_TIMEOUT="${ARGOCD_SMOKE_TIMEOUT:-300}"
+ARGOCD_SMOKE_REQUIRE_HEALTHY="${ARGOCD_SMOKE_REQUIRE_HEALTHY:-yes}"
+
+HTTP_NODE_PORT="${HTTP_NODE_PORT:-30080}"
+HTTPS_NODE_PORT="${HTTPS_NODE_PORT:-30443}"
+
+for cmd in kind kubectl helm; do
+  command -v "$cmd" >/dev/null 2>&1 || {
+    echo "missing required tool: $cmd" >&2
+    exit 1
+  }
+done
+
+# helm repo add (if missing) + targeted update, in one step
+ensure_helm_repo() { # name url
+  helm repo list -o yaml 2>/dev/null | grep -q "^- name: $1\$" || helm repo add "$1" "$2"
+  helm repo update "$1" >/dev/null
+}
+
+# set VERSION_FLAG=(--version X) when a version is pinned, else () — expand quoted
+# as "${VERSION_FLAG[@]}" so an empty pin adds no argument (and shellcheck stays happy).
+# Use an explicit if (not `[[ … ]] && …`): a trailing && that short-circuits makes the
+# function return non-zero, which `set -e` would treat as a fatal error at the call site.
+VERSION_FLAG=()
+set_version_flag() {
+  if [[ -n "${1:-}" ]]; then
+    VERSION_FLAG=(--version "$1")
+  else
+    VERSION_FLAG=()
+  fi
+}
+
+if kind get clusters | grep -qx "$CLUSTER_NAME"; then
+  echo "kind cluster '$CLUSTER_NAME' already exists"
+  echo "  note: extraPortMappings are fixed at creation; delete the cluster to change them"
+else
+  echo "creating kind cluster '$CLUSTER_NAME'"
+  kind create cluster --name "$CLUSTER_NAME" --wait 120s
+fi
+
+docker update --restart unless-stopped "${CLUSTER_NAME}-control-plane"
+
+kubectl config use-context "kind-${CLUSTER_NAME}" >/dev/null
+
+# Generate a trivial, self-contained app in a scratch git repo and force-push it
+# into the in-cluster git daemon over a temporary port-forward. No host repo is
+# read. Convergent: it force-pushes SEED_BRANCH every run, so the same code path
+# covers both "repo is empty after a restart" and "re-run after an edit".
+seed_git() {
+  local url work pf_pid _
+
+  url="git://127.0.0.1:${SEED_LOCAL_PORT}/${SEED_REPO}.git"
+  work="$(mktemp -d)"
+
+  # the smoke app: one tiny Deployment ArgoCD can sync and report Healthy
+  mkdir -p "${work}/${APP_PATH}"
+  cat >"${work}/${APP_PATH}/deployment.yaml" <<YAML
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APP_NAME}
+  labels:
+    app: ${APP_NAME}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${APP_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${APP_NAME}
+    spec:
+      containers:
+        - name: pause
+          image: registry.k8s.io/pause:3.9
+YAML
+
+  git -C "$work" init -q -b "$SEED_BRANCH"
+  git -C "$work" add -A
+  git -C "$work" -c user.email=d3-kind@example.com -c user.name=d3-kind \
+    commit -q -m 'd3-kind smoke app'
+
+  kubectl -n "$GITSERVER_NAMESPACE" port-forward "svc/${GITSERVER_NAME}" \
+    "${SEED_LOCAL_PORT}:${GITSERVER_PORT}" >/dev/null 2>&1 &
+  pf_pid=$!
+
+  # wait for the forward to accept connections
+  for _ in $(seq 1 30); do
+    (exec 3<>"/dev/tcp/127.0.0.1/${SEED_LOCAL_PORT}") 2>/dev/null && {
+      exec 3>&- 3<&-
+      break
+    }
+    sleep 0.5
+  done
+
+  git -C "$work" push -f "$url" "${SEED_BRANCH}:refs/heads/${SEED_BRANCH}"
+
+  kill "$pf_pid" 2>/dev/null || true
+  rm -rf "$work"
+}
+
+# The operator installs below each use `helm … --wait`, so they run strictly
+# serially (total bring-up = sum of readiness times). That's deliberate, not an
+# oversight: these operators are independent and nothing later in the script needs
+# them *Ready* (the smoke app is a plain Deployment) — `--wait` is kept purely for
+# fail-fast (a crashlooping operator surfaces here, not as a mystery later) and so
+# `INSTALL_APP=no` leaves a known-ready stack. If bring-up time matters more than
+# that signal, parallelize these (`&` + per-release logs + `wait`) or drop `--wait`.
+if [[ "$INSTALL_KPS" == "yes" ]]; then
+  ensure_helm_repo prometheus-community https://prometheus-community.github.io/helm-charts
+
+  kubectl get namespace "$KPS_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$KPS_NAMESPACE"
+
+  set_version_flag "$KPS_CHART_VERSION"
+  helm upgrade --install "$KPS_RELEASE_NAME" prometheus-community/kube-prometheus-stack \
+    --namespace "$KPS_NAMESPACE" \
+    "${VERSION_FLAG[@]}" \
+    -f - \
+    --wait <<'YAML'
+crds:
+  enabled: true
+
+defaultRules:
+  create: false
+
+alertmanager:
+  enabled: false
+
+grafana:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+kubeStateMetrics:
+  enabled: false
+
+nodeExporter:
+  enabled: false
+
+kubeApiServer:
+  enabled: false
+kubelet:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+coreDns:
+  enabled: false
+kubeDns:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheusOperator:
+  admissionWebhooks:
+    enabled: false
+  tls:
+    enabled: false
+  serviceMonitor:
+    selfMonitor: false
+YAML
+else
+  echo "skipping kube-prometheus-stack (INSTALL_KPS=$INSTALL_KPS)"
+fi
+
+if [[ "$INSTALL_GRAFANA" == "yes" ]]; then
+  kubectl get namespace "$GRAFANA_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$GRAFANA_NAMESPACE"
+
+  set_version_flag "$GRAFANA_CHART_VERSION"
+  helm upgrade --install "$GRAFANA_RELEASE_NAME" "$GRAFANA_CHART_REF" \
+    --namespace "$GRAFANA_NAMESPACE" \
+    "${VERSION_FLAG[@]}" \
+    -f - \
+    --wait <<'YAML'
+installCRDs: true
+
+serviceMonitor:
+  enabled: false
+YAML
+else
+  echo "skipping grafana-operator (INSTALL_GRAFANA=$INSTALL_GRAFANA)"
+fi
+
+if [[ "$INSTALL_ECK" == "yes" ]]; then
+  ensure_helm_repo elastic https://helm.elastic.co
+
+  kubectl get namespace "$ECK_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$ECK_NAMESPACE"
+
+  set_version_flag "$ECK_CHART_VERSION"
+  helm upgrade --install "$ECK_RELEASE_NAME" elastic/eck-operator \
+    --namespace "$ECK_NAMESPACE" \
+    "${VERSION_FLAG[@]}" \
+    --wait
+else
+  echo "skipping eck-operator (INSTALL_ECK=$INSTALL_ECK)"
+fi
+
+if [[ "$INSTALL_TRAEFIK" == "yes" ]]; then
+  ensure_helm_repo traefik https://traefik.github.io/charts
+
+  kubectl get namespace "$TRAEFIK_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$TRAEFIK_NAMESPACE"
+
+  set_version_flag "$TRAEFIK_CHART_VERSION"
+  helm upgrade --install "$TRAEFIK_RELEASE_NAME" traefik/traefik \
+    --namespace "$TRAEFIK_NAMESPACE" \
+    "${VERSION_FLAG[@]}" \
+    -f - \
+    --wait <<YAML
+service:
+  spec:
+    type: NodePort
+ports:
+  web:
+    nodePort: ${HTTP_NODE_PORT}
+  websecure:
+    nodePort: ${HTTPS_NODE_PORT}
+YAML
+else
+  echo "skipping traefik (INSTALL_TRAEFIK=$INSTALL_TRAEFIK)"
+fi
+
+if [[ "$INSTALL_ARGOCD" == "yes" ]]; then
+  ensure_helm_repo argo https://argoproj.github.io/argo-helm
+
+  kubectl get namespace "$ARGOCD_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$ARGOCD_NAMESPACE"
+
+  set_version_flag "$ARGOCD_CHART_VERSION"
+  helm upgrade --install "$ARGOCD_RELEASE_NAME" argo/argo-cd \
+    --namespace "$ARGOCD_NAMESPACE" \
+    "${VERSION_FLAG[@]}" \
+    -f - \
+    --wait <<'YAML'
+dex:
+  enabled: false
+
+notifications:
+  enabled: false
+
+# applicationSet has no `enabled` gate in current chart (core component);
+# scale to zero so the controller doesn't run.
+applicationSet:
+  replicas: 0
+YAML
+else
+  echo "skipping argo-cd (INSTALL_ARGOCD=$INSTALL_ARGOCD)"
+fi
+
+if [[ "$INSTALL_GITSERVER" == "yes" ]]; then
+  kubectl get namespace "$GITSERVER_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$GITSERVER_NAMESPACE"
+
+  kubectl apply -n "$GITSERVER_NAMESPACE" -f - <<YAML
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${GITSERVER_NAME}
+  labels:
+    app: ${GITSERVER_NAME}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${GITSERVER_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${GITSERVER_NAME}
+    spec:
+      containers:
+        - name: git-daemon
+          image: ${GITSERVER_IMAGE}
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eu
+              apk add --no-cache git git-daemon >/dev/null
+              mkdir -p /srv/git
+              [ -d "/srv/git/${SEED_REPO}.git" ] || git init --bare "/srv/git/${SEED_REPO}.git"
+              exec git daemon --verbose --export-all --enable=receive-pack --reuseaddr --base-path=/srv/git --listen=0.0.0.0 --port=${GITSERVER_PORT}
+          ports:
+            - containerPort: ${GITSERVER_PORT}
+              name: git
+          readinessProbe:
+            tcpSocket:
+              port: ${GITSERVER_PORT}
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          volumeMounts:
+            - name: repos
+              mountPath: /srv/git
+      volumes:
+        - name: repos
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${GITSERVER_NAME}
+  labels:
+    app: ${GITSERVER_NAME}
+spec:
+  selector:
+    app: ${GITSERVER_NAME}
+  ports:
+    - name: git
+      port: ${GITSERVER_PORT}
+      targetPort: ${GITSERVER_PORT}
+YAML
+
+  kubectl -n "$GITSERVER_NAMESPACE" rollout status deployment/"$GITSERVER_NAME" --timeout=120s
+else
+  echo "skipping git-daemon (INSTALL_GITSERVER=$INSTALL_GITSERVER)"
+fi
+
+if [[ "$SEED_GIT" == "yes" ]]; then
+  command -v git >/dev/null 2>&1 || {
+    echo "SEED_GIT=yes requires git on PATH" >&2
+    exit 1
+  }
+  echo "seeding smoke app into ${SEED_REPO}.git (branch ${SEED_BRANCH})"
+  seed_git
+else
+  echo "skipping git seed (SEED_GIT=$SEED_GIT)"
+fi
+
+if [[ "$INSTALL_APP" == "yes" ]]; then
+  APP_SELFHEAL_BOOL=false
+  [[ "$APP_SELFHEAL" == "yes" ]] && APP_SELFHEAL_BOOL=true
+
+  kubectl apply -n "$ARGOCD_NAMESPACE" -f - <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${APP_NAME}
+  namespace: ${ARGOCD_NAMESPACE}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: git://${GITSERVER_NAME}.${GITSERVER_NAMESPACE}.svc:${GITSERVER_PORT}/${SEED_REPO}.git
+    targetRevision: ${SEED_BRANCH}
+    path: ${APP_PATH}
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${APP_NAMESPACE}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: ${APP_SELFHEAL_BOOL}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+YAML
+
+  echo "Application ${APP_NAME} applied in ${ARGOCD_NAMESPACE} (deploys into ${APP_NAMESPACE})"
+else
+  echo "skipping smoke Application (INSTALL_APP=$INSTALL_APP)"
+fi
+
+# ArgoCD smoke test: prove ArgoCD pulled the generated app from the in-cluster
+# daemon and applied it. kubectl-only — does not need the argocd CLI.
+#
+# The pass signal is the LAST SYNC OPERATION's result (operationState.phase ==
+# Succeeded), not the live sync.status — which can flap OutOfSync<->Synced while
+# ArgoCD re-detects drift, making an instantaneous Synced check racy.
+# operationState.phase is the outcome of the actual apply and is stable once it
+# reaches Succeeded. Health is asserted on top of that unless
+# ARGOCD_SMOKE_REQUIRE_HEALTHY=no.
+if [[ "$ARGOCD_SMOKE" == "yes" ]]; then
+  if [[ "$INSTALL_APP" != "yes" ]]; then
+    echo "skipping argocd smoke test (needs INSTALL_APP=yes; INSTALL_APP=$INSTALL_APP)"
+  else
+    echo "argocd smoke: waiting up to ${ARGOCD_SMOKE_TIMEOUT}s for ${APP_NAME} (require-healthy=${ARGOCD_SMOKE_REQUIRE_HEALTHY})"
+    # nudge ArgoCD to reconcile now instead of waiting for its poll interval
+    kubectl -n "$ARGOCD_NAMESPACE" annotate application "$APP_NAME" \
+      argocd.argoproj.io/refresh=normal --overwrite >/dev/null 2>&1 || true
+
+    deadline=$((SECONDS + ARGOCD_SMOKE_TIMEOUT))
+    op_phase="" sync_status="" health_status="" pass=no
+    while [[ $SECONDS -lt $deadline ]]; do
+      # one call → a consistent snapshot of all three fields (space-separated).
+      # `|| true` on read: it returns nonzero at EOF-without-newline (jsonpath emits
+      # no trailing newline, and nothing at all if the get fails) — must not trip set -e.
+      read -r op_phase sync_status health_status < <(
+        kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
+          -o jsonpath='{.status.operationState.phase} {.status.sync.status} {.status.health.status}' 2>/dev/null || true
+      ) || true
+      echo "  op=${op_phase:-<none>} sync=${sync_status:-<none>} health=${health_status:-<none>}"
+      # a failed/errored sync operation is terminal — fail fast, don't wait out the timeout
+      if [[ "$op_phase" == "Failed" || "$op_phase" == "Error" ]]; then
+        break
+      fi
+      if [[ "$op_phase" == "Succeeded" ]] &&
+        { [[ "$ARGOCD_SMOKE_REQUIRE_HEALTHY" != "yes" ]] || [[ "$health_status" == "Healthy" ]]; }; then
+        pass=yes
+        break
+      fi
+      sleep 10
+    done
+
+    if [[ "$pass" == "yes" ]]; then
+      echo "argocd smoke: PASS (op=${op_phase} sync=${sync_status:-<none>} health=${health_status:-<none>})"
+    else
+      echo "argocd smoke: FAIL (op=${op_phase:-<none>} sync=${sync_status:-<none>} health=${health_status:-<none>})" >&2
+      echo "--- operationState.message ---" >&2
+      kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
+        -o jsonpath='{.status.operationState.message}{"\n"}' >&2 || true
+      echo "--- Application conditions ---" >&2
+      kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
+        -o jsonpath='{range .status.conditions[*]}{.type}: {.message}{"\n"}{end}' >&2 || true
+      exit 1
+    fi
+  fi
+else
+  echo "skipping argocd smoke test (ARGOCD_SMOKE=$ARGOCD_SMOKE)"
+fi
+
+echo "done."
