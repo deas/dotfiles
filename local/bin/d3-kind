@@ -3,35 +3,54 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-d3-kind — create a local kind cluster with a prerequisite operator stack, an
-in-cluster git daemon, and a self-contained ArgoCD smoke test that proves the
-"ArgoCD pulls from in-cluster git" path end to end.
+d3-kind — create a local kind cluster with a prerequisite operator stack and an
+in-cluster git daemon, then run a self-contained ArgoCD smoke test that proves
+the "ArgoCD pulls from in-cluster git" path end to end.
 
-The smoke test is independent of any repo: the script GENERATES a trivial app
-(a tiny Deployment), pushes it into the in-cluster git daemon, points an ArgoCD
+The smoke test is independent of any repo: it GENERATES a trivial app (a tiny
+Deployment), pushes it into the in-cluster git daemon, points an ArgoCD
 Application at it, and asserts the sync succeeds. Nothing here reads or deploys
 the surrounding project.
 
 Usage:
+  d3-kind <command>
   d3-kind [-h|--help]
 
-Idempotent: safe to re-run any time. The git daemon stores its repo on ephemeral
-volume, so a cluster/pod restart wipes the in-cluster repo and ArgoCD goes
-"Unknown" (it will NOT prune live resources). Recovery is just to re-run this
-script: it regenerates and reseeds the app and ArgoCD reconciles again. A script
-can't run itself after a reboot, so this makes recovery a single uniform command,
-not automatic.
+Commands:
+  up       create the kind cluster + operator stack. When argo-cd is opted in it
+           also provisions the in-cluster git daemon and (optionally) runs the
+           "argocd works with git" smoke test.
+  smoke    re-run that smoke test against an existing cluster (seed the app,
+           apply the Application, poll until the sync op Succeeds + Healthy).
+  down     delete the kind cluster.
+
+Run with no command to print this help.
+
+The smoke test is scoped to argo-cd: the git daemon and the test only come into
+play when INSTALL_ARGOCD=yes, and the test itself is optional (ARGOCD_SMOKE). It
+depends on BOTH argo-cd and the git daemon and refuses to run unless both are
+present (ARGOCD_SMOKE=yes therefore requires INSTALL_GITSERVER=yes). It is
+independent of any repo — it GENERATES a trivial app (a tiny Deployment), pushes
+it into the in-cluster git daemon, points an ArgoCD Application at it, and asserts
+the sync succeeds. Nothing here reads or deploys the surrounding project.
+
+Idempotent: safe to re-run any time. The git daemon is PVC-backed, so its repo
+survives pod restarts (only a cluster delete wipes it). To re-seed an existing
+cluster on demand, re-run `d3-kind smoke`: it force-pushes the app and ArgoCD
+reconciles again.
 
 Phases (each gated by an env var = "yes"/"no"; default in brackets):
-  INSTALL_KPS        kube-prometheus-stack (CRDs + operator only)    [yes]
-  INSTALL_GRAFANA    grafana-operator                                [yes]
-  INSTALL_ECK        elastic eck-operator                            [yes]
-  INSTALL_TRAEFIK    traefik (NodePort)                              [yes]
-  INSTALL_ARGOCD     argo-cd                                         [yes]
-  INSTALL_GITSERVER  in-cluster git daemon (ephemeral storage)       [yes]
-  SEED_GIT           generate + push the smoke app into the daemon   [yes]
-  INSTALL_APP        apply the smoke ArgoCD Application               [yes]
-  ARGOCD_SMOKE       poll until the sync op Succeeds (+ Healthy)      [yes]
+  up — operator stack:
+    INSTALL_KPS        kube-prometheus-stack (CRDs + operator only)    [yes]
+    INSTALL_GRAFANA    grafana-operator                                [yes]
+    INSTALL_ECK        elastic eck-operator                            [yes]
+    INSTALL_TRAEFIK    traefik (NodePort)                              [yes]
+  up — argo-cd and the smoke test scoped under it (need INSTALL_ARGOCD=yes):
+    INSTALL_ARGOCD     argo-cd                                         [yes]
+    INSTALL_GITSERVER  in-cluster git daemon (PVC-backed, durable)     [yes]
+    ARGOCD_SMOKE       generate+push app, apply Application, poll the
+                       sync op until Succeeds (+ Healthy); requires
+                       INSTALL_GITSERVER=yes                           [yes]
 
 Key knobs (see the variable block below for the full set):
   CLUSTER_NAME       kind cluster name                               [d3]
@@ -39,22 +58,18 @@ Key knobs (see the variable block below for the full set):
   APP_NAME           smoke Application + Deployment name              [d3-smoke]
   APP_NAMESPACE      destination namespace for the smoke app         [d3-smoke]
   APP_SELFHEAL       enable ArgoCD selfHeal                          [no]
+  GITSERVER_STORAGE  PVC size for the in-cluster git daemon          [1Gi]
   ARGOCD_SMOKE_TIMEOUT           seconds to wait for the sync         [300]
   ARGOCD_SMOKE_REQUIRE_HEALTHY   also require health=Healthy          [yes]
 
 Examples:
-  d3-kind                        # full bring-up + seed + smoke
-  INSTALL_APP=no d3-kind         # cluster + git daemon only, deploy by hand
-  INSTALL_GITSERVER=no SEED_GIT=no INSTALL_APP=no d3-kind   # bare prereqs only
+  d3-kind up                     # full stack + argo-cd smoke test (default)
+  ARGOCD_SMOKE=no d3-kind up     # stack + git daemon, skip the smoke test
+  INSTALL_ARGOCD=no d3-kind up   # stack only (no argo-cd, git daemon or smoke)
+  d3-kind smoke                  # re-seed + re-assert against an existing cluster
+  d3-kind down                   # tear the cluster back down
 EOF
 }
-
-case "${1:-}" in
-  -h | --help)
-    usage
-    exit 0
-    ;;
-esac
 
 CLUSTER_NAME="${CLUSTER_NAME:-d3}"
 
@@ -84,23 +99,23 @@ ARGOCD_RELEASE_NAME="${ARGOCD_RELEASE_NAME:-argocd}"
 ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 ARGOCD_CHART_VERSION="${ARGOCD_CHART_VERSION:-}"
 
-# In-cluster git daemon (ephemeral): ArgoCD pulls the smoke app from here instead
-# of an external git host.
+# In-cluster git daemon: ArgoCD pulls the smoke app from here instead of an
+# external git host. Backed by a PVC, so the repo survives pod restarts — it's a
+# durable opt-in like the operator installs, not throwaway scratch storage.
 INSTALL_GITSERVER="${INSTALL_GITSERVER:-yes}"
 GITSERVER_NAMESPACE="${GITSERVER_NAMESPACE:-git-server}"
 GITSERVER_NAME="${GITSERVER_NAME:-git-daemon}"
 GITSERVER_IMAGE="${GITSERVER_IMAGE:-alpine:3.20}"
 GITSERVER_PORT="${GITSERVER_PORT:-9418}"
+GITSERVER_STORAGE="${GITSERVER_STORAGE:-1Gi}"
 
-# Seed step: generate the smoke app and push it into the daemon's repo. No host
+# Seed config: generate the smoke app and push it into the daemon's repo. No host
 # repo is read — the app is synthesized fresh each run.
-SEED_GIT="${SEED_GIT:-yes}"
 SEED_LOCAL_PORT="${SEED_LOCAL_PORT:-9418}"
 SEED_REPO="${SEED_REPO:-app}"
 SEED_BRANCH="${SEED_BRANCH:-kind-test}"
 
 # The self-contained smoke ArgoCD Application (a plain-manifest directory source).
-INSTALL_APP="${INSTALL_APP:-yes}"
 APP_NAME="${APP_NAME:-d3-smoke}"
 APP_NAMESPACE="${APP_NAMESPACE:-d3-smoke}"
 APP_PATH="${APP_PATH:-app}"
@@ -115,12 +130,14 @@ ARGOCD_SMOKE_REQUIRE_HEALTHY="${ARGOCD_SMOKE_REQUIRE_HEALTHY:-yes}"
 HTTP_NODE_PORT="${HTTP_NODE_PORT:-30080}"
 HTTPS_NODE_PORT="${HTTPS_NODE_PORT:-30443}"
 
-for cmd in kind kubectl helm; do
-  command -v "$cmd" >/dev/null 2>&1 || {
-    echo "missing required tool: $cmd" >&2
-    exit 1
-  }
-done
+require_tools() {
+  for cmd in "$@"; do
+    command -v "$cmd" >/dev/null 2>&1 || {
+      echo "missing required tool: $cmd" >&2
+      exit 1
+    }
+  done
+}
 
 # helm repo add (if missing) + targeted update, in one step
 ensure_helm_repo() { # name url
@@ -140,18 +157,6 @@ set_version_flag() {
     VERSION_FLAG=()
   fi
 }
-
-if kind get clusters | grep -qx "$CLUSTER_NAME"; then
-  echo "kind cluster '$CLUSTER_NAME' already exists"
-  echo "  note: extraPortMappings are fixed at creation; delete the cluster to change them"
-else
-  echo "creating kind cluster '$CLUSTER_NAME'"
-  kind create cluster --name "$CLUSTER_NAME" --wait 120s
-fi
-
-docker update --restart unless-stopped "${CLUSTER_NAME}-control-plane"
-
-kubectl config use-context "kind-${CLUSTER_NAME}" >/dev/null
 
 # Generate a trivial, self-contained app in a scratch git repo and force-push it
 # into the in-cluster git daemon over a temporary port-forward. No host repo is
@@ -211,24 +216,247 @@ YAML
   rm -rf "$work"
 }
 
-# The operator installs below each use `helm … --wait`, so they run strictly
-# serially (total bring-up = sum of readiness times). That's deliberate, not an
-# oversight: these operators are independent and nothing later in the script needs
-# them *Ready* (the smoke app is a plain Deployment) — `--wait` is kept purely for
-# fail-fast (a crashlooping operator surfaces here, not as a mystery later) and so
-# `INSTALL_APP=no` leaves a known-ready stack. If bring-up time matters more than
-# that signal, parallelize these (`&` + per-release logs + `wait`) or drop `--wait`.
-if [[ "$INSTALL_KPS" == "yes" ]]; then
-  ensure_helm_repo prometheus-community https://prometheus-community.github.io/helm-charts
+# Provision the in-cluster git daemon, backed by a PVC so the repo persists
+# across pod restarts. Scoped to argo-cd: argo-cd pulls the generated smoke app
+# from here instead of an external git host.
+provision_gitserver() {
+  kubectl get namespace "$GITSERVER_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$GITSERVER_NAMESPACE"
 
-  kubectl get namespace "$KPS_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$KPS_NAMESPACE"
+  kubectl apply -n "$GITSERVER_NAMESPACE" -f - <<YAML
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${GITSERVER_NAME}
+  labels:
+    app: ${GITSERVER_NAME}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: ${GITSERVER_STORAGE}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${GITSERVER_NAME}
+  labels:
+    app: ${GITSERVER_NAME}
+spec:
+  replicas: 1
+  # RWO PVC: a rolling update would deadlock (new pod can't mount while old holds
+  # it), so replace the pod instead.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ${GITSERVER_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${GITSERVER_NAME}
+    spec:
+      containers:
+        - name: git-daemon
+          image: ${GITSERVER_IMAGE}
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eu
+              apk add --no-cache git git-daemon >/dev/null
+              mkdir -p /srv/git
+              [ -d "/srv/git/${SEED_REPO}.git" ] || git init --bare "/srv/git/${SEED_REPO}.git"
+              exec git daemon --verbose --export-all --enable=receive-pack --reuseaddr --base-path=/srv/git --listen=0.0.0.0 --port=${GITSERVER_PORT}
+          ports:
+            - containerPort: ${GITSERVER_PORT}
+              name: git
+          readinessProbe:
+            tcpSocket:
+              port: ${GITSERVER_PORT}
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          volumeMounts:
+            - name: repos
+              mountPath: /srv/git
+      volumes:
+        - name: repos
+          persistentVolumeClaim:
+            claimName: ${GITSERVER_NAME}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${GITSERVER_NAME}
+  labels:
+    app: ${GITSERVER_NAME}
+spec:
+  selector:
+    app: ${GITSERVER_NAME}
+  ports:
+    - name: git
+      port: ${GITSERVER_PORT}
+      targetPort: ${GITSERVER_PORT}
+YAML
 
-  set_version_flag "$KPS_CHART_VERSION"
-  helm upgrade --install "$KPS_RELEASE_NAME" prometheus-community/kube-prometheus-stack \
-    --namespace "$KPS_NAMESPACE" \
-    "${VERSION_FLAG[@]}" \
-    -f - \
-    --wait <<'YAML'
+  kubectl -n "$GITSERVER_NAMESPACE" rollout status deployment/"$GITSERVER_NAME" --timeout=120s
+}
+
+# Apply the self-contained smoke ArgoCD Application pointing at the in-cluster repo.
+apply_smoke_app() {
+  local selfheal=false
+  [[ "$APP_SELFHEAL" == "yes" ]] && selfheal=true
+
+  kubectl apply -n "$ARGOCD_NAMESPACE" -f - <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${APP_NAME}
+  namespace: ${ARGOCD_NAMESPACE}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: git://${GITSERVER_NAME}.${GITSERVER_NAMESPACE}.svc:${GITSERVER_PORT}/${SEED_REPO}.git
+    targetRevision: ${SEED_BRANCH}
+    path: ${APP_PATH}
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${APP_NAMESPACE}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: ${selfheal}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+YAML
+
+  echo "Application ${APP_NAME} applied in ${ARGOCD_NAMESPACE} (deploys into ${APP_NAMESPACE})"
+}
+
+# Poll the Application until its last sync operation Succeeds (+ Healthy unless
+# ARGOCD_SMOKE_REQUIRE_HEALTHY=no). kubectl-only — does not need the argocd CLI.
+#
+# The pass signal is the LAST SYNC OPERATION's result (operationState.phase ==
+# Succeeded), not the live sync.status — which can flap OutOfSync<->Synced while
+# ArgoCD re-detects drift, making an instantaneous Synced check racy.
+# operationState.phase is the outcome of the actual apply and is stable once it
+# reaches Succeeded.
+argocd_smoke_poll() {
+  echo "argocd smoke: waiting up to ${ARGOCD_SMOKE_TIMEOUT}s for ${APP_NAME} (require-healthy=${ARGOCD_SMOKE_REQUIRE_HEALTHY})"
+  # nudge ArgoCD to reconcile now instead of waiting for its poll interval
+  kubectl -n "$ARGOCD_NAMESPACE" annotate application "$APP_NAME" \
+    argocd.argoproj.io/refresh=normal --overwrite >/dev/null 2>&1 || true
+
+  local deadline=$((SECONDS + ARGOCD_SMOKE_TIMEOUT))
+  local op_phase="" sync_status="" health_status="" pass=no
+  while [[ $SECONDS -lt $deadline ]]; do
+    # one call → a consistent snapshot of all three fields (space-separated).
+    # `|| true` on read: it returns nonzero at EOF-without-newline (jsonpath emits
+    # no trailing newline, and nothing at all if the get fails) — must not trip set -e.
+    read -r op_phase sync_status health_status < <(
+      kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
+        -o jsonpath='{.status.operationState.phase} {.status.sync.status} {.status.health.status}' 2>/dev/null || true
+    ) || true
+    echo "  op=${op_phase:-<none>} sync=${sync_status:-<none>} health=${health_status:-<none>}"
+    # a failed/errored sync operation is terminal — fail fast, don't wait out the timeout
+    if [[ "$op_phase" == "Failed" || "$op_phase" == "Error" ]]; then
+      break
+    fi
+    if [[ "$op_phase" == "Succeeded" ]] &&
+      { [[ "$ARGOCD_SMOKE_REQUIRE_HEALTHY" != "yes" ]] || [[ "$health_status" == "Healthy" ]]; }; then
+      pass=yes
+      break
+    fi
+    sleep 10
+  done
+
+  if [[ "$pass" == "yes" ]]; then
+    echo "argocd smoke: PASS (op=${op_phase} sync=${sync_status:-<none>} health=${health_status:-<none>})"
+  else
+    echo "argocd smoke: FAIL (op=${op_phase:-<none>} sync=${sync_status:-<none>} health=${health_status:-<none>})" >&2
+    echo "--- operationState.message ---" >&2
+    kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
+      -o jsonpath='{.status.operationState.message}{"\n"}' >&2 || true
+    echo "--- Application conditions ---" >&2
+    kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
+      -o jsonpath='{range .status.conditions[*]}{.type}: {.message}{"\n"}{end}' >&2 || true
+    exit 1
+  fi
+}
+
+# The argocd smoke test needs BOTH argo-cd and the git daemon present. Refuse
+# (hard fail) if either is missing rather than half-running or auto-provisioning.
+require_smoke_deps() {
+  local missing=()
+  kubectl get crd applications.argoproj.io >/dev/null 2>&1 ||
+    missing+=("argo-cd (Application CRD not found)")
+  kubectl -n "$GITSERVER_NAMESPACE" get deployment "$GITSERVER_NAME" >/dev/null 2>&1 ||
+    missing+=("git daemon (deployment ${GITSERVER_NAME} in namespace ${GITSERVER_NAMESPACE} not found)")
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "argocd smoke test requires both argo-cd and the in-cluster git daemon:" >&2
+    printf '  - missing: %s\n' "${missing[@]}" >&2
+    echo "bring them up first: d3-kind up (with INSTALL_ARGOCD=yes INSTALL_GITSERVER=yes)" >&2
+    exit 1
+  fi
+}
+
+# The basic "argocd works with git" smoke test: push the generated app into the
+# in-cluster daemon, point an ArgoCD Application at it, assert the sync succeeds.
+# Refuses unless argo-cd and the git daemon are both present.
+argocd_git_smoke() {
+  require_smoke_deps
+  echo "argocd smoke: seeding ${SEED_REPO}.git (branch ${SEED_BRANCH})"
+  seed_git
+  apply_smoke_app
+  argocd_smoke_poll
+}
+
+# ── up: kind cluster + operator stack + in-cluster git daemon ────────────────
+cmd_up() {
+  require_tools kind kubectl helm
+
+  # the argocd smoke test depends on both argo-cd and the git daemon — refuse a
+  # contradictory config up front rather than failing deep into the bring-up
+  if [[ "$ARGOCD_SMOKE" == "yes" && ( "$INSTALL_ARGOCD" != "yes" || "$INSTALL_GITSERVER" != "yes" ) ]]; then
+    echo "ARGOCD_SMOKE=yes needs INSTALL_ARGOCD=yes and INSTALL_GITSERVER=yes (got INSTALL_ARGOCD=$INSTALL_ARGOCD, INSTALL_GITSERVER=$INSTALL_GITSERVER)" >&2
+    echo "set ARGOCD_SMOKE=no to bring up the stack without the smoke test" >&2
+    exit 1
+  fi
+
+  if kind get clusters | grep -qx "$CLUSTER_NAME"; then
+    echo "kind cluster '$CLUSTER_NAME' already exists"
+    echo "  note: extraPortMappings are fixed at creation; delete the cluster to change them"
+  else
+    echo "creating kind cluster '$CLUSTER_NAME'"
+    kind create cluster --name "$CLUSTER_NAME" --wait 120s
+  fi
+
+  docker update --restart unless-stopped "${CLUSTER_NAME}-control-plane"
+
+  kubectl config use-context "kind-${CLUSTER_NAME}" >/dev/null
+
+  # The operator installs below each use `helm … --wait`, so they run strictly
+  # serially (total bring-up = sum of readiness times). That's deliberate, not an
+  # oversight: these operators are independent and nothing later needs them
+  # *Ready* (the smoke app is a plain Deployment) — `--wait` is kept purely for
+  # fail-fast (a crashlooping operator surfaces here, not as a mystery later) and
+  # so a bare `up` leaves a known-ready stack. If bring-up time matters more than
+  # that signal, parallelize these (`&` + per-release logs + `wait`) or drop `--wait`.
+  if [[ "$INSTALL_KPS" == "yes" ]]; then
+    ensure_helm_repo prometheus-community https://prometheus-community.github.io/helm-charts
+
+    kubectl get namespace "$KPS_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$KPS_NAMESPACE"
+
+    set_version_flag "$KPS_CHART_VERSION"
+    helm upgrade --install "$KPS_RELEASE_NAME" prometheus-community/kube-prometheus-stack \
+      --namespace "$KPS_NAMESPACE" \
+      "${VERSION_FLAG[@]}" \
+      -f - \
+      --wait <<'YAML'
 crds:
   enabled: true
 
@@ -275,53 +503,53 @@ prometheusOperator:
   serviceMonitor:
     selfMonitor: false
 YAML
-else
-  echo "skipping kube-prometheus-stack (INSTALL_KPS=$INSTALL_KPS)"
-fi
+  else
+    echo "skipping kube-prometheus-stack (INSTALL_KPS=$INSTALL_KPS)"
+  fi
 
-if [[ "$INSTALL_GRAFANA" == "yes" ]]; then
-  kubectl get namespace "$GRAFANA_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$GRAFANA_NAMESPACE"
+  if [[ "$INSTALL_GRAFANA" == "yes" ]]; then
+    kubectl get namespace "$GRAFANA_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$GRAFANA_NAMESPACE"
 
-  set_version_flag "$GRAFANA_CHART_VERSION"
-  helm upgrade --install "$GRAFANA_RELEASE_NAME" "$GRAFANA_CHART_REF" \
-    --namespace "$GRAFANA_NAMESPACE" \
-    "${VERSION_FLAG[@]}" \
-    -f - \
-    --wait <<'YAML'
+    set_version_flag "$GRAFANA_CHART_VERSION"
+    helm upgrade --install "$GRAFANA_RELEASE_NAME" "$GRAFANA_CHART_REF" \
+      --namespace "$GRAFANA_NAMESPACE" \
+      "${VERSION_FLAG[@]}" \
+      -f - \
+      --wait <<'YAML'
 installCRDs: true
 
 serviceMonitor:
   enabled: false
 YAML
-else
-  echo "skipping grafana-operator (INSTALL_GRAFANA=$INSTALL_GRAFANA)"
-fi
+  else
+    echo "skipping grafana-operator (INSTALL_GRAFANA=$INSTALL_GRAFANA)"
+  fi
 
-if [[ "$INSTALL_ECK" == "yes" ]]; then
-  ensure_helm_repo elastic https://helm.elastic.co
+  if [[ "$INSTALL_ECK" == "yes" ]]; then
+    ensure_helm_repo elastic https://helm.elastic.co
 
-  kubectl get namespace "$ECK_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$ECK_NAMESPACE"
+    kubectl get namespace "$ECK_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$ECK_NAMESPACE"
 
-  set_version_flag "$ECK_CHART_VERSION"
-  helm upgrade --install "$ECK_RELEASE_NAME" elastic/eck-operator \
-    --namespace "$ECK_NAMESPACE" \
-    "${VERSION_FLAG[@]}" \
-    --wait
-else
-  echo "skipping eck-operator (INSTALL_ECK=$INSTALL_ECK)"
-fi
+    set_version_flag "$ECK_CHART_VERSION"
+    helm upgrade --install "$ECK_RELEASE_NAME" elastic/eck-operator \
+      --namespace "$ECK_NAMESPACE" \
+      "${VERSION_FLAG[@]}" \
+      --wait
+  else
+    echo "skipping eck-operator (INSTALL_ECK=$INSTALL_ECK)"
+  fi
 
-if [[ "$INSTALL_TRAEFIK" == "yes" ]]; then
-  ensure_helm_repo traefik https://traefik.github.io/charts
+  if [[ "$INSTALL_TRAEFIK" == "yes" ]]; then
+    ensure_helm_repo traefik https://traefik.github.io/charts
 
-  kubectl get namespace "$TRAEFIK_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$TRAEFIK_NAMESPACE"
+    kubectl get namespace "$TRAEFIK_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$TRAEFIK_NAMESPACE"
 
-  set_version_flag "$TRAEFIK_CHART_VERSION"
-  helm upgrade --install "$TRAEFIK_RELEASE_NAME" traefik/traefik \
-    --namespace "$TRAEFIK_NAMESPACE" \
-    "${VERSION_FLAG[@]}" \
-    -f - \
-    --wait <<YAML
+    set_version_flag "$TRAEFIK_CHART_VERSION"
+    helm upgrade --install "$TRAEFIK_RELEASE_NAME" traefik/traefik \
+      --namespace "$TRAEFIK_NAMESPACE" \
+      "${VERSION_FLAG[@]}" \
+      -f - \
+      --wait <<YAML
 service:
   spec:
     type: NodePort
@@ -331,21 +559,21 @@ ports:
   websecure:
     nodePort: ${HTTPS_NODE_PORT}
 YAML
-else
-  echo "skipping traefik (INSTALL_TRAEFIK=$INSTALL_TRAEFIK)"
-fi
+  else
+    echo "skipping traefik (INSTALL_TRAEFIK=$INSTALL_TRAEFIK)"
+  fi
 
-if [[ "$INSTALL_ARGOCD" == "yes" ]]; then
-  ensure_helm_repo argo https://argoproj.github.io/argo-helm
+  if [[ "$INSTALL_ARGOCD" == "yes" ]]; then
+    ensure_helm_repo argo https://argoproj.github.io/argo-helm
 
-  kubectl get namespace "$ARGOCD_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$ARGOCD_NAMESPACE"
+    kubectl get namespace "$ARGOCD_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$ARGOCD_NAMESPACE"
 
-  set_version_flag "$ARGOCD_CHART_VERSION"
-  helm upgrade --install "$ARGOCD_RELEASE_NAME" argo/argo-cd \
-    --namespace "$ARGOCD_NAMESPACE" \
-    "${VERSION_FLAG[@]}" \
-    -f - \
-    --wait <<'YAML'
+    set_version_flag "$ARGOCD_CHART_VERSION"
+    helm upgrade --install "$ARGOCD_RELEASE_NAME" argo/argo-cd \
+      --namespace "$ARGOCD_NAMESPACE" \
+      "${VERSION_FLAG[@]}" \
+      -f - \
+      --wait <<'YAML'
 dex:
   enabled: false
 
@@ -357,180 +585,74 @@ notifications:
 applicationSet:
   replicas: 0
 YAML
-else
-  echo "skipping argo-cd (INSTALL_ARGOCD=$INSTALL_ARGOCD)"
-fi
 
-if [[ "$INSTALL_GITSERVER" == "yes" ]]; then
-  kubectl get namespace "$GITSERVER_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$GITSERVER_NAMESPACE"
-
-  kubectl apply -n "$GITSERVER_NAMESPACE" -f - <<YAML
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ${GITSERVER_NAME}
-  labels:
-    app: ${GITSERVER_NAME}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ${GITSERVER_NAME}
-  template:
-    metadata:
-      labels:
-        app: ${GITSERVER_NAME}
-    spec:
-      containers:
-        - name: git-daemon
-          image: ${GITSERVER_IMAGE}
-          command: ["sh", "-c"]
-          args:
-            - |
-              set -eu
-              apk add --no-cache git git-daemon >/dev/null
-              mkdir -p /srv/git
-              [ -d "/srv/git/${SEED_REPO}.git" ] || git init --bare "/srv/git/${SEED_REPO}.git"
-              exec git daemon --verbose --export-all --enable=receive-pack --reuseaddr --base-path=/srv/git --listen=0.0.0.0 --port=${GITSERVER_PORT}
-          ports:
-            - containerPort: ${GITSERVER_PORT}
-              name: git
-          readinessProbe:
-            tcpSocket:
-              port: ${GITSERVER_PORT}
-            initialDelaySeconds: 2
-            periodSeconds: 3
-          volumeMounts:
-            - name: repos
-              mountPath: /srv/git
-      volumes:
-        - name: repos
-          emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${GITSERVER_NAME}
-  labels:
-    app: ${GITSERVER_NAME}
-spec:
-  selector:
-    app: ${GITSERVER_NAME}
-  ports:
-    - name: git
-      port: ${GITSERVER_PORT}
-      targetPort: ${GITSERVER_PORT}
-YAML
-
-  kubectl -n "$GITSERVER_NAMESPACE" rollout status deployment/"$GITSERVER_NAME" --timeout=120s
-else
-  echo "skipping git-daemon (INSTALL_GITSERVER=$INSTALL_GITSERVER)"
-fi
-
-if [[ "$SEED_GIT" == "yes" ]]; then
-  command -v git >/dev/null 2>&1 || {
-    echo "SEED_GIT=yes requires git on PATH" >&2
-    exit 1
-  }
-  echo "seeding smoke app into ${SEED_REPO}.git (branch ${SEED_BRANCH})"
-  seed_git
-else
-  echo "skipping git seed (SEED_GIT=$SEED_GIT)"
-fi
-
-if [[ "$INSTALL_APP" == "yes" ]]; then
-  APP_SELFHEAL_BOOL=false
-  [[ "$APP_SELFHEAL" == "yes" ]] && APP_SELFHEAL_BOOL=true
-
-  kubectl apply -n "$ARGOCD_NAMESPACE" -f - <<YAML
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: ${APP_NAME}
-  namespace: ${ARGOCD_NAMESPACE}
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: default
-  source:
-    repoURL: git://${GITSERVER_NAME}.${GITSERVER_NAMESPACE}.svc:${GITSERVER_PORT}/${SEED_REPO}.git
-    targetRevision: ${SEED_BRANCH}
-    path: ${APP_PATH}
-    directory:
-      recurse: true
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: ${APP_NAMESPACE}
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: ${APP_SELFHEAL_BOOL}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-YAML
-
-  echo "Application ${APP_NAME} applied in ${ARGOCD_NAMESPACE} (deploys into ${APP_NAMESPACE})"
-else
-  echo "skipping smoke Application (INSTALL_APP=$INSTALL_APP)"
-fi
-
-# ArgoCD smoke test: prove ArgoCD pulled the generated app from the in-cluster
-# daemon and applied it. kubectl-only — does not need the argocd CLI.
-#
-# The pass signal is the LAST SYNC OPERATION's result (operationState.phase ==
-# Succeeded), not the live sync.status — which can flap OutOfSync<->Synced while
-# ArgoCD re-detects drift, making an instantaneous Synced check racy.
-# operationState.phase is the outcome of the actual apply and is stable once it
-# reaches Succeeded. Health is asserted on top of that unless
-# ARGOCD_SMOKE_REQUIRE_HEALTHY=no.
-if [[ "$ARGOCD_SMOKE" == "yes" ]]; then
-  if [[ "$INSTALL_APP" != "yes" ]]; then
-    echo "skipping argocd smoke test (needs INSTALL_APP=yes; INSTALL_APP=$INSTALL_APP)"
-  else
-    echo "argocd smoke: waiting up to ${ARGOCD_SMOKE_TIMEOUT}s for ${APP_NAME} (require-healthy=${ARGOCD_SMOKE_REQUIRE_HEALTHY})"
-    # nudge ArgoCD to reconcile now instead of waiting for its poll interval
-    kubectl -n "$ARGOCD_NAMESPACE" annotate application "$APP_NAME" \
-      argocd.argoproj.io/refresh=normal --overwrite >/dev/null 2>&1 || true
-
-    deadline=$((SECONDS + ARGOCD_SMOKE_TIMEOUT))
-    op_phase="" sync_status="" health_status="" pass=no
-    while [[ $SECONDS -lt $deadline ]]; do
-      # one call → a consistent snapshot of all three fields (space-separated).
-      # `|| true` on read: it returns nonzero at EOF-without-newline (jsonpath emits
-      # no trailing newline, and nothing at all if the get fails) — must not trip set -e.
-      read -r op_phase sync_status health_status < <(
-        kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
-          -o jsonpath='{.status.operationState.phase} {.status.sync.status} {.status.health.status}' 2>/dev/null || true
-      ) || true
-      echo "  op=${op_phase:-<none>} sync=${sync_status:-<none>} health=${health_status:-<none>}"
-      # a failed/errored sync operation is terminal — fail fast, don't wait out the timeout
-      if [[ "$op_phase" == "Failed" || "$op_phase" == "Error" ]]; then
-        break
-      fi
-      if [[ "$op_phase" == "Succeeded" ]] &&
-        { [[ "$ARGOCD_SMOKE_REQUIRE_HEALTHY" != "yes" ]] || [[ "$health_status" == "Healthy" ]]; }; then
-        pass=yes
-        break
-      fi
-      sleep 10
-    done
-
-    if [[ "$pass" == "yes" ]]; then
-      echo "argocd smoke: PASS (op=${op_phase} sync=${sync_status:-<none>} health=${health_status:-<none>})"
+    # argo-cd includes the in-cluster git daemon it pulls from (durable, PVC-backed)
+    if [[ "$INSTALL_GITSERVER" == "yes" ]]; then
+      provision_gitserver
     else
-      echo "argocd smoke: FAIL (op=${op_phase:-<none>} sync=${sync_status:-<none>} health=${health_status:-<none>})" >&2
-      echo "--- operationState.message ---" >&2
-      kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
-        -o jsonpath='{.status.operationState.message}{"\n"}' >&2 || true
-      echo "--- Application conditions ---" >&2
-      kubectl -n "$ARGOCD_NAMESPACE" get application "$APP_NAME" \
-        -o jsonpath='{range .status.conditions[*]}{.type}: {.message}{"\n"}{end}' >&2 || true
-      exit 1
+      echo "skipping git-daemon (INSTALL_GITSERVER=$INSTALL_GITSERVER)"
     fi
-  fi
-else
-  echo "skipping argocd smoke test (ARGOCD_SMOKE=$ARGOCD_SMOKE)"
-fi
 
-echo "done."
+    # optional, argo-cd-scoped smoke test: prove "argocd pulls from in-cluster git".
+    # The config check above guarantees the git daemon is present when this runs.
+    if [[ "$ARGOCD_SMOKE" == "yes" ]]; then
+      require_tools git
+      argocd_git_smoke
+    else
+      echo "skipping argocd smoke test (ARGOCD_SMOKE=$ARGOCD_SMOKE)"
+    fi
+  else
+    echo "skipping argo-cd (INSTALL_ARGOCD=$INSTALL_ARGOCD); git daemon + smoke test are scoped to it and skipped too"
+  fi
+
+  echo "up: done."
+}
+
+# ── down: delete the kind cluster ────────────────────────────────────────────
+cmd_down() {
+  require_tools kind
+
+  if kind get clusters | grep -qx "$CLUSTER_NAME"; then
+    echo "deleting kind cluster '$CLUSTER_NAME'"
+    kind delete cluster --name "$CLUSTER_NAME"
+  else
+    echo "kind cluster '$CLUSTER_NAME' does not exist"
+  fi
+
+  echo "down: done."
+}
+
+# ── smoke: (re)run the argocd-works-with-git smoke test standalone ───────────
+# For an existing cluster — e.g. recovery after a restart wiped the ephemeral
+# git repo. Assumes `up` already installed argo-cd and the git daemon.
+cmd_smoke() {
+  require_tools kubectl git
+
+  kubectl config use-context "kind-${CLUSTER_NAME}" >/dev/null
+
+  # refuses unless argo-cd and the git daemon are both already present
+  argocd_git_smoke
+
+  echo "smoke: done."
+}
+
+case "${1:-}" in
+  up)
+    cmd_up
+    ;;
+  smoke)
+    cmd_smoke
+    ;;
+  down)
+    cmd_down
+    ;;
+  -h | --help | help | "")
+    usage
+    ;;
+  *)
+    echo "unknown command: $1" >&2
+    echo >&2
+    usage >&2
+    exit 1
+    ;;
+esac
