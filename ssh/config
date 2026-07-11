@@ -1,5 +1,3 @@
-ForwardX11 yes
-ForwardAgent yes
 EnableEscapeCommandline yes
 # ServerAliveInterval 120
 # IdentitiesOnly yes
@@ -13,5 +11,16 @@ EnableEscapeCommandline yes
 #    HostkeyAlgorithms +ssh-rsa
 #
 # includes ~/.ssh/config.d/*
+# NOTE: keep Include above the Host blocks — ssh_config is first-match-wins,
+# and an Include placed after a Host block would inherit that block's context.
 Include config.d/*
 
+# Trusted LAN nodes: the only hosts that get the agent (and X11) forwarded.
+Host batman robin
+  ForwardAgent yes
+  ForwardX11 yes
+
+# Default for everything else (agent VMs, h0, internet hosts): no forwarding.
+Host *
+  ForwardAgent no
+  ForwardX11 no
