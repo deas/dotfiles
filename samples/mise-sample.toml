@@ -1,0 +1,55 @@
+# mise-sample.toml — direnv → mise migration cheat sheet
+#
+# Each block shows a common .envrc idiom and its mise.toml equivalent.
+# Copy the parts you need into a project's mise.toml (or .mise.toml),
+# then remove the .envrc and the direnv shell hook.
+#
+# Shell activation (replaces `direnv hook`):
+#   nushell:  add to env.nu:   mise activate nu | save -f ($nu.default-config-dir | path join "mise.nu")
+#             add to config.nu: use mise.nu
+#   zsh:      eval "$(mise activate zsh)"
+
+[env]
+# --- .envrc: export FOO=bar ---------------------------------------------
+FOO = "bar"
+APP_ENV = "development"
+
+# --- .envrc: dotenv / dotenv_if_exists ----------------------------------
+# Existing .env files load unchanged — no rewrite needed.
+_.file = ".env"
+# Several files (later ones win):
+# _.file = [".env", ".env.local"]
+
+# --- .envrc: PATH_add bin ------------------------------------------------
+_.path = ["./bin", "./node_modules/.bin"]
+
+# --- .envrc: layout python / virtualenv ----------------------------------
+_.python.venv = { path = ".venv", create = true }
+
+# --- .envrc: export FOO=$(some-command) — dynamic values ------------------
+# Tera templates replace command substitution. Note: a failing command
+# aborts env loading, so guard commands that may fail:
+GIT_SHA = "{{ exec(command='git rev-parse --short HEAD 2>/dev/null || echo none') }}"
+# Reference other values / home dir:
+KUBECONFIG = "{{ env.HOME }}/.kube/project.yaml"
+PROJECT_ROOT = "{{ config_root }}"
+
+# --- .envrc: unset FOO ----------------------------------------------------
+# Explicitly remove a var inherited from the parent environment:
+LEGACY_VAR = false
+
+# --- Secrets --------------------------------------------------------------
+# direnv users often source untracked files; mise equivalent is an
+# untracked local config (mise.local.toml) or a redacted var:
+# SECRET_TOKEN = { value = "{{ exec(command='pass show project/token') }}", redact = true }
+
+# ---------------------------------------------------------------------------
+# Bonus: mise also replaces asdf/.tool-versions — pin runtimes per project.
+[tools]
+node = "22"
+python = "3.13"
+
+# Bonus: simple task runner (replaces Makefile one-liners).
+[tasks.dev]
+description = "Start the dev server"
+run = "npm run dev"
