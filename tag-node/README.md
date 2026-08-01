@@ -35,6 +35,35 @@ Kept out of the untagged root because it must not reach a server:
 - `tag-desktop/config/systemd/user/` — user units for desktop sessions and for
   services a managed host provisions itself.
 
+## Overriding an untagged file
+
+A tag directory does not only *add* files — within one `DOTFILES_DIRS` entry a
+tagged file **wins** over the same path in the untagged root. That is the seam
+for config that should exist everywhere but with different content per machine
+kind.
+
+`config/nvim/lazyvim.json` is the worked example. The untagged root carries the
+workstation extras list (~45 entries: debuggers, JVM/.NET/Rust/Zig toolchains,
+AI assistants, UI polish). Every one of those pulls plugins, and the `lang.*`
+extras drive Mason to fetch language servers — a large network and disk
+footprint that a headless machine has no use for. `tag-node/` therefore carries
+its own `lazyvim.json` with the config-as-code subset: YAML, JSON, TOML,
+Markdown, Ansible, Terraform, Docker, Nix, Python, plus `util.dot` for shell and
+dotfile filetypes.
+
+The non-`extras` keys (`install_version`, `news`, `version`) are kept identical
+to the untagged file on purpose — LazyVim uses them to decide whether to re-run
+its installer or re-show release notes.
+
+Two things to know when editing either file:
+
+- LazyVim **writes** `lazyvim.json` itself (`:LazyExtras`, and when it records
+  news as seen). Since rcm links it, that write goes through the symlink and
+  dirties this repo. Check `git status` after using `:LazyExtras`.
+- `lazy-lock.json` is deliberately **not** tracked (see `config/nvim/.gitignore`).
+  Plugin versions are therefore not pinned across machines; each one resolves to
+  whatever the plugins' default branches point at when it first syncs.
+
 ## Precedence
 
 A consumer that layers this repo on top of its own base typically lets that
