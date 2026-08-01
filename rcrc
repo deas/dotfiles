@@ -1,2 +1,6 @@
 EXCLUDES="*.md hyprland-wiki LICENSE zshrc-zplug vimrc vimrc.bundles clojure-sc zsh bash samples misc config/carapace/specs-ignore config/systemd/user/mcp-playwright.service"
 DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles"
+# Desktop machines (batman, robin) take the GUI/workstation layer in tag-desktop/.
+# Headless consumers select TAGS="node" through their own rcrc and never source
+# this file. Untagged files are universal — see README.md "Profiles (rcm tags)".
+TAGS="desktop"

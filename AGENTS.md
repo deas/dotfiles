@@ -38,6 +38,14 @@ Here's a typical workflow:
 
 ## Structure
 
+- **Profiles are rcm tags.** The untagged repo root is *universal* config,
+  linked on every machine. `tag-desktop/` holds omarchy/Hyprland GUI and
+  workstation-only files and is selected by `TAGS="desktop"` in this repo's
+  `rcrc`; `tag-node/` holds headless-server additions and is selected by
+  `TAGS="node"` from a consumer's own rcrc. `host-batman/` and `host-robin/`
+  are rcm *host* dirs and are orthogonal to tags. When adding config, put it in
+  the untagged root unless it needs a graphical session or would be useless or
+  harmful on a headless node — see `README.md` and `tag-node/README.md`.
 - The `config` folder correspondes to `~/.config` which is a hidden directory within your home directory that stores configuration files for various applications. It's a standard location for user-specific settings and preferences, adhering to the XDG Base Directory Specification.
-- `config/hypr` is the configuration for the `Hyprland` dynamic tiling Wayland compositor. rcm soft-links `~/.config/hypr` to this folder. When assisting with Hyprland, use the official documentation at <https://wiki.hypr.land/>. Some configuration directives refer to files in
+- `tag-desktop/config/hypr` is the configuration for the `Hyprland` dynamic tiling Wayland compositor. rcm soft-links `~/.config/hypr` to this folder on machines carrying the `desktop` tag. When assisting with Hyprland, use the official documentation at <https://wiki.hypr.land/>. Some configuration directives refer to files in
   subfolders of `~/.local/share/omarchy`. These files are managed by another party and shared by many people. We do not change files in `~/.local/share/omarchy`. Instead, we override settings in our files in `config/hypr`. When assisting with files in the `omarchy` folder, use the official documentation website at <https://manuals.omamix.org/2/the-omarchy-manual/>.
