@@ -1,0 +1,19 @@
+# Node profile — selected by TAGS="node", so only headless s0n nodes see it.
+# rcm gives a tagged file precedence over the untagged root one, so this REPLACES
+# ~/dotfiles/gitconfig rather than adding to it. Hence the include: everything
+# stays defined once in the root file, and only what genuinely has to differ is
+# restated below.
+#
+# What has to differ is the identity. A node account is an agent (or an agent's
+# human owner acting through one), and its commits must not read as though the
+# operator typed them — an agent that authors as you is indistinguishable from
+# you in `git log`, on every node, forever.
+#
+# Order matters: git takes the LAST value, so the include comes first and the
+# override after it.
+[include]
+  path = ~/dotfiles/gitconfig
+
+[user]
+  name = A1 Automation
+  email = a1auto1gg@gmail.com
