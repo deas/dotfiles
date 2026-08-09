@@ -1,6 +1,18 @@
 EXCLUDES="*.md hyprland-wiki LICENSE zshrc-zplug vimrc vimrc.bundles clojure-sc zsh bash samples misc config/carapace/specs-ignore config/systemd/user/mcp-playwright.service"
-DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles"
-# Desktop machines (batman, robin) take the GUI/workstation layer in tag-desktop/.
-# Headless consumers select TAGS="node" through their own rcrc and never source
-# this file. Untagged files are universal — see README.md "Profiles (rcm tags)".
-TAGS="desktop"
+# dotfiles-user is a provisioning layer's per-user overlay, absent on a
+# workstation — rcm tolerates a missing dir. First-listed wins a collision.
+DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles-user $HOME/dotfiles"
+# Machine profile. Every machine sources THIS file, so the profile is recognized
+# here rather than selected by a consumer's own rcrc — see README.md "Profiles
+# (rcm tags)". Desktop must be proven (the workstations run Omarchy); anything
+# unrecognized falls to node, which is the harmless direction.
+if [ -n "${RCM_PROFILE:-}" ]; then
+  TAGS="$RCM_PROFILE"
+elif grep -qE '^ID="?omarchy"?$' /etc/os-release 2>/dev/null; then
+  TAGS="desktop"
+else
+  TAGS="node"
+fi
+# rcm shells out to the `hostname` binary when HOSTNAME is unset, and an Arch
+# node has none — the run then errors and host-<name>/ never resolves.
+HOSTNAME="${HOSTNAME:-$(uname -n)}"

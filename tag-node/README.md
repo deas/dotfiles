@@ -5,19 +5,13 @@ directory reaches the desktop machines, which run `TAGS="desktop"`.
 
 ## Who selects it
 
-Headless machines — servers and provisioned user accounts that get their
-environment from a configuration-management layer rather than from this repo's
-own `rcrc`. Such a consumer clones this repo out of band and renders a
-dedicated rcrc pinned at the clone:
+Headless machines — servers and provisioned user accounts. They run the same
+`just rcm-sync` a workstation does; this repo's own `rcrc` recognizes the
+machine from `/etc/os-release` and sets `TAGS="node"` for anything that is not
+Omarchy, so such a machine receives the **untagged root** plus this directory.
 
-```sh
-. <clone>/rcrc            # inherit this repo's EXCLUDES
-EXCLUDES="$EXCLUDES .git justfile rcrc"
-DOTFILES_DIRS="<clone>"
-TAGS="node"
-```
-
-so it receives the **untagged root** of this repo plus this directory.
+A consumer therefore renders nothing and pins nothing. It clones the repo and
+runs the recipe; `RCM_PROFILE` is there if a machine ever needs contradicting.
 
 ## What belongs here
 

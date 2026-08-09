@@ -10,9 +10,15 @@ git-sync:
   git pull
   git submodule update --init --recursive
 
-# rcm sync
+# rcm sync — the one entrypoint, on a workstation and on a provisioned node
+# alike. The rcrc recognizes which. Keep it non-interactive: provisioning runs
+# it with no tty, where a prompt is answered "no".
 rcm-sync:
-  cd "$HOME" && env RCRC="$HOME/dotfiles/rcrc" rcup -v
+  cd "$HOME" && env RCRC="{{justfile_directory()}}/rcrc" rcup -v
+
+# Remove dotfile symlinks left dangling by a source that moved or went away.
+# Split out of rcm-sync because it prompts. Sweeps $HOME, so read each one.
+rcm-clean:
   find "$HOME" -maxdepth 3 -xtype l -ok rm {} \;
 
 # Create a repomix output file
