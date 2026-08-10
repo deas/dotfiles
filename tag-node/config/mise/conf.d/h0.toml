@@ -17,5 +17,7 @@ trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
 "npm:@playwright/mcp" = "0.0.78"
 "npm:opencode-ai" = { npm_args = "--ignore-scripts=false", version = "latest" }
 "npm:openwiki" = "latest"
+"herdr" = "latest"
+"pipx:graphifyy" = "latest"
 "python" = "3.13"
 "yt-dlp" = "latest"
