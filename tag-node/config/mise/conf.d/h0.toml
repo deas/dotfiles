@@ -1,0 +1,21 @@
+#
+# Ansible managed
+#
+# Managed by the s0n `mise` role — do not edit. Non-destructive conf.d fragment
+# layered over the user's own ~/.config/mise/config.toml (never touched).
+# Declares the s0n user-layer tool set; override `mise_global_tools` in group_vars.
+[settings]
+# Scriptable trust (ADR-0033): project mise configs under these paths load
+# without an interactive `mise trust` — new checkouts/worktrees included.
+trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
+[tools]
+"node" = "22"
+"npm:@anthropic-ai/claude-code" = { npm_args = "--ignore-scripts=false", version = "latest" }
+"npm:@beads/bd" = { npm_args = "--ignore-scripts=false", version = "latest" }
+"npm:@googleworkspace/cli" = { npm_args = "--ignore-scripts=false", version = "latest" }
+"npm:@mariozechner/pi-coding-agent" = "latest"
+"npm:@playwright/mcp" = "0.0.78"
+"npm:opencode-ai" = { npm_args = "--ignore-scripts=false", version = "latest" }
+"npm:openwiki" = "latest"
+"python" = "3.13"
+"yt-dlp" = "latest"
