@@ -42,8 +42,11 @@ Here's a typical workflow:
   linked on every machine. `tag-desktop/` holds omarchy/Hyprland GUI and
   workstation-only files and is selected by `TAGS="desktop"` in this repo's
   `rcrc`; `tag-node/` holds headless-server additions and is selected by
-  `TAGS="node"` from a consumer's own rcrc. `host-batman/` and `host-robin/`
-  are rcm *host* dirs and are orthogonal to tags. When adding config, put it in
+  `TAGS="node"` from a consumer's own rcrc. `rcrc` additionally appends a
+  `user-$(id -un)` tag, so `tag-user-<login>/` is a per-account overlay on top
+  of the profile — rcm skips it when the directory is absent. `host-batman/`
+  and `host-robin/` are rcm *host* dirs and are orthogonal to tags. When
+  adding config, put it in
   the untagged root unless it needs a graphical session or would be useless or
   harmful on a headless node — see `README.md` and `tag-node/README.md`.
 - The `config` folder correspondes to `~/.config` which is a hidden directory within your home directory that stores configuration files for various applications. It's a standard location for user-specific settings and preferences, adhering to the XDG Base Directory Specification.

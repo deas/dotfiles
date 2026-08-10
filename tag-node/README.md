@@ -13,6 +13,11 @@ Omarchy, so such a machine receives the **untagged root** plus this directory.
 A consumer therefore renders nothing and pins nothing. It clones the repo and
 runs the recipe; `RCM_PROFILE` is there if a machine ever needs contradicting.
 
+The profile is per-machine, but `rcrc` also appends a `user-<login>` tag, so an
+account here additionally gets `tag-user-<login>/` when that directory exists.
+That is an overlay on top of this one, never a substitute: a node account still
+takes the untagged root plus `tag-node/`.
+
 ## What belongs here
 
 Config that is wanted on a headless machine and is either useless or harmful on

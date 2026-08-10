@@ -13,6 +13,11 @@ elif grep -qE '^ID="?omarchy"?$' /etc/os-release 2>/dev/null; then
 else
   TAGS="node"
 fi
+# Per-user overlay, orthogonal to the profile: tag-user-<login>/ if one exists
+# (rcm skips a tag with no directory). `id -un` rather than $USER, which is
+# unset under systemd units, cron and some su invocations — that would yield the
+# tag `user-` and match a stray directory instead of nothing.
+TAGS="$TAGS user-$(id -un)"
 # rcm shells out to the `hostname` binary when HOSTNAME is unset, and an Arch
 # node has none — the run then errors and host-<name>/ never resolves.
 HOSTNAME="${HOSTNAME:-$(uname -n)}"

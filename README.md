@@ -31,13 +31,24 @@ The repo serves two kinds of machine. rcm's tag directories pick which:
 | untagged root | always | universal config — git, shell-agnostic CLI tooling, `bin/`, editors |
 | `tag-desktop/` | `TAGS="desktop"` | omarchy/Hyprland GUI, workstation-only rc files and helpers |
 | `tag-node/` | `TAGS="node"` | headless server additions |
+| `tag-user-<login>/` | login name | per-account additions — orthogonal to the profile |
 | `host-batman/`, `host-robin/` | hostname | per-machine overrides — orthogonal to tags |
 
 **The machine recognizes itself.** `rcrc` sets `TAGS` by reading
 `/etc/os-release`: the workstations run Omarchy (`ID=omarchy`) and take
-`desktop`; everything else takes `node`. Nothing per-user selects a profile, so
-every account on a host resolves to the same one — including service and agent
-accounts that never log in interactively.
+`desktop`; everything else takes `node`. Nothing per-user selects the *profile*,
+so every account on a host resolves to the same one — including service and
+agent accounts that never log in interactively.
+
+**Per-user overlay.** On top of that profile, `rcrc` appends `user-$(id -un)`,
+so an account named `sl0p` also picks up `tag-user-sl0p/` if that directory
+exists — rcm skips a tag with no directory, so most accounts get nothing extra.
+Use it for config that should follow one login onto every machine it has;
+reach for `$HOME/dotfiles-user` instead (see `DOTFILES_DIRS` in `rcrc`) when the
+divergence belongs to a single provisioned account rather than to you. Keep
+`tag-user-*/` file paths disjoint from `tag-desktop/` and `tag-node/`: rcm
+documents that host dirs beat tags and tags beat the untagged root, but not
+which of two *tags* wins the same path.
 
 The polarity is deliberate: desktop must be *proven*, and anything unrecognized
 falls to `node`. A desktop mistaken for a node merely loses its GUI config,
