@@ -16,9 +16,4 @@ log/*.log
 rerun.txt
 tags
 tmp/**/*
-
-# Written by tooling into the global excludes; kept here so nothing appends to
-# ~/.gitignore at runtime — that file is a symlink into this repo, and an append
-# would dirty the checkout and fail the next converge.
-app.env
 **/.claude/settings.local.json
