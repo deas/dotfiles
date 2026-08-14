@@ -1,8 +1,12 @@
 # Changes require a relaunch of Hyprland to take effect.
 
-# Ensure Omarchy bins are in the path
-export OMARCHY_PATH=$HOME/.local/share/omarchy
-export PATH=$OMARCHY_PATH/bin/:$PATH
+# Do NOT set OMARCHY_PATH or prepend $OMARCHY_PATH/bin here. Since quattro,
+# Omarchy is a package and Hyprland's own envs.lua exports OMARCHY_PATH
+# (defaulting to /usr/share/omarchy) and prepends its bin dir. Seeding the
+# legacy ~/.local/share/omarchy value from here made the session disagree with
+# ~/.bashrc, and `qs ipc -p` matches instances by literal config path -- so
+# every `bash -lc` caller (idle service -> omarchy-system-lock) silently failed
+# to reach the running shell, and the screen never locked or blanked.
 
 # Set default terminal and editor
 source ~/.config/uwsm/default
