@@ -1,0 +1,176 @@
+/* Default print stylesheet for `md2pdf` (local/bin/md2pdf), used when the
+   project being rendered brings no docs/print.css of its own.
+   Targeted at headless Chromium, which honours @page for size and
+   margins but ignores most header/footer CSS. Set for A4 and for German
+   prose: serif body, long compounds hyphenated rather than left to blow
+   out the measure. */
+
+@page {
+  size: A4;
+  margin: 20mm 18mm 18mm 18mm;
+}
+
+html {
+  font-size: 10.5pt;
+}
+
+body {
+  font-family: "Noto Serif", "Liberation Serif", serif;
+  line-height: 1.45;
+  color: #1a1a1a;
+  max-width: none;
+  margin: 0;
+  hyphens: auto;
+  /* German compounds are long; let them break rather than blow out
+     the measure. */
+  -webkit-hyphens: auto;
+}
+
+/* Pandoc's -s template emits a title block from the metadata, which
+   would duplicate the document's own top-level heading. The metadata
+   title is still wanted — it names the PDF — so hide the block, not the
+   title. */
+#title-block-header {
+  display: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Noto Sans", "Liberation Sans", sans-serif;
+  line-height: 1.2;
+  /* A heading alone at the foot of a page reads as a mistake. */
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+h1 {
+  font-size: 20pt;
+  margin: 0 0 0.2em;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid #1a1a1a;
+}
+
+/* Sections flow rather than each starting a fresh page: forcing a break
+   before every h2 left two of ten pages nearly blank, and the `---`
+   rules already separate the sections visually. */
+h2 {
+  font-size: 14pt;
+  margin: 1.8em 0 0.6em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid #bbb;
+}
+
+h3 {
+  font-size: 11.5pt;
+  margin: 1.4em 0 0.4em;
+}
+
+p,
+li {
+  orphans: 3;
+  widows: 3;
+}
+
+ul,
+ol {
+  padding-left: 1.3em;
+}
+
+li {
+  margin-bottom: 0.25em;
+}
+
+strong {
+  font-weight: 700;
+}
+
+/* --- Tables -------------------------------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.9em 0 1.2em;
+  font-family: "Noto Sans", "Liberation Sans", sans-serif;
+  font-size: 8pt;
+  table-layout: auto;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Amounts must not wrap between figure and unit — "1.044,11" on one
+   line and "€" on the next reads as a typo. CSS cannot do this on its
+   own (the break happens at a normal space), so the table rows in the
+   Markdown use non-breaking spaces between number and unit. */
+
+thead th {
+  background: #ececec;
+  border-bottom: 1.5px solid #888;
+  text-align: left;
+  font-weight: 700;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+tbody tr:nth-child(even) {
+  background: #f7f7f7;
+}
+
+/* Money and quantity columns read better right-aligned, but only the
+   ones that really are numeric — set per table below. */
+tr > td:last-child,
+tr > th:last-child {
+  white-space: normal;
+}
+
+/* --- Code ---------------------------------------------------------- */
+
+code {
+  font-family: "Liberation Mono", monospace;
+  font-size: 0.88em;
+  background: #f0f0f0;
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+}
+
+pre {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 0.6em 0.8em;
+  font-size: 8.5pt;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* --- Rules and quotes ---------------------------------------------- */
+
+hr {
+  border: 0;
+  border-top: 1px solid #ddd;
+  margin: 1.6em 0;
+}
+
+blockquote {
+  margin: 1em 0;
+  padding: 0.4em 0 0.4em 1em;
+  border-left: 3px solid #bbb;
+  color: #444;
+}
+
+a {
+  color: #1a1a1a;
+  text-decoration: none;
+  border-bottom: 1px dotted #999;
+}

@@ -68,6 +68,11 @@ only if it needs a GUI/session, or would be useless or harmful on a server.
 
 misc
 ------------
+- Markdown → PDF: `md2pdf` (`local/bin/md2pdf`, `md2pdf -h`) — pandoc plus
+  either headless Chromium (default) or typst via `-e typst`, no LaTeX engine.
+  Styled by `config/md2pdf/print.css` and `print.typ`, which a project
+  overrides by keeping its own `docs/print.css` or `docs/print.typ`. The
+  script's header records what each engine was measured to produce
 - [Powerline fonts](https://github.com/powerline/fonts)
 - [Setting up Windows Subsystem for Linux with zsh + oh-my-zsh + ConEmu](https://blog.joaograssi.com/windows-subsystem-for-linux-with-oh-my-zsh-conemu/)
 - [Powerline fonts in crostini](https://www.reddit.com/r/Crostini/comments/9blkjv/powerline_fonts_in_the_crostini_terminal/)

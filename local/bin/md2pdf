@@ -1,0 +1,361 @@
+#!/usr/bin/env bash
+#
+# Render Markdown documents to PDF via pandoc, through either headless
+# Chromium or typst.
+#
+# No LaTeX engine is assumed anywhere. Both supported engines take a style
+# file — a print stylesheet for Chromium, a header of set/show rules for
+# typst — which gives better control over page size, table layout and
+# hyphenation than a LaTeX template would. On the Chromium path the
+# intermediate HTML is self-contained (--embed-resources inlines the CSS) so
+# it can live in a temp directory and be thrown away, leaving nothing behind
+# next to the source when a run fails.
+#
+# Usage:
+#   md2pdf [options] FILE.md [FILE.md ...]
+#
+#   -e ENGINE  chromium (default) or typst;  see "Engines" below
+#   -o OUT     output file; only valid with a single input
+#              (default: the input path with .pdf for its extension)
+#   -c FILE    style file for the chosen engine; see "Style file" below
+#   -l LANG    document language, drives hyphenation      (default: de)
+#   -t MS      Chromium virtual time budget in ms         (default: 10000)
+#              ignored by the typst engine
+#   -k         keep the intermediate file next to the PDF
+#              (.html for chromium, .typ for typst)
+#   -q         quiet: report failures only
+#   -h         show this help
+#
+# Engines:
+#   chromium   pandoc -> self-contained HTML -> headless Chromium. Styled by
+#              CSS. Tables fill the measure and its column widths are the
+#              better of the two; needs no extra install wherever a browser
+#              is already present.
+#   typst      pandoc -> typst -> PDF, in one pandoc invocation. Styled by
+#              typst set/show rules. No browser needed. `typst` must be on
+#              PATH — it is usually supplied per project by mise, so run
+#              md2pdf from a directory whose mise.toml pins it, or point
+#              $MD2PDF_TYPST_BIN at the binary.
+#
+# Style file, first hit wins (.css for chromium, .typ for typst):
+#   1. -c FILE
+#   2. $MD2PDF_CSS          / $MD2PDF_TYPST
+#   3. ./docs/print.css     / ./docs/print.typ    — a project's own house
+#      then ./print.css     / ./print.typ           style, picked up when run
+#                                                   from that project's root
+#   4. ~/.config/md2pdf/print.css / print.typ     — the shipped default
+#
+# Environment:
+#   MD2PDF_ENGINE      chromium | typst              (default: chromium)
+#   MD2PDF_CSS         style file default, chromium engine
+#   MD2PDF_TYPST       style file default, typst engine
+#   MD2PDF_TYPST_BIN   typst binary to hand to pandoc (default: typst)
+#   MD2PDF_TYPST_TEMPLATE  pandoc typst template
+#                      (default: ~/.config/md2pdf/pandoc-template.typ)
+#   MD2PDF_LANG        document language default
+#
+# Examples:
+#   md2pdf notes.md
+#   md2pdf -e typst -o /tmp/report.pdf docs/konzept.md
+#   md2pdf -l en docs/*.md
+#
+# Known trap: Chromium exits 0 even when it writes no PDF at all (a bad
+# --print-to-pdf path, a crashed renderer). The output is therefore checked
+# for existence and non-zero size rather than trusting the exit status.
+#
+# Why these two engines? Measured 2026-08-19 on this node against
+# docs/konzept.md from buco-freight — German, table-heavy, 7 pages — not a
+# synthetic document. pandoc 3.10.2 offers 15 --pdf-engine values and exactly
+# one of them was installed:
+#
+#   engine        pages  size    time   tables
+#   groff         7      23 KB   0.32s  no rules, headers split mid-word
+#                                       ("Bemes-sung"), and troff warns the
+#                                       table is wider than the line length
+#   typst         8      134 KB  0.37s  stock: cramped auto columns, cells
+#                                       centered, "Hel-sing-borg"
+#   typst here    6      187 KB  0.32s  print.typ through this script's own
+#                                       template: rules, zebra, 8pt sans,
+#                                       and the densest of the five
+#   weasyprint    8      63 KB   1.24s  honours print.css unchanged
+#   chromium      7      227 KB  0.58s  auto-layout, headers unwrapped
+#
+# All of them got ä ö ü ß € — right. groff is the only one already present
+# and is fine for plain prose, but these documents are mostly rate tables,
+# where it falls down and takes no style file at all.
+#
+# The first typst row is what stock pandoc gives, and taking it as typst's
+# verdict would be wrong — it is the same document with no styling, whereas
+# chromium had print.css. Given the equivalent, typst closes most of the gap,
+# which is why it is an engine here rather than a footnote.
+#
+# Stock pandoc could not be styled all the way, though: its typst template
+# wraps the document in a `conf` function that runs `set document(title:)`
+# and its own page/par set rules AFTER header-includes, clobbering both the
+# PDF title and any typography from print.typ. That is why this script ships
+# its own minimal template (config/md2pdf/pandoc-template.typ) with the
+# wrapper removed and the writer's polyfills kept. print.typ then has the
+# last word, the way print.css does on the Chromium path.
+#
+# The payoff is the last row: with the wrapper gone, print.typ's unjustified
+# setting and tighter leading fit the document in 6 pages against Chromium's
+# 7. One difference remains: typst tables size to content where print.css
+# sets width: 100%, so narrow tables stay narrow. A house typst skill exists at
+# contentreich-incubator/about-me/.claude/skills/typst (targets typst 0.15+).
+#
+# WeasyPrint is a third candidate not wired up here: same CSS as chromium, no
+# wrapper needed at all —
+#   pandoc doc.md --pdf-engine=weasyprint --css=print.css -o doc.pdf
+# and 4 MB against Chromium's 416 MB. Worth adding as an engine if the
+# chromium path ever becomes awkward to satisfy.
+#
+# Worth knowing: this file lives in the untagged dotfiles root, so it links on
+# every machine, including `node` profiles. Chromium is NOT a given there — on
+# the node this was measured on, `pacman -Qi` shows it installed only because
+# mermaid-cli depends on it. That is what -e typst is for.
+set -euo pipefail
+
+XDG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/md2pdf"
+
+ENGINE="${MD2PDF_ENGINE:-chromium}"
+LANG_TAG="${MD2PDF_LANG:-de}"
+TIME_BUDGET="10000"
+STYLE=""
+OUT=""
+KEEP_INTERMEDIATE=0
+QUIET=0
+
+usage() {
+    sed -n '3,60p' "$0" | sed 's/^# \{0,1\}//'
+    exit "${1:-0}"
+}
+
+note() {
+    [[ $QUIET -eq 1 ]] || printf '%s\n' "$*"
+}
+
+die() {
+    echo "$*" >&2
+    exit 1
+}
+
+while getopts ":e:o:c:l:t:kqh" opt; do
+    case "$opt" in
+        e) ENGINE="$OPTARG" ;;
+        o) OUT="$OPTARG" ;;
+        c) STYLE="$OPTARG" ;;
+        l) LANG_TAG="$OPTARG" ;;
+        t) TIME_BUDGET="$OPTARG" ;;
+        k) KEEP_INTERMEDIATE=1 ;;
+        q) QUIET=1 ;;
+        h) usage 0 ;;
+        \?) echo "unknown option: -$OPTARG" >&2; usage 1 ;;
+        :) echo "option -$OPTARG needs an argument" >&2; usage 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+case "$ENGINE" in
+    chromium|typst) ;;
+    *) die "unknown engine: $ENGINE (expected chromium or typst)" ;;
+esac
+
+if [[ $# -eq 0 ]]; then
+    echo "no input file given" >&2
+    usage 1
+fi
+
+[[ -n "$OUT" && $# -gt 1 ]] && die "-o takes a single input file, got $#"
+
+command -v pandoc >/dev/null || die "pandoc not installed"
+
+# Each engine names its style file differently, so the search is over the
+# extension the engine can actually read. Mixing them up would otherwise
+# hand CSS to typst and fail deep inside pandoc.
+if [[ "$ENGINE" == "chromium" ]]; then
+    STYLE_EXT="css"
+    [[ -n "$STYLE" ]] || STYLE="${MD2PDF_CSS:-}"
+else
+    STYLE_EXT="typ"
+    [[ -n "$STYLE" ]] || STYLE="${MD2PDF_TYPST:-}"
+fi
+
+if [[ "$ENGINE" == "chromium" ]]; then
+    # The binary is named differently across distributions and Chrome
+    # channels.
+    CHROME=""
+    for candidate in chromium chromium-browser google-chrome google-chrome-stable; do
+        if command -v "$candidate" >/dev/null; then
+            CHROME="$candidate"
+            break
+        fi
+    done
+    [[ -n "$CHROME" ]] || die "no chromium/chrome binary found (try -e typst)"
+else
+    # typst is normally provisioned per project by mise rather than globally,
+    # so say that instead of the bare "not found" a user would have to go and
+    # work out for themselves.
+    TYPST_BIN="${MD2PDF_TYPST_BIN:-typst}"
+    command -v "$TYPST_BIN" >/dev/null || die \
+        "typst not found on PATH: $TYPST_BIN
+mise usually supplies it per project — run md2pdf from a directory whose
+mise.toml pins typst, add it with \`mise use -g typst\`, or set
+\$MD2PDF_TYPST_BIN to the binary."
+
+    # Our own template rather than pandoc's, so that print.typ is the last
+    # word on typography; see the findings block above for why.
+    TEMPLATE="${MD2PDF_TYPST_TEMPLATE:-$XDG_DIR/pandoc-template.typ}"
+    [[ -f "$TEMPLATE" ]] || die "typst template not found: $TEMPLATE"
+fi
+
+# A project's own style file beats the shipped default, so a repo that has
+# tuned its typography keeps it without every invocation carrying -c. Only
+# reached when neither -c nor the engine's env var named one.
+if [[ -z "$STYLE" ]]; then
+    for candidate in \
+        "docs/print.$STYLE_EXT" \
+        "print.$STYLE_EXT" \
+        "$XDG_DIR/print.$STYLE_EXT"
+    do
+        if [[ -f "$candidate" ]]; then
+            STYLE="$candidate"
+            break
+        fi
+    done
+fi
+[[ -n "$STYLE" ]] || die \
+    "no style file found, and none given: $XDG_DIR/print.$STYLE_EXT is missing"
+[[ -f "$STYLE" ]] || die "style file not found: $STYLE"
+
+# pandoc resolves --css against the working directory, but --resource-path
+# below points at each source file's directory so its images resolve too.
+# An absolute style file keeps the two from being confused for one another.
+STYLE="$(cd "$(dirname "$STYLE")" && pwd)/$(basename "$STYLE")"
+note "-- engine: $ENGINE, style: $STYLE"
+
+# --no-sandbox is only needed when running as root, where Chromium refuses to
+# start otherwise. Passing it unconditionally would drop the sandbox for every
+# normal user run too.
+SANDBOX_FLAG=()
+[[ "$(id -u)" -eq 0 ]] && SANDBOX_FLAG=(--no-sandbox)
+
+WORKDIR="$(mktemp -d)"
+trap 'rm -rf "$WORKDIR"' EXIT
+
+# Replace a Markdown extension rather than appending to it, so notes.markdown
+# does not become notes.markdown.pdf. An unrecognized extension is kept.
+pdf_path() {
+    case "${1,,}" in
+        *.md|*.mkd|*.mdown|*.mdwn|*.markdown) printf '%s.pdf' "${1%.*}" ;;
+        *) printf '%s.pdf' "$1" ;;
+    esac
+}
+
+status=0
+n=0
+for src in "$@"; do
+    n=$((n + 1))
+
+    if [[ ! -f "$src" ]]; then
+        echo "!! not found: $src" >&2
+        status=1
+        continue
+    fi
+
+    pdf="${OUT:-$(pdf_path "$src")}"
+    stem="$(basename "$(pdf_path "$src")" .pdf)"
+
+    # Chromium writes nothing and still exits 0 when the target directory is
+    # absent, which surfaces as the generic "produced no PDF" below. Naming
+    # the actual cause is worth the extra test.
+    outdir="$(dirname "$pdf")"
+    if [[ ! -d "$outdir" ]]; then
+        echo "!! $src: output directory does not exist: $outdir" >&2
+        status=1
+        continue
+    fi
+
+    # First ATX heading anywhere in the file, not just line 1: a document may
+    # open with a comment or a blank line. Falls back to the file name, which
+    # beats pandoc's "-" placeholder in the PDF metadata.
+    title="$(sed -n 's/^# \+//p' "$src" | head -1)"
+    [[ -n "$title" ]] || title="$stem"
+
+    if [[ "$ENGINE" == "chromium" ]]; then
+        html="$WORKDIR/$n-$stem.html"
+
+        pandoc "$src" \
+            --from=gfm \
+            --to=html5 \
+            --standalone \
+            --embed-resources \
+            --resource-path="$(dirname "$src"):." \
+            --metadata "lang=$LANG_TAG" \
+            --metadata "title=$title" \
+            --css "$STYLE" \
+            --output "$html"
+
+        # Chromium is noisy on stderr even when it succeeds, so the output is
+        # held back and only shown if something actually went wrong. The
+        # throwaway --user-data-dir keeps a render out of the real browser
+        # profile, which otherwise collects crash reports from every run and
+        # would be contended if an interactive Chromium were open at the same
+        # time.
+        chrome_log="$WORKDIR/chrome.log"
+        "$CHROME" --headless \
+            --disable-gpu \
+            "${SANDBOX_FLAG[@]}" \
+            --user-data-dir="$WORKDIR/chrome-profile" \
+            --no-pdf-header-footer \
+            --virtual-time-budget="$TIME_BUDGET" \
+            --print-to-pdf="$pdf" \
+            "$html" >"$chrome_log" 2>&1 || true
+
+        if [[ ! -s "$pdf" ]]; then
+            echo "!! $src: chromium produced no PDF" >&2
+            cat "$chrome_log" >&2
+            status=1
+            continue
+        fi
+
+        [[ $KEEP_INTERMEDIATE -eq 1 ]] && cp "$html" "${pdf%.pdf}.html"
+    else
+        # The title is safe to pass here: our template records it with
+        # #set document but renders no title block, so it reaches the PDF
+        # metadata without duplicating the document's own h1. That is the
+        # same outcome print.css gets by hiding #title-block-header.
+        pandoc "$src" \
+            --from=gfm \
+            --pdf-engine="$TYPST_BIN" \
+            --template="$TEMPLATE" \
+            --include-in-header="$STYLE" \
+            --resource-path="$(dirname "$src"):." \
+            --metadata "lang=$LANG_TAG" \
+            --metadata "title=$title" \
+            --output "$pdf"
+
+        if [[ ! -s "$pdf" ]]; then
+            echo "!! $src: typst produced no PDF" >&2
+            status=1
+            continue
+        fi
+
+        # pandoc goes straight to PDF, so the .typ only exists if asked for.
+        if [[ $KEEP_INTERMEDIATE -eq 1 ]]; then
+            pandoc "$src" \
+                --from=gfm \
+                --to=typst \
+                --standalone \
+                --template="$TEMPLATE" \
+                --include-in-header="$STYLE" \
+                --resource-path="$(dirname "$src"):." \
+                --metadata "lang=$LANG_TAG" \
+                --metadata "title=$title" \
+                --output "${pdf%.pdf}.typ"
+        fi
+    fi
+
+    note ">> $pdf ($(du -h "$pdf" | cut -f1))"
+done
+
+exit "$status"
