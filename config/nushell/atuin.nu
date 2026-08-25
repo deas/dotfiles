@@ -1,4 +1,9 @@
 # Source this in your ~/.config/nushell/config.nu
+#
+# Vendored output of `atuin init nu`, with one local change: upstream names both
+# keybindings `atuin`, which newer Nushell rejects with "Multiple keybindings
+# share a name". They are renamed here to atuin_search / atuin_up. Re-apply that
+# rename if this file is ever regenerated.
 $env.ATUIN_SESSION = (atuin uuid)
 hide-env -i ATUIN_HISTORY_ID
 
@@ -63,7 +68,7 @@ $env.config = (
     $env.config | upsert keybindings (
         $env.config.keybindings
         | append {
-            name: atuin
+            name: atuin_search
             modifier: control
             keycode: char_r
             mode: [emacs, vi_normal, vi_insert]
@@ -76,7 +81,7 @@ $env.config = (
     $env.config | upsert keybindings (
         $env.config.keybindings
         | append {
-            name: atuin
+            name: atuin_up
             modifier: none
             keycode: up
             mode: [emacs, vi_normal, vi_insert]
