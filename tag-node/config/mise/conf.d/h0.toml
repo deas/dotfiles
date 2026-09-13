@@ -10,12 +10,12 @@
 trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
 [tools]
 "node" = "22"
-"npm:@anthropic-ai/claude-code" = { npm_args = "--ignore-scripts=false", version = "latest" }
-"npm:@beads/bd" = { npm_args = "--ignore-scripts=false", version = "latest" }
-"npm:@googleworkspace/cli" = { npm_args = "--ignore-scripts=false", version = "latest" }
+"npm:@anthropic-ai/claude-code" = { version = "latest", allow_builds = ["@anthropic-ai/claude-code"] }
+"npm:@beads/bd" = { version = "latest", allow_builds = ["@beads/bd"] }
+"npm:@googleworkspace/cli" = { version = "latest", allow_builds = ["@googleworkspace/cli"] }
 "npm:@mariozechner/pi-coding-agent" = "latest"
 "npm:@playwright/mcp" = "0.0.78"
-"npm:opencode-ai" = { npm_args = "--ignore-scripts=false", version = "latest" }
+"npm:opencode-ai" = { version = "latest", allow_builds = ["opencode-ai"] }
 "npm:openwiki" = "latest"
 "herdr" = "latest"
 "pipx:graphifyy" = "latest"
