@@ -24,3 +24,7 @@ Host batman robin
 Host *
   ForwardAgent no
   ForwardX11 no
+
+Host agent-work
+  HostName h0
+  User sl0p
