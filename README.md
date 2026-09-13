@@ -66,6 +66,55 @@ RCM_PROFILE=desktop just rcm-sync
 **Adding config:** default to the untagged root. Move it under `tag-desktop/`
 only if it needs a GUI/session, or would be useless or harmful on a server.
 
+Packages (mise and nix)
+------------
+Two package planes, both declared here, both layered by the same rcm tags. A
+machine gets the union of the layers its profile resolves — which is why a tool
+is added by dropping a *fragment* in the right directory, never by running an
+imperative install that only this machine remembers.
+
+| | Where it is declared | Materialize | Remove |
+| --- | --- | --- | --- |
+| **mise** — exact-version toolchains, language runtimes, agent CLIs | `mise.toml`, `config/mise/conf.d/*.toml`, `tag-*/config/mise/conf.d/*.toml` | `mise install` | drop the line **and** `mise uninstall <tool> --all` |
+| **nix** — the self-service long tail from nixpkgs | `config/nix/env/pkgs.d/*.nix` + the same path under `tag-*/` | `just nix-sync` | drop the line → `just nix-sync` |
+
+**The removal column is the real difference.** mise does not own its set, so a
+deleted line only stops *activating* a tool that stays on disk. The nix env is
+one `buildEnv` in a single profile entry, so a sync adds and removes together —
+and `nix profile rollback` undoes a step.
+
+A nix fragment is a function from `pkgs` to a package list, and its filename is
+its layer:
+
+```nix
+# tag-node/config/nix/env/pkgs.d/50-node.nix
+pkgs: with pkgs; [
+  cloc
+]
+```
+
+Keep filenames distinct per layer — two layers with the same name means one
+wins rather than both merging. `just nix-sync` prints which layers it resolved.
+
+Three things about the nix plane that are not obvious, all of them mechanical:
+
+- **`config/nix/env/flake.nix` and `flake.lock` are excluded from rcm** (see
+  `rcrc`). They are the env's source, not dotfiles: `just nix-sync` copies them,
+  with the fragments rcm composed, into `~/.local/state/dotfiles/nix-env` and
+  installs from there. nix resolves a symlink found inside its store copy of a
+  flake *against that copy*, so a linked `flake.nix` fails with
+  `path '/nix/store/...-source/home/...' does not exist`.
+- **`flake.lock` is the pin** and belongs in a commit — it is what makes two
+  machines resolve the same packages. Bump it deliberately with `just
+  nix-update`, never as a side effect of a sync.
+- **`nix-sync` is not chained into `rcm-sync`.** `rcm-sync` has to stay fast and
+  non-interactive for provisioning; this one builds and fetches. On a fresh
+  machine run it after `just rcm-sync` — the same second step `mise install`
+  needs. A machine without nix skips cleanly.
+
+nix is a per-node grant, not a given: a server has it only where the
+provisioning layer installed the daemon and put the account in `nix-users`.
+
 misc
 ------------
 - Markdown → PDF: `md2pdf` (`local/bin/md2pdf`, `md2pdf -h`) — pandoc plus

@@ -1,4 +1,9 @@
-EXCLUDES="*.md hyprland-wiki LICENSE zshrc-zplug vimrc vimrc.bundles clojure-sc zsh bash samples misc config/carapace/specs-ignore config/systemd/user/mcp-playwright.service"
+# config/nix/env/{flake.nix,flake.lock} are excluded deliberately: they are the
+# SOURCE of the nix package env, not a dotfile. `just nix-sync` copies them
+# into a build dir, because nix resolves a symlink inside its store copy of a
+# flake against that copy — a linked flake.nix is a trap, not a shortcut. The
+# pkgs.d/ fragments beside them ARE linked; composing those layers is rcm's job.
+EXCLUDES="*.md hyprland-wiki LICENSE zshrc-zplug vimrc vimrc.bundles clojure-sc zsh bash samples misc config/carapace/specs-ignore config/systemd/user/mcp-playwright.service config/nix/env/flake.nix config/nix/env/flake.lock"
 # dotfiles-user is a provisioning layer's per-user overlay, absent on a
 # workstation — rcm tolerates a missing dir. First-listed wins a collision.
 DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles-user $HOME/dotfiles"

@@ -49,6 +49,13 @@ Here's a typical workflow:
   adding config, put it in
   the untagged root unless it needs a graphical session or would be useless or
   harmful on a headless node — see `README.md` and `tag-node/README.md`.
+- **Packages are declared here, in two planes**, both layered by the same
+  tags: `mise` (exact-version toolchains — `mise.toml`,
+  `*/config/mise/conf.d/*.toml`, materialized by `mise install`) and `nix`
+  (the nixpkgs long tail — `*/config/nix/env/pkgs.d/*.nix`, materialized by
+  `just nix-sync`). Dropping a nix package removes it; dropping a mise tool
+  only deactivates it. See `README.md` "Packages (mise and nix)" — and note
+  `config/nix/env/flake.nix` is rcm-EXCLUDED on purpose.
 - The `config` folder correspondes to `~/.config` which is a hidden directory within your home directory that stores configuration files for various applications. It's a standard location for user-specific settings and preferences, adhering to the XDG Base Directory Specification.
 - `tag-desktop/config/hypr` is the configuration for the `Hyprland` dynamic tiling Wayland compositor. rcm soft-links `~/.config/hypr` to this folder on machines carrying the `desktop` tag. When assisting with Hyprland, use the official documentation at <https://wiki.hypr.land/>. Some configuration directives refer to files in
   subfolders of `~/.local/share/omarchy`. These files are managed by another party and shared by many people. We do not change files in `~/.local/share/omarchy`. Instead, we override settings in our files in `config/hypr`. When assisting with files in the `omarchy` folder, use the official documentation website at <https://manuals.omamix.org/2/the-omarchy-manual/>.
