@@ -1,19 +1,33 @@
+# Headless-node mise layer — the tool set for accounts on machines carrying the
+# `node` tag. Universal tools belong in the untagged root's
+# config/mise/conf.d/ instead; nothing here reaches a desktop (TAGS="desktop").
 #
-# Ansible managed
+# This repo owns the set. ADR-0043 moved user-scoped packages out of the s0n
+# project: the infra layer provisions only the node-wide mise binary and its
+# /etc/profile.d activation, and the fragment `roles/mise` used to render is
+# tombstoned. Edit this file directly — nothing regenerates it.
 #
-# Managed by the s0n `mise` role — do not edit. Non-destructive conf.d fragment
-# layered over the user's own ~/.config/mise/config.toml (never touched).
-# Declares the s0n user-layer tool set; override `mise_global_tools` in group_vars.
+# A conf.d fragment, layered over the account's own ~/.config/mise/config.toml
+# (never touched). Keep fragment filenames distinct per layer, or one layer's
+# file shadows the other's instead of both merging. Dropping a line only stops
+# *activating* a tool — `mise uninstall <tool> --all` reclaims the disk.
 [settings]
 # Scriptable trust (ADR-0033): project mise configs under these paths load
 # without an interactive `mise trust` — new checkouts/worktrees included.
 trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
 [tools]
 "node" = "22"
-"npm:@anthropic-ai/claude-code" = { version = "latest", allow_builds = ["@anthropic-ai/claude-code"] }
+"npm:@anthropic-ai/claude-code" = { version = "latest", allow_builds = [
+  "@anthropic-ai/claude-code",
+] }
 "npm:@beads/bd" = { version = "latest", allow_builds = ["@beads/bd"] }
-"npm:@googleworkspace/cli" = { version = "latest", allow_builds = ["@googleworkspace/cli"] }
+"npm:@googleworkspace/cli" = { version = "latest", allow_builds = [
+  "@googleworkspace/cli",
+] }
 "npm:@mariozechner/pi-coding-agent" = "latest"
+"npm:@oh-my-pi/pi-coding-agent" = { version = "latest", allow_builds = [
+  "@oh-my-pi/pi-coding-agent",
+] }
 "npm:@playwright/mcp" = "0.0.78"
 "npm:opencode-ai" = { version = "latest", allow_builds = ["opencode-ai"] }
 "npm:openwiki" = "latest"
@@ -21,4 +35,8 @@ trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
 "pipx:graphifyy" = "latest"
 "python" = "3.13"
 "yt-dlp" = "latest"
+# Runtime for `omp` (@oh-my-pi/pi-coding-agent): the package declares
+# engines.bun and its bin execs bun, not node — without this it installs
+# cleanly and then fails at first run.
+bun = "latest"
 fnox = "latest"
