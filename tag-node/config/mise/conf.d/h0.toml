@@ -32,7 +32,8 @@ trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
 "npm:opencode-ai" = { version = "latest", allow_builds = ["opencode-ai"] }
 "npm:openwiki" = "latest"
 "herdr" = "latest"
-"pipx:graphifyy" = "latest"
+"pypi:graphifyy" = "latest"
+"pypi:headroom-ai" = { version = "latest", extras = ["code", "mcp"] }
 "python" = "3.13"
 "yt-dlp" = "latest"
 # Runtime for `omp` (@oh-my-pi/pi-coding-agent): the package declares
