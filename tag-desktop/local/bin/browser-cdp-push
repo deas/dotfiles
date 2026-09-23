@@ -1,0 +1,95 @@
+#!/bin/bash
+# Publish THIS workstation's real Chrome DevTools endpoint on the agent node's
+# loopback, so browser-harness running THERE drives the browser sitting HERE.
+#
+# Run it in a terminal and leave it open; Ctrl-C takes the tunnel down and the
+# node's env file with it. It is foreground ON PURPOSE. A CDP connection to a
+# logged-in profile is full control of your authenticated browser, and every
+# process running as your user on the node can reach the forwarded port — so
+# the exposure lasts exactly as long as you are there, not as long as the
+# machine is up. That is also why there is no systemd unit.
+#
+# WHY A SCRIPT AND NOT A `RemoteForward` LINE in ssh/config: since M136 Chrome
+# ignores --remote-debugging-port on the DEFAULT user-data-dir, so a real
+# logged-in profile is debuggable only through the chrome://inspect toggle —
+# and that mints an EPHEMERAL port, re-rolled on every Chrome launch and
+# written to <profile>/DevToolsActivePort. There is nothing static to forward.
+#
+# WHY WE SHIP BU_CDP_WS AND NOT BU_CDP_URL: since M147 Chrome also refuses
+# /json/* discovery on that same default profile. BU_CDP_URL resolves its
+# websocket through <url>/json/version, and its 404 fallback reads the LOCAL
+# machine's profile dirs — which the node hasn't got. So we read line 2 of
+# DevToolsActivePort (the browser ws path) here, where the file is, and hand
+# the node a complete websocket URL.
+set -euo pipefail
+
+NODE="${BROWSER_CDP_NODE:-agent-work}" # ssh alias for the node; see ssh/config
+PORT="${BROWSER_CDP_PORT:-9222}"       # port we bind on the NODE's loopback
+ENV_FILE=".cache/browser-cdp.env"      # written on the NODE, relative to $HOME
+
+# The same profile dirs browser_harness scans on Linux (daemon.py:_LINUX_PROFILES).
+profiles=(
+  "$HOME/.config/google-chrome"
+  "$HOME/.config/chromium"
+  "$HOME/.config/BraveSoftware/Brave-Browser"
+)
+
+# DevToolsActivePort is NOT removed when the browser exits — a closed Chrome
+# leaves a dead port behind. SingletonLock is a symlink whose target ends in the
+# owning pid, so it is what actually answers "is this profile live?".
+live_profile() {
+  local p pid
+  for p in "${profiles[@]}"; do
+    [ -e "$p/DevToolsActivePort" ] || continue
+    pid="$(readlink "$p/SingletonLock" 2>/dev/null)" || continue
+    pid="${pid##*-}"
+    [[ "$pid" =~ ^[0-9]+$ ]] || continue
+    kill -0 "$pid" 2>/dev/null || continue
+    printf '%s\n' "$p"
+    return 0
+  done
+  return 1
+}
+
+if ! profile="$(live_profile)"; then
+  {
+    echo "browser-cdp-push: no running browser is exposing DevTools."
+    echo "  1. Open Chrome, go to chrome://inspect/#remote-debugging"
+    echo "  2. Tick \"Allow remote debugging for this browser instance\""
+    echo "  3. Restart Chrome, then run this again"
+  } >&2
+  exit 1
+fi
+
+remote_port="$(sed -n 1p "$profile/DevToolsActivePort")"
+ws_path="$(sed -n 2p "$profile/DevToolsActivePort")"
+if [ -z "$remote_port" ] || [ -z "$ws_path" ]; then
+  echo "browser-cdp-push: $profile/DevToolsActivePort is malformed" >&2
+  exit 1
+fi
+
+echo "browser-cdp-push: $profile -> $NODE:$PORT (local $remote_port)" >&2
+echo "browser-cdp-push: Ctrl-C to revoke. Chrome will ask to allow the first connection." >&2
+
+# One ssh owns BOTH the reverse forward and the env file, so the file cannot
+# outlive the tunnel: an absent file on the node means "no browser", never a
+# stale endpoint. The trap fires on the SIGHUP sshd sends when we disconnect.
+read -r -d '' remote_cmd <<EOF || true
+umask 077
+mkdir -p "\$HOME/.cache"
+# Arm the cleanup BEFORE the file exists, so no failure path can leave it behind.
+# The park below has to be a BACKGROUND job we wait on: a trap does not fire
+# while a foreground command is still running, so a bare 'sleep infinity' would
+# swallow the SIGHUP sshd sends at disconnect and strand the file on the node.
+trap 'rm -f "\$HOME/$ENV_FILE"; kill \$park 2>/dev/null' EXIT HUP INT TERM
+printf 'export BU_CDP_WS=%s\n' 'ws://127.0.0.1:$PORT$ws_path' > "\$HOME/$ENV_FILE"
+sleep infinity & park=\$!
+wait \$park
+EOF
+
+exec ssh -T \
+  -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=30 \
+  -o ServerAliveCountMax=3 \
+  -R "127.0.0.1:${PORT}:127.0.0.1:${remote_port}" \
+  "$NODE" "$remote_cmd" </dev/null

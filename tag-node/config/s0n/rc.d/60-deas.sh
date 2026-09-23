@@ -97,3 +97,29 @@ fi
 if command -v direnv >/dev/null 2>&1; then
   eval "$(direnv hook bash)"
 fi
+
+# --- browser-harness ---------------------------------------------------------
+# The browser is NOT on this node — it is the real, logged-in Chrome on whichever
+# workstation is in use, published here by `browser-cdp-push` (tag-desktop) over
+# an ssh -R. That command owns this file and deletes it when the tunnel drops, so
+# a MISSING file means "no browser", never a stale endpoint.
+#
+# Sourced rather than set statically because the value is not stable: Chrome
+# refuses --remote-debugging-port on a default profile (M136+), so the real
+# profile is reachable only via the chrome://inspect toggle, which re-rolls both
+# the port and the browser uuid on every launch. It is BU_CDP_WS and not
+# BU_CDP_URL because Chrome also stopped serving /json/* on that profile (M147+),
+# and BU_CDP_URL's fallback resolves the ws path from LOCAL profile dirs, which
+# this node has none of.
+#
+# An explicit endpoint also disables the harness's local-Chrome machinery, which
+# on a headless node would otherwise try to launch a browser with no display.
+#
+# GOTCHA: the daemon inherits the env of whatever first started it and keeps that
+# endpoint for its lifetime. After the workstation's Chrome restarts, re-run the
+# push, re-source this, then `browser-harness --reload`.
+# An `if` rather than a `&&` chain: this is the last line of the fragment, and a
+# bare test would leave $? at 1 whenever no browser is published.
+if [ -r "$HOME/.cache/browser-cdp.env" ]; then
+  . "$HOME/.cache/browser-cdp.env"
+fi
