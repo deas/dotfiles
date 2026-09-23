@@ -3,4 +3,5 @@
 # instead (tag-desktop/, tag-node/, tag-user-<login>/, same pkgs.d path).
 pkgs: with pkgs; [
   cloc
+  sqlcmd # Microsoft go-sqlcmd — SQL Server from Linux
 ]
