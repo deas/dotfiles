@@ -29,7 +29,7 @@ trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
   "@oh-my-pi/pi-coding-agent",
 ] }
 "npm:@playwright/mcp" = "0.0.78"
-"npm:opencode-ai" = { version = "latest", allow_builds = ["opencode-ai"] }
+"npm:@opencode/cli" = { version = "latest", allow_builds = ["@opencode/cli"] }
 "npm:openwiki" = "latest"
 "herdr" = "latest"
 "pypi:browser-harness" = "latest"
