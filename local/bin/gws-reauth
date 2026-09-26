@@ -1,0 +1,290 @@
+#!/bin/bash
+# gws-reauth — mint, inspect and hand over a Google Workspace CLI (gws) grant.
+#
+# WHY THIS EXISTS. `gws` authenticates with an OAuth *user grant*, and a grant can
+# only be minted by a human consenting in a browser. For a consumer @gmail.com
+# identity there is no service-account route at all (impersonation needs
+# domain-wide delegation, which needs a Workspace tenant), so this step cannot be
+# automated away — only made reproducible. That is all this script does.
+#
+# THE KEY FACT IT IS BUILT ON: a refresh token is bound to the OAuth CLIENT, not
+# to a machine or a home. So you consent wherever a browser already is — your
+# workstation — and the three resulting values travel. There is no need to tunnel
+# a loopback port into a headless seat's home, which is what you would otherwise
+# be doing, against a race: `gws auth login` binds 127.0.0.1:0, an OS-assigned
+# port you cannot know in advance.
+#
+# WHERE THE RESULT GOES. Into the estate's vault, by hand, under
+# `operator.google.gws_*`. From there the node reconciles it into the seat's
+# ~/.config/gws/credentials.json on `--tags gws`. This script deliberately writes
+# no credential anywhere and reads no vault: it is the interactive half, and the
+# secret's only path into the estate stays the human one.
+#
+# THE 7-DAY TRAP. Google expires refresh tokens after exactly 7 days for any
+# External OAuth app whose consent screen is still in `Testing`. The Gmail scopes
+# in this grant are RESTRICTED, so publishing to production is not free — it costs
+# verification plus a CASA assessment. If you are re-running this weekly, that is
+# why, and it is not something the script can fix.
+
+set -euo pipefail
+
+SELF=${0##*/}
+
+# The scope set the live grant carries, recorded so a re-consent can be CHECKED
+# rather than merely hoped for. We do not pass these to `--scopes`: `--full` is
+# what demonstrably produced them, and an unverified flag path is a worse default
+# than a verified one. What protects against silent widening is the comparison at
+# the end — if upstream changes what `--full` means, you are told.
+EXPECTED_SCOPES="email
+openid
+profile
+https://www.googleapis.com/auth/calendar
+https://www.googleapis.com/auth/cloud-platform
+https://www.googleapis.com/auth/documents
+https://www.googleapis.com/auth/drive
+https://www.googleapis.com/auth/gmail.modify
+https://www.googleapis.com/auth/presentations
+https://www.googleapis.com/auth/pubsub
+https://www.googleapis.com/auth/spreadsheets
+https://www.googleapis.com/auth/tasks
+https://www.googleapis.com/auth/userinfo.email
+https://www.googleapis.com/auth/userinfo.profile"
+
+usage() {
+  cat <<EOF
+$SELF — mint, inspect and hand over a gws grant
+
+USAGE
+  $SELF capture <client_secret.json>   consent in a browser, print the vault values
+  $SELF status                         what this home's gws is using, and from where
+  $SELF handover                       clear credentials.enc so a reconciled
+                                       credentials.json is what gws reads
+
+CAPTURE OPTIONS
+  --full            request all scopes incl. pubsub + cloud-platform (default)
+  --readonly        request read-only scopes
+  --scopes <list>   comma-separated custom scopes
+  --services <list> comma-separated services to limit the picker (e.g. drive,gmail)
+  --out <file>      also write the three values to <file>, mode 0600
+  --keep            keep the scratch config dir instead of removing it
+
+WHERE TO RUN WHAT
+  capture    on a machine with a browser. It never touches ~/.config/gws — it
+             works in a scratch dir and removes it, so a live home is untouched
+             even if you run it on the node by mistake.
+  status     anywhere gws is installed, as the seat you are asking about.
+  handover   as the seat, once, after the vault value has been reconciled in.
+
+AFTERWARDS
+  Put the three printed values in the estate vault under operator.google:
+      ansible-vault edit envs/vault-layers.yml
+        operator.google.gws_client_id / gws_client_secret / gws_refresh_token
+  Re-plant the seat's seed (it is seed-once) and reconcile:
+      make ansible-<node> -e node_users_secrets_overwrite=true
+      sudo -iu <seat> /home/<seat>/.local/bin/s0n-self-provision --tags gws
+EOF
+}
+
+die() {
+  printf '%s: %s\n' "$SELF" "$*" >&2
+  exit 1
+}
+
+note() { printf '\n== %s\n' "$*"; }
+
+need_gws() {
+  command -v gws >/dev/null 2>&1 && return 0
+  cat >&2 <<EOF
+$SELF: gws is not on PATH.
+
+It is a mise pin carried by the node profile (tag-node/config/mise/conf.d/h0.toml),
+so a desktop machine does not get it by default. For a one-off capture:
+
+    mise use -g npm:@googleworkspace/cli@0.22.5
+
+Match the version to the one the skills are generated from — a skill set pinned to
+a ref describes that binary's flags (tag-node/config/asm/skills.yml).
+EOF
+  exit 1
+}
+
+# `gws auth status` is JSON, which is the only reason this stays a shell script.
+gws_status_field() {
+  gws auth status 2>/dev/null | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+v = d.get(sys.argv[1])
+print("\n".join(v) if isinstance(v, list) else ("" if v is None else v))
+' "$1"
+}
+
+cmd_status() {
+  need_gws
+  note "gws auth status"
+  gws auth status || die "gws auth status failed"
+  cat <<'EOF'
+
+Reading it: `credential_source` and `storage` say which of the six sources won.
+Precedence is
+
+  1 GOOGLE_WORKSPACE_CLI_TOKEN        2 GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE
+  3 credentials.enc                   4 credentials.json
+  5 GOOGLE_APPLICATION_CREDENTIALS    6 ~/.config/gcloud/application_default_credentials.json
+
+If you provisioned credentials.json and `storage` still says `encrypted`, the
+home is reading credentials.enc and your reconciled file is inert. That is what
+`gws-reauth handover` fixes.
+EOF
+}
+
+cmd_handover() {
+  need_gws
+  local dir=${GOOGLE_WORKSPACE_CLI_CONFIG_DIR:-$HOME/.config/gws}
+  [ -e "$dir/credentials.enc" ] || {
+    echo "$SELF: no $dir/credentials.enc — nothing to hand over."
+    if [ -s "$dir/credentials.json" ]; then
+      echo "$SELF: the reconciled $dir/credentials.json is already what gws reads."
+    else
+      echo "$SELF: and no $dir/credentials.json either — this home has no grant at all."
+      echo "$SELF: reconcile one first (--tags gws), or capture one on a machine with a browser."
+    fi
+    return 0
+  }
+  cat <<EOF
+$SELF: about to run \`gws auth logout\` as $(id -un).
+
+That clears $dir/credentials.enc AND the token cache. It is NOT reversible
+without another browser consent — so do it only when a reconciled
+credentials.json is already in place. Check first:
+
+    ls -l $dir/credentials.json
+
+EOF
+  [ -s "$dir/credentials.json" ] ||
+    die "$dir/credentials.json is missing or empty — refusing. Reconcile it first (--tags gws)."
+  read -r -p "Type 'logout' to proceed: " reply
+  [ "$reply" = logout ] || die "aborted."
+  gws auth logout
+  note "after"
+  gws auth status || true
+}
+
+cmd_capture() {
+  local secret="" scope_args=("--full") out="" keep=0
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --full) scope_args=("--full") ;;
+      --readonly) scope_args=("--readonly") ;;
+      --scopes) shift; scope_args=("--scopes" "${1:?--scopes needs a value}") ;;
+      --services) shift; scope_args=("--services" "${1:?--services needs a value}") ;;
+      --out) shift; out=${1:?--out needs a path} ;;
+      --keep) keep=1 ;;
+      -h|--help) usage; return 0 ;;
+      -*) die "unknown option: $1" ;;
+      *) secret=$1 ;;
+    esac
+    shift
+  done
+
+  need_gws
+  [ -n "$secret" ] || { usage; die "capture needs the path to a client_secret.json"; }
+  [ -r "$secret" ] || die "cannot read $secret"
+  python3 -c 'import json,sys; json.load(open(sys.argv[1]))["installed"]' "$secret" 2>/dev/null ||
+    die "$secret is not a Desktop-app OAuth client (expected a top-level \"installed\" object)"
+
+  # A scratch config dir, so this never disturbs a live home — including the case
+  # where you run it on the node by accident. GOOGLE_WORKSPACE_CLI_CONFIG_DIR is
+  # the documented override and the only state gws keeps.
+  local scratch
+  scratch=$(mktemp -d "${TMPDIR:-/tmp}/gws-reauth.XXXXXXXX")
+  chmod 700 "$scratch"
+  # shellcheck disable=SC2064  # expand $scratch now, not at trap time
+  [ "$keep" -eq 1 ] || trap "rm -rf '$scratch'" EXIT
+  install -m 0600 "$secret" "$scratch/client_secret.json"
+  export GOOGLE_WORKSPACE_CLI_CONFIG_DIR=$scratch
+  # The encryption key would otherwise go to the OS keyring, which on a headless
+  # machine is a dbus dependency for state we are about to delete anyway.
+  export GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file
+
+  note "consent"
+  cat <<EOF
+gws will print a URL and wait. Open it in this machine's browser.
+
+The redirect goes to http://localhost:<port> on THIS machine — gws binds
+127.0.0.1:0, so the port is chosen by the OS and appears in that URL. That is
+why this is worth doing where the browser already is: from a headless seat you
+would be tunnelling a port you cannot know in advance, while gws waits.
+
+Working in $scratch — your own ~/.config/gws is untouched.
+EOF
+  echo
+  gws auth login "${scope_args[@]}" || die "gws auth login failed"
+
+  local user granted
+  user=$(gws_status_field user)
+  granted=$(gws_status_field scopes | LC_ALL=C sort)
+  [ -n "$user" ] || die "login reported success but no user resolved — refusing to print a half-grant"
+
+  note "scope check"
+  if [ "$granted" = "$(printf '%s\n' "$EXPECTED_SCOPES" | LC_ALL=C sort)" ]; then
+    echo "identical to the recorded set ($(printf '%s\n' "$granted" | wc -l) scopes)."
+  else
+    cat <<'EOF'
+DIFFERS from the set recorded in this script. Read the diff before you store it —
+a grant that widened is a grant that can do more than the one it replaces.
+Update EXPECTED_SCOPES in this script in the same change that accepts it.
+EOF
+    diff <(printf '%s\n' "$EXPECTED_SCOPES" | LC_ALL=C sort) <(printf '%s\n' "$granted") || true
+  fi
+
+  note "vault values for $user"
+  echo "These are SECRETS. They are on your terminal and in its scrollback; they"
+  echo "are not in shell history unless you put them there."
+  echo
+  # `auth export --unmasked` is the only way to read the refresh token back out.
+  gws auth export --unmasked | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+for src in (d, d.get("credentials", {}), d.get("installed", {})):
+    if isinstance(src, dict) and "refresh_token" in src:
+        d = src
+        break
+pairs = (("client_id", "gws_client_id"),
+         ("client_secret", "gws_client_secret"),
+         ("refresh_token", "gws_refresh_token"))
+missing = [k for k, _ in pairs if not d.get(k)]
+if missing:
+    # Validate BEFORE emitting anything: a half-printed grant invites a
+    # half-filled vault entry, which fails later and further from here.
+    sys.exit("gws-reauth: export carried no %s — refusing to print a partial grant"
+             % ", ".join(missing))
+for key, ref in pairs:
+    print("    %s: \"%s\"" % (ref, d[key]))
+' | tee "${out:-/dev/null}"
+
+  [ -z "$out" ] || { chmod 0600 "$out"; echo; echo "also written to $out (0600) — delete it once the vault has it."; }
+
+  cat <<EOF
+
+Paste those three lines under the EXISTING operator.google dict:
+
+    ansible-vault edit envs/vault-layers.yml
+
+then re-plant the seat's seed and reconcile — the seed is seed-once, so a new key
+does not reach an already-seeded home on its own:
+
+    make ansible-<node> -e node_users_secrets_overwrite=true
+    sudo -iu <seat> /home/<seat>/.local/bin/s0n-self-provision --tags gws
+
+If that seat has ever run \`gws auth login\` itself, its credentials.enc outranks
+the reconciled file. One more step, as that seat: \`gws-reauth handover\`.
+EOF
+}
+
+case ${1:-} in
+  capture) shift; cmd_capture "$@" ;;
+  status) cmd_status ;;
+  handover) cmd_handover ;;
+  -h|--help|help|"") usage ;;
+  *) usage; die "unknown command: $1" ;;
+esac
