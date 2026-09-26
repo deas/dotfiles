@@ -18,11 +18,20 @@ elif grep -qE '^ID="?omarchy"?$' /etc/os-release 2>/dev/null; then
 else
   TAGS="node"
 fi
-# Per-user overlay, orthogonal to the profile: tag-user-<login>/ if one exists
-# (rcm skips a tag with no directory). `id -un` rather than $USER, which is
-# unset under systemd units, cron and some su invocations — that would yield the
-# tag `user-` and match a stray directory instead of nothing.
-TAGS="$TAGS user-$(id -un)"
+# Per-user overlay, in three tiers, MOST SPECIFIC FIRST — rcm resolves a
+# collision to the first tag listed, so this is the order that lets a seat
+# override the profile rather than be shadowed by it:
+#
+#   tag-user-<login>-<profile>/  this seat, on this kind of machine
+#   tag-user-<login>/            this seat everywhere (login is not machine-scoped:
+#                                `deas` is both a workstation login and a node seat)
+#   tag-<profile>/               every seat on this kind of machine
+#
+# rcm skips a tag with no directory, so unused tiers cost nothing. `id -un`
+# rather than $USER, which is unset under systemd units, cron and some su
+# invocations — that would yield the tag `user-` and match a stray directory
+# instead of nothing. $TAGS still holds exactly the profile tag at this point.
+TAGS="user-$(id -un)-$TAGS user-$(id -un) $TAGS"
 # rcm shells out to the `hostname` binary when HOSTNAME is unset, and an Arch
 # node has none — the run then errors and host-<name>/ never resolves.
 HOSTNAME="${HOSTNAME:-$(uname -n)}"
