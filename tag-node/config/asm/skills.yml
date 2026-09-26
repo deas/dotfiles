@@ -1,0 +1,105 @@
+# Agent skills for accounts on machines carrying the `node` tag — linked to
+# ~/.config/asm/skills.yml, read by the s0n user layer (roles/asm_skills) and
+# reconciled into every provider listed below.
+#
+# This file DECLARES; the node still reconciles. The project catalog
+# (gv-agents.yml `asm_skills`) supplies the default set, entries here override
+# it BY NAME and append what is new, and the removal half stays with the node:
+# dropping an entry here leaves the skill installed — retire one with
+# `state: absent`, not by deleting the lines.
+#
+# Universal skills belong in the untagged root's config/asm/skills.yml instead;
+# nothing here reaches a desktop (TAGS="desktop"). A single seat's set goes in
+# tag-user-<login>-node/config/asm/skills.yml, which outranks this file.
+
+skills:
+  # ---- Google Workspace -----------------------------------------------------
+  # Driven through the `gws` CLI this repo already declares for the same tag
+  # (config/mise/conf.d/h0.toml, "npm:@googleworkspace/cli").
+  #
+  # GENERATED from that binary's own command surface (`gws generate-skills`), so
+  # each skill's flag tables describe a specific version — which is why these
+  # carry a ref where the project catalog's entries mostly track a branch.
+  # v0.22.5 is what npm's `latest` resolves to and what is installed today.
+  #
+  # NOTE the coupling is one-sided: the mise line says `latest`, so the binary
+  # floats while this ref does not. When they diverge the skills describe flags
+  # the installed `gws` may not have. `gws --version` against the ref below is
+  # the check; bump both together, or pin the mise line too.
+  #
+  # The set is CLOSED under the skills' own cross-references, which is why the
+  # helpers below are listed rather than trimmed: every service skill links its
+  # helpers AND ../gws-shared/SKILL.md by relative path, and each helper links
+  # back to its service. asm installs skills as siblings, so a link resolves
+  # only if its target is installed — omitting the helpers leaves the service
+  # skills pointing at files that are not there. Verified against v0.22.5:
+  # nothing in this set references anything outside it.
+  - name: gws-shared
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-shared"
+    providers: [claude, opencode, pi]
+
+  - name: gws-gmail
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-gmail"
+    providers: [claude, opencode, pi]
+  - name: gws-gmail-send
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-gmail-send"
+    providers: [claude, opencode, pi]
+  - name: gws-gmail-read
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-gmail-read"
+    providers: [claude, opencode, pi]
+  - name: gws-gmail-reply
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-gmail-reply"
+    providers: [claude, opencode, pi]
+  - name: gws-gmail-reply-all
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-gmail-reply-all"
+    providers: [claude, opencode, pi]
+  - name: gws-gmail-forward
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-gmail-forward"
+    providers: [claude, opencode, pi]
+  - name: gws-gmail-triage
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-gmail-triage"
+    providers: [claude, opencode, pi]
+  - name: gws-gmail-watch
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-gmail-watch"
+    providers: [claude, opencode, pi]
+
+  - name: gws-calendar
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-calendar"
+    providers: [claude, opencode, pi]
+  - name: gws-calendar-agenda
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-calendar-agenda"
+    providers: [claude, opencode, pi]
+  - name: gws-calendar-insert
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-calendar-insert"
+    providers: [claude, opencode, pi]
+
+  - name: gws-drive
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-drive"
+    providers: [claude, opencode, pi]
+  - name: gws-drive-upload
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-drive-upload"
+    providers: [claude, opencode, pi]
+
+  - name: gws-docs
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-docs"
+    providers: [claude, opencode, pi]
+  - name: gws-docs-write
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-docs-write"
+    providers: [claude, opencode, pi]
+
+  - name: gws-sheets
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-sheets"
+    providers: [claude, opencode, pi]
+  - name: gws-sheets-read
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-sheets-read"
+    providers: [claude, opencode, pi]
+  - name: gws-sheets-append
+    source: "github:googleworkspace/cli#v0.22.5:skills/gws-sheets-append"
+    providers: [claude, opencode, pi]
+  # Deliberately NOT here, each for its own reason rather than by oversight:
+  #   gws-admin-reports  reaches the whole tenant's audit logs — a per-seat
+  #                      decision, not one every node account should carry.
+  #   gws-chat / classroom / forms / keep / meet / people / slides / tasks /
+  #   events / modelarmor / script  services this estate does not use; each
+  #                      would pull its own helpers in by the closure rule above.
+  #   the 40 recipe and 10 persona skills  task templates over these services.
