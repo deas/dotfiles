@@ -27,8 +27,13 @@ NODE="${BROWSER_CDP_NODE:-agent-work}" # ssh alias for the node; see ssh/config
 PORT="${BROWSER_CDP_PORT:-9222}"       # port we bind on the NODE's loopback
 ENV_FILE=".cache/browser-cdp.env"      # written on the NODE, relative to $HOME
 
-# The same profile dirs browser_harness scans on Linux (daemon.py:_LINUX_PROFILES).
+# The same profile dirs browser_harness scans on Linux (daemon.py:_LINUX_PROFILES),
+# preceded by the omarchy menu's Brave sandbox (tag-desktop omarchy-menu.jsonc).
+# The sandbox is a non-default user-data-dir, so --remote-debugging-port works
+# there and it needs no chrome://inspect toggle. It goes FIRST: when it is
+# running, the node drives the throwaway browser, not the logged-in one.
 profiles=(
+  "$HOME/.config/brave-sandbox"
   "$HOME/.config/google-chrome"
   "$HOME/.config/chromium"
   "$HOME/.config/BraveSoftware/Brave-Browser"
@@ -53,10 +58,12 @@ live_profile() {
 
 if ! profile="$(live_profile)"; then
   {
-    echo "browser-cdp-push: no running browser is exposing DevTools."
-    echo "  1. Open Chrome, go to chrome://inspect/#remote-debugging"
-    echo "  2. Tick \"Allow remote debugging for this browser instance\""
-    echo "  3. Restart Chrome, then run this again"
+    echo "browser-cdp-push: no running browser is exposing DevTools. Either:"
+    echo "  - launch Browsers > Brave (Sandbox) from the omarchy menu, then run this again; or"
+    echo "  - for a logged-in browser:"
+    echo "    1. Open Chrome, go to chrome://inspect/#remote-debugging"
+    echo "    2. Tick \"Allow remote debugging for this browser instance\""
+    echo "    3. Restart Chrome, then run this again"
   } >&2
   exit 1
 fi
@@ -69,7 +76,11 @@ if [ -z "$remote_port" ] || [ -z "$ws_path" ]; then
 fi
 
 echo "browser-cdp-push: $profile -> $NODE:$PORT (local $remote_port)" >&2
-echo "browser-cdp-push: Ctrl-C to revoke. Chrome will ask to allow the first connection." >&2
+if [ "$profile" = "$HOME/.config/brave-sandbox" ]; then
+  echo "browser-cdp-push: Ctrl-C to revoke. The sandbox accepts connections without asking." >&2
+else
+  echo "browser-cdp-push: Ctrl-C to revoke. Chrome will ask to allow the first connection." >&2
+fi
 
 # One ssh owns BOTH the reverse forward and the env file, so the file cannot
 # outlive the tunnel: an absent file on the node means "no browser", never a
