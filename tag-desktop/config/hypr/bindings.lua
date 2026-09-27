@@ -27,3 +27,11 @@
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
 -- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
+
+-- Google Workspace instead of HEY for mail and calendar
+hl.unbind("SUPER + SHIFT + E")
+hl.unbind("SUPER + SHIFT + ALT + E")
+hl.unbind("SUPER + SHIFT + C")
+o.bind("SUPER + SHIFT + E", "Email", { webapp = "https://mail.google.com/" })
+o.bind("SUPER + SHIFT + ALT + E", "New email", { webapp = "https://mail.google.com/mail/?view=cm&fs=1" })
+o.bind("SUPER + SHIFT + C", "Calendar", { webapp = "https://calendar.google.com/" })
