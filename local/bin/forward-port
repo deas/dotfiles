@@ -1,18 +1,48 @@
 #!/bin/bash
 
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <remote_port> <local_port>"
+# Forward TCP connections from a listen address to a target address.
+#   Examples:
+#     forward-port 8080 80                   # all interfaces :8080 -> localhost:80
+#     forward-port 127.0.0.1:2222 10.0.0.5:22
+#     forward-port [::1]:8080 example.com:80
+#
+# Arguments:
+#  1. Listen address, [host:]port (no host: all interfaces, IPv4 and IPv6)
+#  2. Target address, [host:]port (no host: localhost)
+
+usage() {
+  echo "Usage: $0 [listen_host:]listen_port [target_host:]target_port" >&2
   exit 1
+}
+
+[ "$#" -eq 2 ] || usage
+
+# Split "host:port" into HOST and PORT; HOST is empty when only a port is given.
+split() {
+  if [[ "$1" == *:* ]]; then
+    HOST="${1%:*}"
+    PORT="${1##*:}"
+    [ -n "$HOST" ] || usage
+  else
+    HOST=""
+    PORT="$1"
+  fi
+  if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
+    echo "Error: bad port in '$1'." >&2
+    exit 1
+  fi
+}
+
+split "$1"
+if [ -z "$HOST" ]; then
+  LISTEN="TCP6-LISTEN:${PORT},bind=[::],ipv6only=0"
+elif [[ "$HOST" == \[*\] ]]; then
+  LISTEN="TCP6-LISTEN:${PORT},bind=${HOST}"
+else
+  LISTEN="TCP-LISTEN:${PORT},bind=${HOST}"
 fi
 
-REMOTE_PORT=$1
-LOCAL_PORT=$2
+split "$2"
+TARGET="TCP:${HOST:-localhost}:${PORT}"
 
-# Validate that ports are numbers
-if ! [[ "$REMOTE_PORT" =~ ^[0-9]+$ ]] || ! [[ "$LOCAL_PORT" =~ ^[0-9]+$ ]]; then
-  echo "Error: Ports must be integers."
-  exit 1
-fi
-
-exec socat "TCP6-LISTEN:${REMOTE_PORT},bind=[::],ipv6only=0,fork,reuseaddr" "TCP:localhost:${LOCAL_PORT}"
-# exec socat "TCP-LISTEN:${REMOTE_PORT},bind=0.0.0.0,fork,reuseaddr" "TCP:localhost:${LOCAL_PORT}"
+exec socat "${LISTEN},fork,reuseaddr" "$TARGET"
