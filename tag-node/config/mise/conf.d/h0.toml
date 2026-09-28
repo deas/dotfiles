@@ -42,3 +42,4 @@ trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
 # cleanly and then fails at first run.
 bun = "latest"
 fnox = "latest"
+"npm:@dzhng/jevgrep" = "latest"
