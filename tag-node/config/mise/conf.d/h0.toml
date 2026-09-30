@@ -43,3 +43,4 @@ trusted_config_paths = ["~/projects", "/var/devops/s0n/projects"]
 bun = "latest"
 fnox = "latest"
 "npm:@dzhng/jevgrep" = "latest"
+"npm:@microsoft/teams.cli" = "preview"
