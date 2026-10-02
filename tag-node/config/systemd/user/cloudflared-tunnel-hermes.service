@@ -1,0 +1,15 @@
+[Unit]
+Description=Cloudflare Tunnel hermes
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel --loglevel info run --token-file %h/.config/cloudflared/hermes.token
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
