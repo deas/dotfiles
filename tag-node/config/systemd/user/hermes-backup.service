@@ -1,0 +1,11 @@
+[Unit]
+Description=Hermes home backup (hermes backup)
+
+[Service]
+Type=oneshot
+# Upstream's stable launcher (as hermes-agent.service); a unit gets no login PATH.
+ExecStart=%h/.local/bin/hermes backup --output %h/backups/hermes --keep 7
+WorkingDirectory=%h
+UMask=0077
+Nice=10
+IOSchedulingClass=idle
