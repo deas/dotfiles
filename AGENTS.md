@@ -40,15 +40,21 @@ Here's a typical workflow:
 
 - **Profiles are rcm tags.** The untagged repo root is *universal* config,
   linked on every machine. `tag-desktop/` holds omarchy/Hyprland GUI and
-  workstation-only files and is selected by `TAGS="desktop"` in this repo's
-  `rcrc`; `tag-node/` holds headless-server additions and is selected by
-  `TAGS="node"` from a consumer's own rcrc. `rcrc` additionally appends a
-  `user-$(id -un)` tag, so `tag-user-<login>/` is a per-account overlay on top
-  of the profile — rcm skips it when the directory is absent. `host-batman/`
-  and `host-robin/` are rcm *host* dirs and are orthogonal to tags. When
-  adding config, put it in
-  the untagged root unless it needs a graphical session or would be useless or
-  harmful on a headless node — see `README.md` and `tag-node/README.md`.
+  workstation-only files; `tag-node/` holds headless-server additions. This
+  repo's `rcrc` picks the profile itself: `$RCM_PROFILE` if set, else
+  `desktop` when `/etc/os-release` says omarchy, else `node`.
+- **Per-user overlays are tags too**, layered most-specific-first (rcm gives a
+  collision to the first tag listed): `tag-user-<login>-<profile>/` (this
+  account on this kind of machine), then `tag-user-<login>/` (this account
+  everywhere), then `tag-<profile>/`. The login comes from `id -un`; rcm skips
+  any tier whose directory is absent.
+- **Host dirs are orthogonal to tags.** `host-batman/` and `host-robin/` match
+  `uname -n` and apply to every account on that machine. There is no tracked
+  user+host tier; `~/dotfiles-local` (first in `DOTFILES_DIRS`, untracked)
+  serves that role.
+- When adding config, put it in the untagged root unless it needs a graphical
+  session or would be useless or harmful on a headless node — see `README.md`
+  and `tag-node/README.md`.
 - **Packages are declared here, in two planes**, both layered by the same
   tags: `mise` (exact-version toolchains — `mise.toml`,
   `*/config/mise/conf.d/*.toml`, materialized by `mise install`) and `nix`
