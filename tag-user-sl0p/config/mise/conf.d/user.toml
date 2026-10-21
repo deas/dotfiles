@@ -1,0 +1,15 @@
+[tools]
+"go:github.com/f/mcptools/cmd/mcptools" = "master"
+mitmproxy = "latest"
+"npm:@pnp/cli-microsoft365" = { version = "latest", trust_policy_excludes = "fast-xml-parser@4.5.7" }
+"npm:rea-agents" = "latest"
+"npm:t3" = "latest"
+# PDF/document → Markdown for agents. See README-pdf-to-markdown.md in the
+# dotfiles repo for why these two and not docling/marker/mineru.
+# markitdown: `extras = "all"` fails to resolve (prerelease Azure dependency).
+# onnxruntime (via magika) has no cp315 wheels yet — build its venv on 3.14.
+"pipx:markitdown" = { version = "latest", extras = "pdf,docx,pptx,xlsx,xls,outlook", uvx_args = "--python 3.14" }
+# pymupdf4llm 2.0 is an empty shim: the code moved into pymupdf 2.x, which
+# ships no `pymupdf4llm` CLI. Stay on 1.x until we switch to the library.
+"pipx:pymupdf4llm" = "1"
+"pypi:huggingface_hub" = "latest"
