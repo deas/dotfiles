@@ -35,7 +35,9 @@ node = "26"
 "herdr" = "latest"
 "pypi:browser-harness" = "latest"
 "pypi:graphifyy" = "latest"
-"pypi:headroom-ai" = { version = "latest", extras = ["code", "mcp"] }
+# --python 3.14: fastuuid (via litellm) ships no cp315 wheel and its sdist
+# pins PyO3 0.26, which refuses 3.15. Drop once fastuuid supports 3.15.
+"pypi:headroom-ai" = { version = "latest", extras = ["code", "mcp"], uvx_args = "--python 3.14" }
 python = "3.15"
 "yt-dlp" = "latest"
 # Runtime for `omp` (@oh-my-pi/pi-coding-agent): the package declares
