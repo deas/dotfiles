@@ -1,0 +1,165 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.11,<3.15"  # onnxruntime has no cp315 wheels yet
+# dependencies = ["pymupdf>=2,<3"]
+# ///
+#
+# Convert PDFs (and other PyMuPDF-readable documents) to Markdown for agents.
+#
+# Replaces the `pymupdf4llm` CLI, which pymupdf4llm 2.0 dropped when its code
+# moved into pymupdf 2.x (the package still ships the `pymupdf4llm` module,
+# just no command). This is a thin wrapper over pymupdf4llm.convert_batch();
+# see README-pdf-to-markdown.md. Lives in the sl0p tier because uv is declared
+# there (tag-user-sl0p/config/mise/conf.d/user.toml).
+#
+# Usage:
+#   pdf2md [options] INPUT [INPUT ...]     INPUT is a file or a directory
+#   pdf2md -s FILE                         Markdown to stdout, no files written
+#
+# Each input lands in OUT/<stem>/<stem>.<ext> next to a run-log.txt.
+#
+#   -o, --out DIR        output directory                   (default: ./md)
+#   -s, --stdout         print the converted text instead of writing files;
+#                        single file input only
+#   -b, --backend FMT    md, json or txt                    (default: md)
+#   -p, --pattern GLOB   files to pick up from directories  (default: *.pdf)
+#   -w, --workers N      worker processes                   (default: auto)
+#   --ocr-mode MODE      never, select-drop, select-keep, force-drop,
+#                        force-keep                         (default: select-keep)
+#   --ocr-lang LANG      Tesseract language(s), e.g. deu+eng (default: eng)
+#   --no-layout          plain reading order instead of the layout model
+#   --write-images       write images next to the output
+#   --embed-images       embed images in the output
+#   --header, --footer   keep page headers / footers
+#   --opt KEY=VALUE      extra conversion option, repeatable
+#                        (e.g. --opt page_separators=true --opt ocr_dpi=200)
+
+import argparse
+import signal
+import sys
+from pathlib import Path
+
+import pymupdf
+import pymupdf4llm
+from pymupdf4llm import convert_batch
+from pymupdf4llm.ocr import OCRMode
+from pymupdf4llm.worker_sizing import auto_workers
+
+OCR_MODES = {
+    "never": OCRMode.NEVER,
+    "select-drop": OCRMode.SELECT_DROP_OLD,
+    "select-keep": OCRMode.SELECT_KEEP_OLD,
+    "force-drop": OCRMode.FORCE_DROP_OLD,
+    "force-keep": OCRMode.FORCE_KEEP_OLD,
+}
+
+CONVERTERS = {
+    "md": pymupdf4llm.to_markdown,
+    "json": pymupdf4llm.to_json,
+    "txt": pymupdf4llm.to_text,
+}
+
+
+def parse_value(value):
+    if value.lower() in ("true", "false"):
+        return value.lower() == "true"
+    for cast in (int, float):
+        try:
+            return cast(value)
+        except ValueError:
+            pass
+    return value
+
+
+def parse_opts(pairs):
+    opts = {}
+    for pair in pairs:
+        key, sep, value = pair.partition("=")
+        if not sep:
+            sys.exit(f"pdf2md: --opt expects KEY=VALUE, got {pair!r}")
+        opts[key] = parse_value(value)
+    return opts
+
+
+def collect_inputs(paths, pattern):
+    inputs = []
+    for path in map(Path, paths):
+        if path.is_file():
+            inputs.append(path)
+        elif path.is_dir():
+            inputs.extend(sorted(path.glob(pattern)))
+        else:
+            sys.exit(f"pdf2md: no such file or directory: {path}")
+    if not inputs:
+        sys.exit(f"pdf2md: no inputs matching {pattern!r}")
+    return inputs
+
+
+def main():
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # quiet exit under `| head`
+    # PyMuPDF prints parser and OCR notices to stdout; keep it for the output.
+    pymupdf.set_messages(stream=sys.stderr)
+    parser = argparse.ArgumentParser(
+        prog="pdf2md", description="Convert documents to Markdown with pymupdf4llm."
+    )
+    parser.add_argument("inputs", nargs="+", metavar="INPUT")
+    parser.add_argument("-o", "--out", default="md")
+    parser.add_argument("-s", "--stdout", action="store_true")
+    parser.add_argument("-b", "--backend", default="md", choices=CONVERTERS)
+    parser.add_argument("-p", "--pattern", default="*.pdf")
+    parser.add_argument("-w", "--workers", type=int)
+    parser.add_argument("--ocr-mode", default="select-keep", choices=OCR_MODES)
+    parser.add_argument("--ocr-lang", default="eng")
+    parser.add_argument("--layout", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--write-images", action="store_true")
+    parser.add_argument("--embed-images", action="store_true")
+    parser.add_argument("--header", action="store_true")
+    parser.add_argument("--footer", action="store_true")
+    parser.add_argument("--opt", action="append", default=[], metavar="KEY=VALUE")
+    args = parser.parse_args()
+
+    if args.write_images and args.embed_images:
+        parser.error("--write-images and --embed-images are mutually exclusive")
+
+    inputs = collect_inputs(args.inputs, args.pattern)
+    options = parse_opts(args.opt) | {
+        "use_ocr": OCR_MODES[args.ocr_mode],
+        # The library's name; upstream's CLI sent `ocr_lang`, which nothing reads.
+        "ocr_language": args.ocr_lang,
+        "write_images": args.write_images,
+        "embed_images": args.embed_images,
+        "header": args.header,
+        "footer": args.footer,
+    }
+    pymupdf4llm.use_layout(args.layout)
+
+    if args.stdout:
+        if len(inputs) != 1:
+            parser.error("--stdout takes exactly one input file")
+        if args.write_images:
+            parser.error("--stdout cannot be combined with --write-images")
+        output = CONVERTERS[args.backend](str(inputs[0]), **options)
+        sys.stdout.write(output if isinstance(output, str) else str(output))
+        return
+
+    workers = args.workers or auto_workers(
+        file_count=len(inputs),
+        user_dpi=options.get("ocr_dpi", 150),
+        ocr_mode=options["use_ocr"],
+    )
+    results = convert_batch(
+        inputs,
+        workers=max(1, workers),
+        out_dir=args.out,
+        backend=args.backend,
+        options=options,
+    )
+    failed = [r for r in results if not r.success]
+    for r in failed:
+        print(f"pdf2md: {r.input}: {r.error}", file=sys.stderr)
+    print(f"{len(results) - len(failed)}/{len(results)} converted into {args.out}/", file=sys.stderr)
+    sys.exit(1 if failed else 0)
+
+
+if __name__ == "__main__":
+    main()

@@ -9,21 +9,27 @@ real ~10-page born-digital German document, not a synthetic benchmark.
 ```toml
 # tag-user-sl0p/config/mise/conf.d/user.toml (→ ~/.config/mise/conf.d/user.toml)
 [tools]
-"pipx:markitdown"  = { version = "latest", extras = "pdf,docx,pptx,xlsx,xls,outlook" }
-"pipx:pymupdf4llm" = "1"   # 2.0 is an empty shim with no CLI — see below
+"pipx:markitdown" = { version = "latest", extras = "pdf,docx,pptx,xlsx,xls,outlook", uvx_args = "--python 3.14" }
+uv = "latest"   # runs pdf2md and backs every pipx: entry
 ```
 
-`pymupdf4llm` for PDFs, `markitdown` for everything else. Add `pipx:docling`
+`pdf2md` (`tag-user-sl0p/local/bin/pdf2md`, over pymupdf4llm) for PDFs,
+`markitdown` for everything else. Add `pipx:docling`
 only when a document defeats both — see [When to reach for docling](#when-to-reach-for-docling).
 
-### Why `pymupdf4llm` is pinned to 1.x
+### Why `pdf2md` and not `pipx:pymupdf4llm`
 
-`pymupdf4llm` 2.0 (2026-10-19) is a 904-byte placeholder package with no code
-and no entry points. The 4llm code now lives inside `pymupdf` 2.x, which only
-ships the `pymupdf` and `pymupdf-config` commands. On `"latest"`, mise's pipx
-backend fails with `Failed to install entrypoints for pymupdf4llm`. Keep the
-pin at `"1"` until we drop the CLI and call `pymupdf4llm.to_markdown()` from
-`pymupdf` 2.x instead.
+`pymupdf4llm` 2.0 (2026-10-19) is a placeholder package with no code and no
+entry points. The `pymupdf4llm` module now ships inside `pymupdf` 2.x, which
+only installs the `pymupdf` and `pymupdf-config` commands — so there is no
+pipx entry that yields a converter CLI any more. `pdf2md` is a uv script
+(PEP 723 header: `pymupdf>=2,<3`, Python `<3.15`) wrapping
+`pymupdf4llm.convert_batch()` and `to_markdown()`; uv caches its environment
+after the first run.
+
+Python is capped below 3.15 because the layout model pulls `onnxruntime`,
+which has no cp315 wheels yet — the same reason markitdown (via `magika`)
+carries `uvx_args = "--python 3.14"`. Lift both once onnxruntime ships them.
 
 ## Why the pipx backend
 
@@ -37,7 +43,7 @@ empty), so they come in through mise's `pipx:` backend — the same mechanism
 
 | Tool | mise entry | Installed | Speed here | Verdict |
 | --- | --- | --- | --- | --- |
-| **pymupdf4llm** | `pipx:pymupdf4llm` | ~80 MB | 2 s | best output, **AGPL-3.0** |
+| **pymupdf4llm** | `pdf2md` (uv script) | ~80 MB | 2 s | best output, **AGPL-3.0** |
 | **markitdown** (Microsoft) | `pipx:markitdown` | 279 MB | 7 s | weak on PDF, great on Office formats |
 | **docling** (IBM) | `pipx:docling` | 1.5 GB + ~500 MB models | 126 s | layout-aware, handles scans |
 | **marker-pdf** (Datalab) | `pipx:marker-pdf` | ~2 GB + torch | GPU-bound | best accuracy, needs a GPU |
@@ -101,16 +107,19 @@ keep markitdown installed alongside rather than standardizing on one tool.
 markitdown report.docx > report.md          # any format → stdout
 markitdown report.docx -o report.md
 
-# pymupdf4llm is a batch converter: --out is a directory, not a file, and
-# each input lands in <out>/<stem>/<stem>.md next to a run-log.txt.
-pymupdf4llm --out ./md doc.pdf
-pymupdf4llm --out ./md ./papers --pattern '*.pdf' --workers 8 --show-progress
+pdf2md -s doc.pdf > doc.md                  # one file → stdout
+# Batch mode: --out (default ./md) is a directory, and each input lands in
+# <out>/<stem>/<stem>.md next to a run-log.txt.
+pdf2md doc.pdf other.pdf
+pdf2md -o ./md ./papers --pattern '*.pdf' --workers 8
 ```
 
-Flags worth knowing: `--backend {md,json,txt}`, `--write-images` /
-`--embed-images`, `--no-layout` to fall back to plain reading order, and
+Flags worth knowing (`pdf2md -h`): `--backend {md,json,txt}`,
+`--write-images` / `--embed-images`, `--no-layout` to fall back to plain
+reading order, and
 `--ocr-mode {never,select-drop,select-keep,force-drop,force-keep}` with
-`--ocr-lang` — OCR goes through the system Tesseract (`/usr/bin/tesseract`,
+`--ocr-lang deu+eng` — upstream's old CLI silently ignored `--ocr-lang`;
+`pdf2md` passes it through as `ocr_language`. OCR goes through the system Tesseract (`/usr/bin/tesseract`,
 already present on batman), so scanned pages are not automatically a reason
 to reach for docling.
 

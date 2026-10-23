@@ -9,7 +9,8 @@ mitmproxy = "latest"
 # markitdown: `extras = "all"` fails to resolve (prerelease Azure dependency).
 # onnxruntime (via magika) has no cp315 wheels yet — build its venv on 3.14.
 "pipx:markitdown" = { version = "latest", extras = "pdf,docx,pptx,xlsx,xls,outlook", uvx_args = "--python 3.14" }
-# pymupdf4llm 2.0 is an empty shim: the code moved into pymupdf 2.x, which
-# ships no `pymupdf4llm` CLI. Stay on 1.x until we switch to the library.
-"pipx:pymupdf4llm" = "1"
+# PDFs go through `pdf2md` (tag-user-sl0p/local/bin), a uv script over
+# pymupdf 2.x — pymupdf4llm 2.0 is an empty shim with no CLI. uv also backs
+# every `pipx:` entry here.
+uv = "latest"
 "pypi:huggingface_hub" = "latest"
