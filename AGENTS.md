@@ -65,3 +65,47 @@ Here's a typical workflow:
 - The `config` folder correspondes to `~/.config` which is a hidden directory within your home directory that stores configuration files for various applications. It's a standard location for user-specific settings and preferences, adhering to the XDG Base Directory Specification.
 - `tag-desktop/config/hypr` is the configuration for the `Hyprland` dynamic tiling Wayland compositor. rcm soft-links `~/.config/hypr` to this folder on machines carrying the `desktop` tag. When assisting with Hyprland, use the official documentation at <https://wiki.hypr.land/>. Some configuration directives refer to files in
   subfolders of `~/.local/share/omarchy`. These files are managed by another party and shared by many people. We do not change files in `~/.local/share/omarchy`. Instead, we override settings in our files in `config/hypr`. When assisting with files in the `omarchy` folder, use the official documentation website at <https://manuals.omamix.org/2/the-omarchy-manual/>.
+
+## Todo Processing
+
+The repository's agent-actionable backlog lives in [`TODO.md`](./TODO.md),
+which is the single source of truth. It is plain markdown in git — no external
+tracker. Installed tooling that can reach a tracker (e.g. the Trello skill) is
+not a reason to file dotfiles work there. Items move between three sections:
+`Backlog`, `In progress`, `Done`.
+
+Agents work **propose-only**: an agent may pick up and fully prepare a todo, but
+a human reviews and approves before it is marked done. The loop:
+
+1. **Pick** the highest-priority unblocked item from `Backlog` (prefer `P1`,
+   then `P2`, then `P3`; untagged items are lowest). If priorities are equal,
+   ask the human which to take. Skip items marked as needing a human decision.
+2. **Claim** it: move the line to `In progress` and append an owner tag
+   (e.g. `@claude`). Commit this move on a working branch off `master`.
+3. **Implement** the change, following the conventions in this file. Keep the
+   change surgical and scoped to the one item.
+4. **Validate** by running the changed config and looking at it. The bar is the
+   item's own **observable check**, written into the todo before the work
+   starts. In practice: `just rcm-sync` (and `lsrc` to confirm what links where),
+   then exercise the tool — e.g. for nvim, a start with empty `:messages` and
+   `:checkhealth` for the touched plugin — and confirm `git status` shows no
+   tracked file dirtied beyond the intended change.
+   - **Name the profile you checked on.** Untagged config reaches both `desktop`
+     and `node`; a check run on one says nothing about the other.
+5. **Propose**: present the diff and what you actually observed — the command
+   run, its output. Never "should work". **Stop here** — do not merge or move
+   the item to `Done` yourself.
+6. **Human approves**, merges, and moves the line to `Done` (changing `[ ]` to
+   `[x]`). Only a human closes an item.
+
+Rules:
+
+- One item in `In progress` per agent at a time; finish or release before
+  claiming another.
+- Never edit the `Done` section except to add a freshly approved item.
+- If work uncovers new tasks, add them to `Backlog` rather than expanding the
+  scope of the current item.
+- If an item is blocked, move it back to `Backlog` with a sub-bullet noting the
+  blocker.
+- If an item's observable check could not be run, say which one and leave the
+  item open. A change that has not been looked at is not done.
