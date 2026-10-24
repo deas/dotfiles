@@ -96,43 +96,42 @@ return {
     end,
     -- for nixos:
     -- build = "nix run .#release",
-    opts = {
-      debug = {
-        enabled = true,
-        show_scores = true,
-      },
-    },
+    opts = {},
     lazy = false, -- the plugin lazy-initialises itself
     keys = {
       {
-        "ff",
+        "<leader>Ff",
         function()
           require("fff").find_files()
         end,
         desc = "FFFind files",
       },
       {
-        "fg",
+        "<leader>Fg",
         function()
           require("fff").live_grep()
         end,
         desc = "LiFFFe grep",
       },
       {
-        "fz",
+        "<leader>Fz",
         function()
           require("fff").live_grep({ grep = { modes = { "fuzzy", "plain" } } })
         end,
         desc = "Live fffuzy grep",
       },
       {
-        "fc",
+        "<leader>Fc",
         function()
           require("fff").live_grep({ query = vim.fn.expand("<cword>") })
         end,
         desc = "Search current word",
       },
     },
+  },
+  {
+    "folke/which-key.nvim",
+    opts = { spec = { { "<leader>F", group = "fff" } } },
   },
   {
     "esmuellert/vscode-diff.nvim",
@@ -535,10 +534,6 @@ return {
       require("copilot.api").status = require("copilot.status") -- TODO: Smart override
     end,
   },]]
-  {
-    "neoclide/coc.nvim",
-    branch = "release",
-  },
   {
     "epwalsh/obsidian.nvim",
     version = "*", -- recommended, use latest release instead of latest commit
