@@ -38,7 +38,7 @@
   autosquash = true
 [include]
   # path = ~/.gitconfig.local
-  path = .gitdelta
+  path = ~/.gitdelta
 [diff]
   colorMoved = zebra
 [credential]
