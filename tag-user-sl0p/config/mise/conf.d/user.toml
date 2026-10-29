@@ -13,4 +13,8 @@ mitmproxy = "latest"
 # pymupdf 2.x — pymupdf4llm 2.0 is an empty shim with no CLI. uv also backs
 # every `pipx:` entry here.
 uv = "latest"
+# CLIs the Obsidian skills drive (config/asm/skills.d/obsidian.yml and the
+# Claude plugin): web page → clean Markdown, and Markdown templating.
+"npm:defuddle" = "latest"
+"npm:knap" = "latest"
 "pypi:huggingface_hub" = "latest"

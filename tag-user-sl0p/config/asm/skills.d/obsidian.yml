@@ -1,0 +1,33 @@
+# kepano's Obsidian skills for this seat's non-Claude providers, as a FRAGMENT
+# of ~/.config/asm/skills.yml (read by the s0n user layer, roles/asm_skills).
+# A fragment, not a tag-user-sl0p copy of skills.yml: rcm resolves a collision
+# per file, so a copy would shadow tag-node's whole set for this seat.
+#
+# Claude Code gets the same six from upstream's plugin (`obsidian@obsidian-skills`,
+# declared on this seat's harness_config in the s0n project), so `claude` is
+# deliberately absent here — a second copy would shadow the plugin's. This list
+# mirrors the plugin's skills/ dir and needs re-syncing when upstream adds one.
+#
+# obsidian-cli remote-controls a RUNNING desktop app and does nothing on a
+# headless node; kept for parity with the plugin. defuddle and knap need their
+# CLIs, declared in config/mise/conf.d/user.toml. Upstream carries no tags, so
+# these track main.
+skills:
+  - name: obsidian-markdown
+    source: "github:kepano/obsidian-skills#main:skills/obsidian-markdown"
+    providers: [opencode, pi]
+  - name: obsidian-bases
+    source: "github:kepano/obsidian-skills#main:skills/obsidian-bases"
+    providers: [opencode, pi]
+  - name: json-canvas
+    source: "github:kepano/obsidian-skills#main:skills/json-canvas"
+    providers: [opencode, pi]
+  - name: obsidian-cli
+    source: "github:kepano/obsidian-skills#main:skills/obsidian-cli"
+    providers: [opencode, pi]
+  - name: defuddle
+    source: "github:kepano/obsidian-skills#main:skills/defuddle"
+    providers: [opencode, pi]
+  - name: knap
+    source: "github:kepano/obsidian-skills#main:skills/knap"
+    providers: [opencode, pi]
