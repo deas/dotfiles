@@ -1,0 +1,224 @@
+#!/usr/bin/env bash
+# lab-kali — create or destroy a Kali box on an isolated incus lab network,
+#            pre-wired with opencode (v2) driving mcp-kali-server locally.
+#
+# WHAT IT IS
+#   A hand-run experimentation helper. It is NOT part of the sovera1gn-n0des
+#   node framework — nothing here is declared in that repo, and the box it makes
+#   is a throwaway. It uses only `incus`, so any member of the `incus` group can
+#   run it with no sudo.
+#
+# THE ISOLATED NETWORK (shared with lab-target)
+#   Both boxes sit on `kali-lab` (10.223.0.0/24). An egress ACL lets them reach
+#   the INTERNET and EACH OTHER only. The LAN, the incus host, every other
+#   guest, and the tailnet are blocked — in both directions. A process inside a
+#   lab box has no incus control socket, so the network ACL is its real boundary.
+#   Measured reachable: lab<->lab, lab->internet. Measured blocked: lab->LAN,
+#   lab->host gateway, lab->incusbr0 guests, host->lab (ingress).
+#
+# WHAT create INSTALLS ON THE KALI BOX
+#   - mcp-kali-server  (Kali's own package): `kali-server-mcp`, the tool API, run
+#                      as a loopback systemd unit `kali-mcp.service` on :5000.
+#   - opencode v2      (npm `@opencode/cli`, the same package h0 pins): the agent
+#                      / MCP client, installed globally.
+#   - opencode is wired to the local Kali tool server via the `mcp-server` stdio
+#     bridge, written to /root/.config/opencode/opencode.json.
+#   Give opencode its OWN throwaway credential inside the box — do NOT forward a
+#   real seat's keys or token into an attack box.
+#
+# IDEMPOTENT
+#   create re-runs safely: an existing box is started and re-provisioned in
+#   place; apt and the config writes converge; opencode is only reinstalled when
+#   missing or not v2. destroy removes the box, and tears the shared network down
+#   only once no lab box is left using it.
+#
+# USAGE
+#   lab-kali create     create/start the Kali box and (re)provision its tooling
+#   lab-kali destroy    delete the Kali box (and the lab network if now empty)
+#   lab-kali help       show this help
+#
+# ENV OVERRIDES
+#   LAB_KALI_NAME (kali)   LAB_KALI_CPU (2)   LAB_KALI_MEM (4GiB)
+#   LAB_KALI_IMAGE (images:kali/cloud)
+#   LAB_OPENCODE_VERSION (latest)   LAB_MCP_PORT (5000)
+#   LAB_NET (kali-lab)  LAB_ACL (kali-lab-egress)  LAB_GW (10.223.0.1/24)
+set -euo pipefail
+
+NET=${LAB_NET:-kali-lab}
+ACL=${LAB_ACL:-kali-lab-egress}
+GW=${LAB_GW:-10.223.0.1/24}
+NET_CIDR=${LAB_NET_CIDR:-10.223.0.0/24}
+
+NAME=${LAB_KALI_NAME:-kali}
+IMAGE=${LAB_KALI_IMAGE:-images:kali/cloud}
+CPU=${LAB_KALI_CPU:-2}
+MEM=${LAB_KALI_MEM:-4GiB}
+OPENCODE_VERSION=${LAB_OPENCODE_VERSION:-latest}
+MCP_PORT=${LAB_MCP_PORT:-5000}
+
+SELF=$(basename "$0")
+die() {
+  echo "$SELF: $*" >&2
+  exit 1
+}
+need_incus() {
+  command -v incus >/dev/null || die "incus not found on PATH"
+  incus list >/dev/null 2>&1 || die "cannot talk to incus — are you in the 'incus' group?"
+}
+
+# --- shared lab network (idempotent) --------------------------------------
+ensure_lab_net() {
+  if ! incus network acl show "$ACL" >/dev/null 2>&1; then
+    echo "$SELF: creating egress ACL $ACL"
+    incus network acl create "$ACL" \
+      --description "isolated lab: internet + intra-lab only, no LAN/host/guests"
+    local cidr
+    for cidr in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 \
+      100.64.0.0/10 169.254.0.0/16 224.0.0.0/4; do
+      incus network acl rule add "$ACL" egress action=reject destination="$cidr"
+    done
+    incus network acl rule add "$ACL" egress action=allow                       # internet
+    incus network acl rule add "$ACL" egress action=allow destination="$NET_CIDR" # intra-lab
+  fi
+  if ! incus network show "$NET" >/dev/null 2>&1; then
+    echo "$SELF: creating isolated network $NET ($GW)"
+    incus network create "$NET" \
+      ipv4.address="$GW" ipv4.nat=true ipv6.address=none \
+      security.acls="$ACL" \
+      security.acls.default.ingress.action=reject \
+      security.acls.default.egress.action=reject \
+      --description "isolated kali lab network"
+  fi
+}
+
+# Remove the shared network+ACL, but only if no instance still uses the network.
+teardown_lab_net_if_empty() {
+  incus network show "$NET" >/dev/null 2>&1 || return 0
+  if incus network show "$NET" |
+    awk '/^used_by:/{f=1;next} f&&/instances/{found=1} END{exit !found}'; then
+    echo "$SELF: network $NET still has instances — leaving it in place"
+    return 0
+  fi
+  echo "$SELF: lab is empty — removing $NET and $ACL"
+  incus network delete "$NET" 2>/dev/null || true
+  incus network acl delete "$ACL" 2>/dev/null || true
+}
+
+# Exact-match IP lookup: `incus list <name>` is a SUBSTRING filter, so a bare
+# "kali" would also match "kali-lab" — match the name column exactly instead.
+wait_ip() {
+  local ip
+  for _ in $(seq 30); do
+    ip=$(incus list -c n4 -f csv | awk -F, -v n="$NAME" '$1==n{split($2,a," ");print a[1]}')
+    [ -n "$ip" ] && {
+      echo "$ip"
+      return 0
+    }
+    sleep 2
+  done
+  return 1
+}
+
+# --- provision the Kali box (idempotent, runs inside the container) --------
+provision_kali() {
+  echo "$SELF: provisioning $NAME (mcp-kali-server + opencode v2) — this can take a few minutes"
+  incus exec "$NAME" \
+    --env OC_VER="$OPENCODE_VERSION" --env MCP_PORT="$MCP_PORT" \
+    -- bash -s <<'PROVISION'
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -qq
+# Kali's own package for the MCP tool API server + bridge; node for opencode.
+apt-get install -y -qq mcp-kali-server npm
+
+# opencode v2 (npm @opencode/cli) — install only when missing or not a working
+# v2. Debian/Kali npm blocks postinstall scripts by default, and @opencode/cli
+# fetches its platform binary in postinstall, so --allow-scripts is required or
+# the installed `opencode` errors with "postinstall script was not run".
+if ! command -v opencode >/dev/null 2>&1 || ! opencode --version 2>/dev/null | grep -qE '(^|v)2\.'; then
+  npm install -g --allow-scripts=@opencode/cli "@opencode/cli@${OC_VER}"
+fi
+
+# Wire opencode -> local Kali tool server through the stdio bridge.
+install -d -m 0700 /root/.config/opencode
+cat >/root/.config/opencode/opencode.json <<JSON
+{
+  "\$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "kali": {
+      "type": "local",
+      "command": ["mcp-server", "--server", "http://127.0.0.1:${MCP_PORT}"],
+      "enabled": true
+    }
+  }
+}
+JSON
+
+# Run the tool API server on loopback only, as a managed unit.
+cat >/etc/systemd/system/kali-mcp.service <<UNIT
+[Unit]
+Description=Kali MCP tool API server (loopback only)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/kali-server-mcp --ip 127.0.0.1 --port ${MCP_PORT}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now kali-mcp.service
+
+echo "provisioned: $(opencode --version 2>/dev/null || echo 'opencode ?'); kali-mcp on 127.0.0.1:${MCP_PORT}"
+PROVISION
+}
+
+cmd_create() {
+  need_incus
+  ensure_lab_net
+  if incus info "$NAME" >/dev/null 2>&1; then
+    echo "$SELF: '$NAME' exists — starting if stopped, then re-provisioning"
+    incus start "$NAME" 2>/dev/null || true
+  else
+    echo "$SELF: launching $NAME from $IMAGE on $NET"
+    incus launch "$IMAGE" "$NAME" --network "$NET" \
+      -c limits.cpu="$CPU" -c limits.memory="$MEM" -q
+  fi
+  local ip
+  ip=$(wait_ip) || die "'$NAME' did not get an address"
+  provision_kali
+  cat <<EOF
+
+$SELF: $NAME is up at $ip (network $NET, isolated from the LAN).
+  open the agent:   incus exec $NAME -- bash -lc 'cd /root && opencode'
+  it drives Kali tools via the local MCP server (kali-mcp.service, 127.0.0.1:$MCP_PORT)
+  shell:            incus exec $NAME -- bash
+  add a target:     lab-target create   (then scan its address from here)
+  tear down:        $SELF destroy
+
+Reminder: give opencode a THROWAWAY credential inside the box; never a real
+seat's token or SSH key — this is an attack box.
+EOF
+}
+
+cmd_destroy() {
+  need_incus
+  if incus info "$NAME" >/dev/null 2>&1; then
+    echo "$SELF: deleting $NAME"
+    incus delete -f "$NAME"
+  else
+    echo "$SELF: '$NAME' not present"
+  fi
+  teardown_lab_net_if_empty
+}
+
+cmd_help() { sed -n '2,/^set -euo/p' "$0" | sed '$d;s/^# \{0,1\}//'; }
+
+case "${1:-help}" in
+create) cmd_create ;;
+destroy) cmd_destroy ;;
+help | -h | --help) cmd_help ;;
+*) die "unknown command '${1}' — try: $SELF help" ;;
+esac

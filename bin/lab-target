@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# lab-target — create or destroy a deliberately-vulnerable target box on the
+#              same isolated incus lab network that lab-kali uses.
+#
+# WHAT IT IS
+#   A hand-run experimentation helper, NOT part of the sovera1gn-n0des node
+#   framework. It uses only `incus`, so any member of the `incus` group can run
+#   it with no sudo. The target launches straight from Docker Hub as an incus
+#   OCI container (no nested docker). It is vulnerable BY DESIGN — safe only
+#   because it is confined to the isolated lab network.
+#
+# THE ISOLATED NETWORK (shared with lab-kali)
+#   Both boxes sit on `kali-lab` (10.223.0.0/24). An egress ACL lets them reach
+#   the INTERNET and EACH OTHER only. The LAN, the incus host, every other
+#   guest, and the tailnet are blocked — in both directions.
+#   Never move this box onto incusbr0 or a LAN bridge.
+#
+# IDEMPOTENT
+#   create re-runs safely: an existing box is just started; the OCI remote and
+#   the shared network are created only when missing. destroy removes the box,
+#   and tears the shared network down only once no lab box is left using it.
+#
+# USAGE
+#   lab-target create    create/start the target (default: OWASP DVWA on :80)
+#   lab-target destroy   delete the target (and the lab network if now empty)
+#   lab-target help      show this help
+#
+# ENV OVERRIDES
+#   LAB_TARGET_NAME (target)   LAB_TARGET_PORT (80)
+#   LAB_TARGET_IMAGE (vulnerables/web-dvwa)   # any Docker Hub image, e.g.
+#     bkimminich/juice-shop (:3000), citizenstig/dvwa, webgoat/webgoat (:8080)
+#   LAB_OCI_REMOTE (docker)
+#   LAB_NET (kali-lab)  LAB_ACL (kali-lab-egress)  LAB_GW (10.223.0.1/24)
+set -euo pipefail
+
+NET=${LAB_NET:-kali-lab}
+ACL=${LAB_ACL:-kali-lab-egress}
+GW=${LAB_GW:-10.223.0.1/24}
+NET_CIDR=${LAB_NET_CIDR:-10.223.0.0/24}
+
+NAME=${LAB_TARGET_NAME:-target}
+IMAGE=${LAB_TARGET_IMAGE:-vulnerables/web-dvwa}
+PORT=${LAB_TARGET_PORT:-80}
+OCI_REMOTE=${LAB_OCI_REMOTE:-docker}
+
+SELF=$(basename "$0")
+die() {
+  echo "$SELF: $*" >&2
+  exit 1
+}
+need_incus() {
+  command -v incus >/dev/null || die "incus not found on PATH"
+  incus list >/dev/null 2>&1 || die "cannot talk to incus — are you in the 'incus' group?"
+}
+
+ensure_lab_net() {
+  if ! incus network acl show "$ACL" >/dev/null 2>&1; then
+    echo "$SELF: creating egress ACL $ACL"
+    incus network acl create "$ACL" \
+      --description "isolated lab: internet + intra-lab only, no LAN/host/guests"
+    local cidr
+    for cidr in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 \
+      100.64.0.0/10 169.254.0.0/16 224.0.0.0/4; do
+      incus network acl rule add "$ACL" egress action=reject destination="$cidr"
+    done
+    incus network acl rule add "$ACL" egress action=allow
+    incus network acl rule add "$ACL" egress action=allow destination="$NET_CIDR"
+  fi
+  if ! incus network show "$NET" >/dev/null 2>&1; then
+    echo "$SELF: creating isolated network $NET ($GW)"
+    incus network create "$NET" \
+      ipv4.address="$GW" ipv4.nat=true ipv6.address=none \
+      security.acls="$ACL" \
+      security.acls.default.ingress.action=reject \
+      security.acls.default.egress.action=reject \
+      --description "isolated kali lab network"
+  fi
+}
+
+ensure_oci_remote() {
+  if ! incus remote list -f csv | cut -d, -f1 | grep -qx "$OCI_REMOTE"; then
+    echo "$SELF: adding OCI remote '$OCI_REMOTE' -> docker.io (your incus client config only)"
+    incus remote add "$OCI_REMOTE" https://docker.io --protocol oci
+  fi
+}
+
+teardown_lab_net_if_empty() {
+  incus network show "$NET" >/dev/null 2>&1 || return 0
+  if incus network show "$NET" |
+    awk '/^used_by:/{f=1;next} f&&/instances/{found=1} END{exit !found}'; then
+    echo "$SELF: network $NET still has instances — leaving it in place"
+    return 0
+  fi
+  echo "$SELF: lab is empty — removing $NET and $ACL"
+  incus network delete "$NET" 2>/dev/null || true
+  incus network acl delete "$ACL" 2>/dev/null || true
+}
+
+# Exact-match IP lookup: `incus list <name>` is a SUBSTRING filter, so match the
+# name column exactly instead of trusting a positional filter.
+wait_ip() {
+  local ip
+  for _ in $(seq 30); do
+    ip=$(incus list -c n4 -f csv | awk -F, -v n="$NAME" '$1==n{split($2,a," ");print a[1]}')
+    [ -n "$ip" ] && {
+      echo "$ip"
+      return 0
+    }
+    sleep 2
+  done
+  return 1
+}
+
+cmd_create() {
+  need_incus
+  ensure_lab_net
+  if incus info "$NAME" >/dev/null 2>&1; then
+    echo "$SELF: '$NAME' exists — starting if stopped"
+    incus start "$NAME" 2>/dev/null || true
+  else
+    ensure_oci_remote
+    echo "$SELF: launching $NAME from ${OCI_REMOTE}:${IMAGE} on $NET"
+    incus launch "${OCI_REMOTE}:${IMAGE}" "$NAME" --network "$NET" -q
+  fi
+  local ip
+  ip=$(wait_ip) || die "'$NAME' did not get an address (image may still be starting)"
+  cat <<EOF
+
+$SELF: $NAME is up at $ip (network $NET, isolated from the LAN).
+  vulnerable service: http://$ip:$PORT
+  from Kali:          incus exec kali -- nmap -sV $ip
+                      incus exec kali -- curl -s http://$ip:$PORT | head
+  tear down:          $SELF destroy
+
+This box is vulnerable by design; keep it on the isolated lab network.
+EOF
+}
+
+cmd_destroy() {
+  need_incus
+  if incus info "$NAME" >/dev/null 2>&1; then
+    echo "$SELF: deleting $NAME"
+    incus delete -f "$NAME"
+  else
+    echo "$SELF: '$NAME' not present"
+  fi
+  teardown_lab_net_if_empty
+}
+
+cmd_help() { sed -n '2,/^set -euo/p' "$0" | sed '$d;s/^# \{0,1\}//'; }
+
+case "${1:-help}" in
+create) cmd_create ;;
+destroy) cmd_destroy ;;
+help | -h | --help) cmd_help ;;
+*) die "unknown command '${1}' — try: $SELF help" ;;
+esac
