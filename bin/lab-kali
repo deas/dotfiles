@@ -5,8 +5,10 @@
 # WHAT IT IS
 #   A hand-run experimentation helper. It is NOT part of the sovera1gn-n0des
 #   node framework — nothing here is declared in that repo, and the box it makes
-#   is a throwaway. It uses only `incus`, so any member of the `incus` group can
-#   run it with no sudo.
+#   is a throwaway. It uses only `incus` (no sudo), but needs incus ADMIN — the
+#   lab's own NAT bridge + egress ACL are default-project operations. A member of
+#   the `incus` group confined to a restricted per-user project cannot build it;
+#   run as an incus-admin (e.g. devops).
 #
 # THE ISOLATED NETWORK (shared with lab-target)
 #   Both boxes sit on `kali-lab` (10.223.0.0/24). An egress ACL lets them reach
@@ -63,7 +65,14 @@ die() {
 }
 need_incus() {
   command -v incus >/dev/null || die "incus not found on PATH"
-  incus list >/dev/null 2>&1 || die "cannot talk to incus — are you in the 'incus' group?"
+  incus list >/dev/null 2>&1 || die "cannot talk to incus — are you in an incus group?"
+  # The lab's NAT bridge + egress ACL are default-project operations. Members of
+  # the `incus` group are confined to a restricted per-user project (no network
+  # creation, no `default` access) and cannot build the lab — only `incus-admin`
+  # can. Fail here with the real reason instead of half-creating the ACL.
+  if [ "${LAB_SKIP_ADMIN_CHECK:-}" != 1 ] && ! id -nG | grep -qw incus-admin; then
+    die "needs incus admin (group 'incus-admin' / default-project access). You look like a restricted incus user — run as an admin (e.g. devops), or set LAB_SKIP_ADMIN_CHECK=1 if you have admin another way."
+  fi
 }
 
 # --- shared lab network (idempotent) --------------------------------------
