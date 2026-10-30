@@ -18,3 +18,5 @@ uv = "latest"
 "npm:defuddle" = "latest"
 "npm:knap" = "latest"
 "pypi:huggingface_hub" = "latest"
+# Secrets scanner (gitleaks successor); registry resolves to aqua:betterleaks/betterleaks.
+betterleaks = "latest"
