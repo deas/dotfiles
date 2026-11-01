@@ -28,3 +28,11 @@ Host *
 Host agent-work
   HostName h0
   User sl0p
+
+# The four WordPress sites' live host (web-default, Hetzner), meant to be named
+# by SITE_LIVE_SSH=wp-live in their site.env so a host move is this one edit.
+# Tailnet name: needs this machine on the tailnet with MagicDNS on. Public ssh
+# there is being closed (sovera1gn-n0des ADR-0052).
+Host wp-live
+  HostName web-default.taild36b8.ts.net
+  User devops
