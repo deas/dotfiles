@@ -1,0 +1,11 @@
+# Node seats (h0, guests, web-default): only what a seat on a node needs.
+# The desktop's forwarding policy is not restated; ssh's defaults already
+# forward nothing.
+
+# The four WordPress sites' live host (web-default, Hetzner), the same alias
+# as tag-desktop's. By tailnet ADDRESS, not name: h0 runs with accept-dns off,
+# so web-default.taild36b8.ts.net does not resolve there. The address is stable
+# for as long as web-default is not re-enrolled.
+Host wp-live
+  HostName 100.100.20.87
+  User devops
