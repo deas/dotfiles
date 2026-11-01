@@ -8,6 +8,8 @@ WorkingDirectory=%h/work/projects/contentreich/biffweb-sandbox
 Restart=always
 StandardOutput=journal
 StandardError=journal
+# Drop-in environment variables for the service. Uncomment and set the VIDEO_FOLDER variable if needed.
+# Environment="VIDEO_FOLDER=test/content/other"
 
 [Install]
 WantedBy=default.target
