@@ -137,7 +137,10 @@ let light_theme = {
 }
 
 # External completer example
-let carapace_completer = {|spans|
+# Newer Nushell hands completers a record whose fields bind by parameter name
+# (token, place, buffer); `$place.command` is the old positional `spans` list.
+let carapace_completer = {|place|
+    let spans = $place.command
     carapace $spans.0 nushell ...$spans | from json
 }
 
