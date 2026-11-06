@@ -35,3 +35,10 @@ hl.unbind("SUPER + SHIFT + C")
 o.bind("SUPER + SHIFT + E", "Email", { webapp = "https://mail.google.com/" })
 o.bind("SUPER + SHIFT + ALT + E", "New email", { webapp = "https://mail.google.com/mail/?view=cm&fs=1" })
 o.bind("SUPER + SHIFT + C", "Calendar", { webapp = "https://calendar.google.com/" })
+
+-- Dictation keys from before Alt + Space and Right Alt became the defaults.
+-- Remove these lines to give the keys back to applications.
+if o.dictation_installed and o.dictation_installed() then
+  o.bind("SUPER + CTRL + X", "Toggle dictation", "omarchy-dictation toggle")
+  o.bind_hold("F9", "Start dictation (push-to-talk)", "omarchy-dictation start", "Stop dictation (push-to-talk)", "omarchy-dictation stop")
+end
