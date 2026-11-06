@@ -57,6 +57,16 @@ _term_modes_check() {
       "$st" "${last:-?}" "$reply" >>"$HOME/.cache/term-modes.log"
     # Pop kitty flags (a few times: pushes can nest), mouse modes off.
     printf '\e[<u\e[<u\e[<u\e[<u\e[?1000l\e[?1002l\e[?1003l\e[?1006l' >/dev/tty
+    # Say so, once, above the prompt: which modes, and which command.
+    local modes='' m
+    case $reply in *'[?'[1-9]*u*) modes='kitty-keys' ;; esac
+    for m in 1000 1002 1003 1006; do
+      case $reply in *"$m;1\$y"*) modes="${modes:+$modes,}mouse-$m" ;; esac
+    done
+    last=${last//[[:cntrl:]]/?} # never echo raw control bytes back
+    [ "${#last}" -gt 60 ] && last="${last:0:57}..."
+    printf '\e[33mterm-modes: `%s` left %s on (status %s); reset, logged to ~/.cache/term-modes.log\e[0m\n' \
+      "${last:-?}" "$modes" "$st" >/dev/tty
     ;;
   esac
   return "$st"
