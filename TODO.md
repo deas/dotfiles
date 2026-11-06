@@ -27,6 +27,22 @@ that same `*.md` rule and is never linked.
 
 ## In progress
 
+- [ ] [P2] shell: find what leaves kitty-keyboard/mouse modes on over ssh @claude
+  - Symptom (2026-11-06, `node` h0 over ssh): Ctrl+C prints `9;133u` (the tail
+    of `ESC[99;133u`, kitty keyboard protocol) and the scroll wheel prints
+    escape sequences (mouse tracking left on). Some program enabled the modes
+    and exited without disabling them. tirith was ruled out: neither its bash
+    hook nor its binary emits these sequences.
+  - Step 1 (this item): a prompt-time detector,
+    `tag-node/config/s0n/rc.d/70-term-modes.sh`, that queries the terminal,
+    logs the previous command to `~/.cache/term-modes.log` and resets the modes.
+    Step 2 is a follow-up: fix or work around the culprit once the log names it.
+  - **Observable check:** in an interactive bash on `node` (inside tmux, which
+    answers the queries), `printf '\e[>5u\e[?1000h'` produces one log line
+    naming that command, and the next keypress is plain again. A clean command
+    logs nothing, and a shell whose terminal does not answer disables the
+    detector after one timeout.
+
 ## Backlog
 
 - [ ] [P2] nvim: the desktop theme plugin is a tracked symlink into `/home/deas`
