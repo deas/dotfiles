@@ -27,13 +27,17 @@ NODE="${BROWSER_CDP_NODE:-agent-work}" # ssh alias for the node; see ssh/config
 PORT="${BROWSER_CDP_PORT:-9222}"       # port we bind on the NODE's loopback
 ENV_FILE=".cache/browser-cdp.env"      # written on the NODE, relative to $HOME
 
-# The same profile dirs browser_harness scans on Linux (daemon.py:_LINUX_PROFILES),
-# preceded by the omarchy menu's Brave sandbox (tag-desktop omarchy-menu.jsonc).
-# The sandbox is a non-default user-data-dir, so --remote-debugging-port works
-# there and it needs no chrome://inspect toggle. It goes FIRST: when it is
+# The omarchy menu's Brave sandbox (tag-desktop omarchy-menu.jsonc) is a
+# non-default user-data-dir started with a FIXED --remote-debugging-port, so it
+# needs no chrome://inspect toggle and still serves /json/version. Chromium
+# writes DevToolsActivePort only for an ephemeral port (=0), so the sandbox has
+# no such file; we ask its port directly instead. It is tried FIRST: when it is
 # running, the node drives the throwaway browser, not the logged-in one.
+SANDBOX="$HOME/.config/brave-sandbox"
+SANDBOX_PORT=9222 # must match --remote-debugging-port in omarchy-menu.jsonc
+
+# The same profile dirs browser_harness scans on Linux (daemon.py:_LINUX_PROFILES).
 profiles=(
-  "$HOME/.config/brave-sandbox"
   "$HOME/.config/google-chrome"
   "$HOME/.config/chromium"
   "$HOME/.config/BraveSoftware/Brave-Browser"
@@ -56,7 +60,15 @@ live_profile() {
   return 1
 }
 
-if ! profile="$(live_profile)"; then
+if json="$(curl -fsS --max-time 2 "http://127.0.0.1:$SANDBOX_PORT/json/version" 2>/dev/null)"; then
+  profile="$SANDBOX"
+  remote_port="$SANDBOX_PORT"
+  ws_path="$(printf '%s\n' "$json" |
+    sed -n 's|.*"webSocketDebuggerUrl": *"ws://[^/"]*\(/[^"]*\)".*|\1|p')"
+elif profile="$(live_profile)"; then
+  remote_port="$(sed -n 1p "$profile/DevToolsActivePort")"
+  ws_path="$(sed -n 2p "$profile/DevToolsActivePort")"
+else
   {
     echo "browser-cdp-push: no running browser is exposing DevTools. Either:"
     echo "  - launch Browsers > Brave (Sandbox) from the omarchy menu, then run this again; or"
@@ -68,10 +80,8 @@ if ! profile="$(live_profile)"; then
   exit 1
 fi
 
-remote_port="$(sed -n 1p "$profile/DevToolsActivePort")"
-ws_path="$(sed -n 2p "$profile/DevToolsActivePort")"
 if [ -z "$remote_port" ] || [ -z "$ws_path" ]; then
-  echo "browser-cdp-push: $profile/DevToolsActivePort is malformed" >&2
+  echo "browser-cdp-push: could not read a DevTools endpoint for $profile" >&2
   exit 1
 fi
 
