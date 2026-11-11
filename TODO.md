@@ -27,19 +27,6 @@ that same `*.md` rule and is never linked.
 
 ## In progress
 
-- [ ] [P2] ssh: one alias per machine and account for herdr (`h0-sl0p`, `h0-devops`, `h3-sl0p`, `h3-devops`) @claude
-  - hc and the herdr app name a machine after its ssh Host and list the Hosts
-    from `~/.ssh/config`, so `agent-work` (= `sl0p@h0`) says neither machine
-    nor account, and `devops@h0` would come out as `h0-2`. Replace it in
-    `tag-desktop/ssh/config` and in `browser-cdp-push`'s default. On nodes
-    (`tag-node/ssh/config`), only `h3-sl0p`, so h0's core can drive h3: a
-    `devops` entry there would give anything running as `sl0p` on h0
-    passwordless root on h3.
-  - **Observable check:** `ssh -G` resolves each alias to the right user and
-    host on `node` (h0) for both files. On a `desktop`: `ssh h0-sl0p id -un` →
-    `sl0p`, `ssh h0-devops id -un` → `devops`, and `hc machine add h0-sl0p`
-    shows up as `h0-sl0p` in `hc machine ls` (human, on the laptop).
-
 ## Backlog
 
 - [ ] [P2] herdr-core: h0 as the hub for agents across accounts (`sl0p` → `deas`, …)
@@ -164,6 +151,18 @@ that same `*.md` rule and is never linked.
     this up without asking first.
 
 ## Done
+
+- [x] [P2] ssh: one alias per machine and account for herdr (`5aff5b0`)
+  - `tag-desktop/ssh/config`: `agent-work` replaced by `h0-sl0p`, `h0-devops`,
+    `h3-sl0p`, `h3-devops`, so hc and the herdr app name machines by host and
+    account; `browser-cdp-push` defaults to `h0-sl0p`. `tag-node/ssh/config`:
+    only `h3-sl0p`, no `devops` alias on nodes (it would hand `sl0p` on h0
+    passwordless root on h3).
+  - Observed on `node` (h0, `sl0p`) 2026-11-11: `ssh -G` on both files
+    resolves each alias to the intended user and host, `h3-devops` is
+    unknown on nodes; `bash -n browser-cdp-push` clean.
+  - Not observed: the `desktop` half (`ssh h0-devops id -un`, `hc machine add
+    h0-sl0p` named `h0-sl0p`); closed by the human without it.
 
 - [x] herdr-core: declare the `hc` agent skill for node accounts (`bd63ca5`)
   - Upstream's stub in `tag-node/config/asm/skills.yml`,
