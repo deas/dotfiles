@@ -2,6 +2,15 @@
 # The desktop's forwarding policy is not restated; ssh's defaults already
 # forward nothing.
 
+# h0's herdr-core drives h3 as the unprivileged seat, same alias as the
+# desktop's (`hc machine add h3-sl0p` there names it `h3-sl0p`). By plain name:
+# h3 is on h0's LAN but not in h0's tailnet view. Deliberately NO h3-devops
+# here — anything running as sl0p on h0 could use it, and devops has
+# passwordless sudo; that alias lives only on the desktops.
+Host h3-sl0p
+  HostName h3
+  User sl0p
+
 # The four WordPress sites' live host (web-default, Hetzner), the same alias
 # as tag-desktop's. By tailnet ADDRESS, not name: h0 runs with accept-dns off,
 # so web-default.taild36b8.ts.net does not resolve there. The address is stable

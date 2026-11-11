@@ -20,14 +20,30 @@ Host batman robin
   ForwardAgent yes
   ForwardX11 yes
 
-# Default for everything else (agent VMs, h0, internet hosts): no forwarding.
+# Agent nodes, one alias per MACHINE AND ACCOUNT: <host>-<login>. herdr-core
+# (hc, the herdr app) names a machine after the Host it was added by and lists
+# these Hosts in its add-machine dialog, so `hc machine add h3-devops` is
+# `h3-devops/<terminal>` everywhere. `devops@h3` would be named `h3`, and a
+# second account on the same host `h3-2`. `-devops` has passwordless sudo;
+# `-sl0p` is the unprivileged everyday seat. They sit above `Host *` like every
+# specific block, though that one sets nothing they do.
+Host h0-sl0p
+  HostName h0
+  User sl0p
+Host h0-devops
+  HostName h0
+  User devops
+Host h3-sl0p
+  HostName h3
+  User sl0p
+Host h3-devops
+  HostName h3
+  User devops
+
+# Default for everything else (agent VMs, h0, h3, internet hosts): no forwarding.
 Host *
   ForwardAgent no
   ForwardX11 no
-
-Host agent-work
-  HostName h0
-  User sl0p
 
 # The four WordPress sites' live host (web-default, Hetzner), meant to be named
 # by SITE_LIVE_SSH=wp-live in their site.env so a host move is this one edit.

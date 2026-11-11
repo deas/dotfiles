@@ -23,7 +23,7 @@
 # the node a complete websocket URL.
 set -euo pipefail
 
-NODE="${BROWSER_CDP_NODE:-agent-work}" # ssh alias for the node; see ssh/config
+NODE="${BROWSER_CDP_NODE:-h0-sl0p}"   # ssh alias for the node; see ssh/config
 PORT="${BROWSER_CDP_PORT:-9222}"       # port we bind on the NODE's loopback
 ENV_FILE=".cache/browser-cdp.env"      # written on the NODE, relative to $HOME
 
