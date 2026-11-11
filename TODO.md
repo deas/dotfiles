@@ -27,64 +27,6 @@ that same `*.md` rule and is never linked.
 
 ## In progress
 
-- [ ] [P2] herdr-core: declare the `hc` agent skill for node accounts @claude
-  - The binary stays OUT of this repo on purpose: the connecting client owns it.
-    `hc machine add <user>@h0` offers to copy its own `hc` when the node has
-    none or an older one (`--install` to skip the prompt), and `hc machine
-    update h0` replaces it in place with terminals kept running. That keeps
-    client and node cores version-matched; a mise pin would fight it (and the
-    binary has no GitHub release assets, so only mise's `http:` backend could
-    reach it anyway). The same route gives `deas`/`c4n4ry`/`devops` a core.
-  - Add to `tag-node/config/asm/skills.yml`:
-    `github:herdrdev/herdr-core#master:skills/herdr-core`, providers
-    `[claude, opencode, pi]`. It is the upstream stub ("rarely changes") that
-    defers to `hc --skill`, so the manual tracks whatever binary is installed;
-    tracking `master` (the default branch) rather than a tag for the same
-    reason — the binary floats.
-  - Out of scope: retiring the herdr TUI server, a persistent core unit, a
-    narrower in-house skill description. Each is its own item if wanted.
-  - **Observable check (`node`, h0):** `readlink ~/.config/asm/skills.yml`
-    points into `tag-node`; after the node reconciles,
-    `~/.claude/skills/herdr-core/SKILL.md` exists; a `hc run --bg --name probe
-    claude "…"` session lists `herdr-core` among its skills.
-
-- [ ] [P1] herdr-core: hc terminals on h0 start without mise, so agents aren't found @claude
-  - Observed 2026-11-11 as `sl0p`: `hc exec 'echo $PATH'` →
-    `/usr/local/sbin:/usr/local/bin:/usr/bin` (no mise installs, no
-    `~/.local/bin`); `hc run --bg claude` → `spawn_failed: cannot start
-    "claude"`. The core (started 2026-11-10 20:38) took its environment from
-    whatever launched it, and that had no mise activation. Every mise-declared
-    agent (`claude`, `pi`, `omp`, `opencode`) is affected.
-  - Root cause (read in herdr-core's source, `platform/systemd.rs`): hc writes
-    its LAUNCHER's environment into the core's unit. The laptop launches it via
-    non-interactive ssh; Arch's bash sources no rc file for that, and mise is
-    activated only in `/etc/profile.d/mise.sh` (login shells). Interactive hc
-    shells don't help either: they are non-login on Linux, and `~/.bashrc` →
-    `rc.d` never activates mise. `environment.d` can't fix it (launcher PATH
-    wins), and `config.toml` has no env key.
-  - Fix: `tag-node/config/systemd/user/herdr-core.service` — at boot (linger),
-    `bash -lc` + `~/.local/bin` → `hc server start`, then `hc server restart
-    --fresh` (hc >= 0.1.20). The second step is needed because a connected
-    laptop cold-starts the core the instant it finds none, and won that race
-    against a plain `server start` (observed 06:59:02 vs 06:59:03).
-    `systemctl --user restart herdr-core` repairs a bare core without stopping
-    terminals.
-  - Seen on h0 as `sl0p`, 2026-11-11, hc 0.1.20, unit enabled, after
-    `systemctl --user restart herdr-core`: `hc exec` resolves `hc`
-    (`~/.local/bin`) and `claude`, `pi`, `opencode`, `omp` (mise shims); `hc run
-    --bg --name probe claude "…"` started by bare name and answered. Before:
-    bare `/usr/local/sbin:/usr/local/bin:/usr/bin`, all MISSING.
-  - Then `hc machine update agent-work` from the laptop restarted the core
-    (new pid) and the PATH held: `hc`, `claude`, `pi` still resolve.
-  - Not observed: a cold boot of h0 (the unit's `WantedBy=default.target`
-    path under linger). Other accounts need their own one-time
-    `systemctl --user enable --now herdr-core.service` once they have hc.
-  - **Observable check (`node`, h0):** with hc >= 0.1.19 on h0 and the unit
-    enabled, after `hc server stop && systemctl --user start herdr-core`, `hc
-    exec 'command -v hc claude pi'` resolves all three; then `hc machine update
-    h0` from the laptop, and the same check still passes; `hc run --on h0 --bg
-    --name probe claude "…"` starts by bare name.
-
 ## Backlog
 
 - [ ] [P2] nvim: the desktop theme plugin is a tracked symlink into `/home/deas`
@@ -184,6 +126,29 @@ that same `*.md` rule and is never linked.
     this up without asking first.
 
 ## Done
+
+- [x] herdr-core: declare the `hc` agent skill for node accounts (`bd63ca5`)
+  - Upstream's stub in `tag-node/config/asm/skills.yml`,
+    `github:herdrdev/herdr-core#master:skills/herdr-core` (the default branch is
+    `master`, not `main`), for claude, opencode and pi. The binary stays out of
+    this repo: the connecting client installs and updates it.
+  - Observed on `node` (h0, `sl0p`) 2026-11-11: `make skills` → `failed=0`,
+    re-run `changed=0`; `SKILL.md` installed for all three providers,
+    byte-identical to upstream; a Claude started via `hc run --bg` answered
+    `herdr-core=yes`.
+- [x] [P1] herdr-core: hc terminals on h0 start without mise, so agents aren't found (`eda60c9`)
+  - hc gives the core its launcher's environment; a laptop cold-starts it over
+    non-interactive ssh, which activates no mise. Fixed by
+    `tag-node/config/systemd/user/herdr-core.service`: login bash plus
+    `~/.local/bin` → `hc server start`, then `hc server restart --fresh`
+    (hc >= 0.1.20; restarts keep the environment from 0.1.19 on).
+  - Observed on `node` (h0, `sl0p`) 2026-11-11, hc 0.1.20: after `systemctl
+    --user restart herdr-core`, `hc`, `claude`, `pi`, `opencode`, `omp` resolve
+    in hc terminals; `hc run --bg --name probe claude` started by bare name and
+    answered; after `hc machine update agent-work` from the laptop (new core
+    pid) the PATH held.
+  - Not observed: a cold boot of h0. Other accounts need their own one-time
+    `systemctl --user enable --now herdr-core.service`.
 
 - [x] nvim: free the `f` motion, drop coc.nvim, sidekick on `node` (`8c19b51`)
   - fff.nvim keys moved to `<leader>F*`, its debug overlay off; coc.nvim removed;
