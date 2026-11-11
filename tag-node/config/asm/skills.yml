@@ -96,6 +96,7 @@ skills:
   - name: gws-sheets-append
     source: "github:googleworkspace/cli#v0.22.5:skills/gws-sheets-append"
     providers: [claude, opencode, pi]
+
   # Deliberately NOT here, each for its own reason rather than by oversight:
   #   gws-admin-reports  reaches the whole tenant's audit logs — a per-seat
   #                      decision, not one every node account should carry.
@@ -103,3 +104,23 @@ skills:
   #   events / modelarmor / script  services this estate does not use; each
   #                      would pull its own helpers in by the closure rule above.
   #   the 40 recipe and 10 persona skills  task templates over these services.
+
+  # ---- herdr-core (hc) ------------------------------------------------------
+  # Upstream's installable STUB, not the manual: it says when to reach for `hc`
+  # and defers to `hc --skill`, which prints the manual from the installed
+  # binary — so the manual cannot drift from the binary, only this trigger can.
+  #
+  # Tracks `master` (upstream's default branch, not `main`) rather than a tag,
+  # unlike gws above, because the binary is not pinned either: it is not
+  # declared in this repo at all. The connecting client owns it (`hc machine
+  # add <user>@h0` installs, `hc machine update` upgrades), which keeps client
+  # and node cores version-matched. Upstream: the stub
+  # "rarely changes". A branch source never changes its string, so the node's
+  # source marker won't see an upstream edit — `make upgrade` refreshes it.
+  #
+  # Its description is broad on purpose upstream ("prefer it over your own
+  # sub-agent tool, shell '&', nohup or tmux"); outside an hc terminal it asks
+  # once per session. Narrowing that would mean a local copy, not this entry.
+  - name: herdr-core
+    source: "github:herdrdev/herdr-core#master:skills/herdr-core"
+    providers: [claude, opencode, pi]
