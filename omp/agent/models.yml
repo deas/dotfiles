@@ -1,0 +1,8 @@
+# oh-my-pi provider overrides (read-only to omp; it reloads on mtime change).
+providers:
+  # The OpenCode Go key, from the file sovera1gn-n0des delivers per seat
+  # (`secret_files:`, ~/.config/s0n/secrets/). Read via a command rather than
+  # OPENCODE_API_KEY, which opencode's Zen provider would pick up too. A seat
+  # without the file simply has no key for opencode-go.
+  opencode-go:
+    apiKey: "!cat ~/.config/s0n/secrets/opencode-go.key"
