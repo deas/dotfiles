@@ -27,9 +27,7 @@ that same `*.md` rule and is never linked.
 
 ## In progress
 
-## Backlog
-
-- [ ] [P2] herdr-core: declare the `hc` agent skill for node accounts
+- [ ] [P2] herdr-core: declare the `hc` agent skill for node accounts @claude
   - The binary stays OUT of this repo on purpose: the connecting client owns it.
     `hc machine add <user>@h0` offers to copy its own `hc` when the node has
     none or an older one (`--install` to skip the prompt), and `hc machine
@@ -48,6 +46,8 @@ that same `*.md` rule and is never linked.
     points into `tag-node`; after the node reconciles,
     `~/.claude/skills/herdr-core/SKILL.md` exists; a `hc run --bg --name probe
     claude "…"` session lists `herdr-core` among its skills.
+
+## Backlog
 
 - [ ] [P2] nvim: the desktop theme plugin is a tracked symlink into `/home/deas`
   - `tag-desktop/config/nvim/lua/plugins/neovim.lua` →
