@@ -55,16 +55,35 @@ that same `*.md` rule and is never linked.
     "claude"`. The core (started 2026-11-10 20:38) took its environment from
     whatever launched it, and that had no mise activation. Every mise-declared
     agent (`claude`, `pi`, `omp`, `opencode`) is affected.
-  - Options: `hc server restart --fresh` from an activated shell (0.1.20+,
-    one-off); `shell = [...]` in `~/.config/herdr-core/config.toml` with a
-    login shell that activates mise; or a mise activation that also reaches
-    non-interactive ssh (`ssh h0 hc connect`), which is how laptop clients
-    start the core. Decide which before picking up — restarting the core
-    affects every terminal in it.
-  - **Observable check (`node`, h0):** after a cold core start triggered from
-    the laptop (`hc machine add sl0p@h0`), `hc run --on h0 --bg claude …`
-    starts without an absolute path, and `hc exec 'command -v claude pi'`
-    resolves both under `~/.local/share/mise/installs`.
+  - Root cause (read in herdr-core's source, `platform/systemd.rs`): hc writes
+    its LAUNCHER's environment into the core's unit. The laptop launches it via
+    non-interactive ssh; Arch's bash sources no rc file for that, and mise is
+    activated only in `/etc/profile.d/mise.sh` (login shells). Interactive hc
+    shells don't help either: they are non-login on Linux, and `~/.bashrc` →
+    `rc.d` never activates mise. `environment.d` can't fix it (launcher PATH
+    wins), and `config.toml` has no env key.
+  - Fix: `tag-node/config/systemd/user/herdr-core.service` — at boot (linger),
+    `bash -lc` + `~/.local/bin` → `hc server start`, then `hc server restart
+    --fresh` (hc >= 0.1.20). The second step is needed because a connected
+    laptop cold-starts the core the instant it finds none, and won that race
+    against a plain `server start` (observed 06:59:02 vs 06:59:03).
+    `systemctl --user restart herdr-core` repairs a bare core without stopping
+    terminals.
+  - Seen on h0 as `sl0p`, 2026-11-11, hc 0.1.20, unit enabled, after
+    `systemctl --user restart herdr-core`: `hc exec` resolves `hc`
+    (`~/.local/bin`) and `claude`, `pi`, `opencode`, `omp` (mise shims); `hc run
+    --bg --name probe claude "…"` started by bare name and answered. Before:
+    bare `/usr/local/sbin:/usr/local/bin:/usr/bin`, all MISSING.
+  - Then `hc machine update agent-work` from the laptop restarted the core
+    (new pid) and the PATH held: `hc`, `claude`, `pi` still resolve.
+  - Not observed: a cold boot of h0 (the unit's `WantedBy=default.target`
+    path under linger). Other accounts need their own one-time
+    `systemctl --user enable --now herdr-core.service` once they have hc.
+  - **Observable check (`node`, h0):** with hc >= 0.1.19 on h0 and the unit
+    enabled, after `hc server stop && systemctl --user start herdr-core`, `hc
+    exec 'command -v hc claude pi'` resolves all three; then `hc machine update
+    h0` from the laptop, and the same check still passes; `hc run --on h0 --bg
+    --name probe claude "…"` starts by bare name.
 
 ## Backlog
 

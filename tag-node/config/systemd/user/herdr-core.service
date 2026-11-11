@@ -1,0 +1,49 @@
+[Unit]
+Description=Start herdr-core (hc) at boot with the login PATH, so agents resolve
+Documentation=https://github.com/herdrdev/herdr-core
+# hc itself is not declared in this repo: the connecting client installs it
+# (`hc machine add <user>@h0`). Until it has, this unit is a silent no-op.
+ConditionPathExists=%h/.local/bin/herdr-core
+
+# WHY this exists: hc writes its LAUNCHER's environment into the core's own
+# transient unit (platform/systemd.rs), and every terminal inherits that. A
+# laptop cold-starting the core over `ssh h0 hc connect` launches it from a
+# non-interactive, non-login bash — Arch's bash sources no ~/.bashrc for ssh,
+# and mise is activated only in /etc/profile.d — so PATH is the bare
+# /usr/local/sbin:/usr/local/bin:/usr/bin and `hc run claude` fails with
+# spawn_failed. environment.d cannot fix this: the launcher's PATH overrides
+# the manager's in the core's unit. So this unit is the launcher, at boot.
+#
+# VERSION-DEPENDENT. From hc 0.1.19 a restart (`hc update`, `hc machine
+# update`, `hc server restart`) keeps the environment the core STARTED with, so
+# one good start holds until the next cold start. On 0.1.18 and older a
+# restart takes the restarting caller's environment (observed on h0,
+# 2026-11-11: a bare-PATH restart lost the shims). And the update INTO 0.1.19
+# itself still takes the updater's environment once (upstream CHANGELOG).
+#
+# RACE: a connected client (the laptop's app) cold-starts the core the moment
+# it finds none, so after an `hc server stop` it beats a plain `server start`
+# here (observed on h0, 2026-11-11: core and the laptop's `hc connect` in the
+# same second, this unit a second later and a no-op). Hence the second step,
+# `restart --fresh` (hc >= 0.1.20): it puts THIS environment on whatever core
+# is running, whoever started it, and keeps every terminal running.
+#
+# Whenever the core came up bare (an update into 0.1.19, or a crash a client
+# noticed first), from a shell on this node — no `hc server stop` needed:
+#   systemctl --user restart herdr-core.service
+# Enable once per account:
+#   systemctl --user enable --now herdr-core.service
+
+[Service]
+Type=oneshot
+# Login, non-interactive: /etc/profile.d/mise.sh puts the mise shims on PATH.
+# ~/.local/bin is added HERE, not left to ~/.profile: an Arch-skeleton
+# ~/.bash_profile shadows ~/.profile for login bash, and without it agents in
+# hc terminals cannot run `hc` itself. `server start` is a no-op if a core is
+# running; the core lives in its own hc-serve-* unit, not this cgroup. Then
+# `restart --fresh` applies this environment even if a client won the race.
+ExecStart=/bin/bash -lc 'PATH="$HOME/.local/bin:$PATH"; hc=$HOME/.local/bin/herdr-core; "$hc" server start >/dev/null && exec "$hc" server restart --fresh'
+WorkingDirectory=%h
+
+[Install]
+WantedBy=default.target
