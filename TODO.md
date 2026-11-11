@@ -36,16 +36,35 @@ that same `*.md` rule and is never linked.
     binary has no GitHub release assets, so only mise's `http:` backend could
     reach it anyway). The same route gives `deas`/`c4n4ry`/`devops` a core.
   - Add to `tag-node/config/asm/skills.yml`:
-    `github:herdrdev/herdr-core#main:skills/herdr-core`, providers
+    `github:herdrdev/herdr-core#master:skills/herdr-core`, providers
     `[claude, opencode, pi]`. It is the upstream stub ("rarely changes") that
     defers to `hc --skill`, so the manual tracks whatever binary is installed;
-    tracking `main` rather than a tag for the same reason — the binary floats.
+    tracking `master` (the default branch) rather than a tag for the same
+    reason — the binary floats.
   - Out of scope: retiring the herdr TUI server, a persistent core unit, a
     narrower in-house skill description. Each is its own item if wanted.
   - **Observable check (`node`, h0):** `readlink ~/.config/asm/skills.yml`
     points into `tag-node`; after the node reconciles,
     `~/.claude/skills/herdr-core/SKILL.md` exists; a `hc run --bg --name probe
     claude "…"` session lists `herdr-core` among its skills.
+
+- [ ] [P1] herdr-core: hc terminals on h0 start without mise, so agents aren't found @claude
+  - Observed 2026-11-11 as `sl0p`: `hc exec 'echo $PATH'` →
+    `/usr/local/sbin:/usr/local/bin:/usr/bin` (no mise installs, no
+    `~/.local/bin`); `hc run --bg claude` → `spawn_failed: cannot start
+    "claude"`. The core (started 2026-11-10 20:38) took its environment from
+    whatever launched it, and that had no mise activation. Every mise-declared
+    agent (`claude`, `pi`, `omp`, `opencode`) is affected.
+  - Options: `hc server restart --fresh` from an activated shell (0.1.20+,
+    one-off); `shell = [...]` in `~/.config/herdr-core/config.toml` with a
+    login shell that activates mise; or a mise activation that also reaches
+    non-interactive ssh (`ssh h0 hc connect`), which is how laptop clients
+    start the core. Decide which before picking up — restarting the core
+    affects every terminal in it.
+  - **Observable check (`node`, h0):** after a cold core start triggered from
+    the laptop (`hc machine add sl0p@h0`), `hc run --on h0 --bg claude …`
+    starts without an absolute path, and `hc exec 'command -v claude pi'`
+    resolves both under `~/.local/share/mise/installs`.
 
 ## Backlog
 
