@@ -29,6 +29,26 @@ that same `*.md` rule and is never linked.
 
 ## Backlog
 
+- [ ] [P2] herdr-core: declare the `hc` agent skill for node accounts
+  - The binary stays OUT of this repo on purpose: the connecting client owns it.
+    `hc machine add <user>@h0` offers to copy its own `hc` when the node has
+    none or an older one (`--install` to skip the prompt), and `hc machine
+    update h0` replaces it in place with terminals kept running. That keeps
+    client and node cores version-matched; a mise pin would fight it (and the
+    binary has no GitHub release assets, so only mise's `http:` backend could
+    reach it anyway). The same route gives `deas`/`c4n4ry`/`devops` a core.
+  - Add to `tag-node/config/asm/skills.yml`:
+    `github:herdrdev/herdr-core#main:skills/herdr-core`, providers
+    `[claude, opencode, pi]`. It is the upstream stub ("rarely changes") that
+    defers to `hc --skill`, so the manual tracks whatever binary is installed;
+    tracking `main` rather than a tag for the same reason — the binary floats.
+  - Out of scope: retiring the herdr TUI server, a persistent core unit, a
+    narrower in-house skill description. Each is its own item if wanted.
+  - **Observable check (`node`, h0):** `readlink ~/.config/asm/skills.yml`
+    points into `tag-node`; after the node reconciles,
+    `~/.claude/skills/herdr-core/SKILL.md` exists; a `hc run --bg --name probe
+    claude "…"` session lists `herdr-core` among its skills.
+
 - [ ] [P2] nvim: the desktop theme plugin is a tracked symlink into `/home/deas`
   - `tag-desktop/config/nvim/lua/plugins/neovim.lua` →
     `/home/deas/.local/state/omarchy/current/theme/neovim.lua`. Any other login
