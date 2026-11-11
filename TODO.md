@@ -29,6 +29,31 @@ that same `*.md` rule and is never linked.
 
 ## Backlog
 
+- [ ] [P2] herdr-core: h0 as the hub for agents across accounts (`sl0p` → `deas`, …)
+  - Machine lists are per core (`machines.json` in that core's state): the
+    laptop's `hc machine add deas@h0` gives agents ON h0 nothing. For a hub
+    that survives the laptop sleeping, h0's `sl0p` core adds the other
+    accounts itself: `hc machine add deas@localhost --name deas --install`
+    (likewise `c4n4ry`, `devops`).
+  - Per herdr-core's source (`remote.rs`, `from_machine`), a dialed machine
+    may only call back to terminals here that started work there: parent →
+    helper (`hc run --on deas`, `send`, `read`, `wait`) and the helper's
+    reports back work over the parent's line; unsolicited agent-to-agent
+    messages across accounts do not, by design. Reverse delegation (`deas` →
+    `sl0p`) needs `deas`'s core to add `sl0p@localhost` too.
+  - Prerequisites per target account: an SSH key from `sl0p` in its
+    `~/.ssh/authorized_keys`, and `systemctl --user enable --now
+    herdr-core.service` once hc is there (else its terminals have no mise —
+    see the closed PATH item). **Needs a human decision before it is picked:**
+    a machine entry is effectively a shell as that user (`hc exec`, `hc file
+    write`), so each account's owner grants the key, not an agent.
+  - **Observable check (`node`, h0):** from an agent in `sl0p`'s core,
+    `hc run --on deas --bg --name probe claude "Reply with hc send
+    $HC_TERMINAL_ID: probe-ok"` starts by bare name, the `<hc from=…>` report
+    reaches the parent, and `hc exec --on deas 'id -un; command -v claude'`
+    prints `deas` and a mise shim. Repeat with the laptop asleep: the helper
+    keeps running and still reports.
+
 - [ ] [P2] nvim: the desktop theme plugin is a tracked symlink into `/home/deas`
   - `tag-desktop/config/nvim/lua/plugins/neovim.lua` →
     `/home/deas/.local/state/omarchy/current/theme/neovim.lua`. Any other login
