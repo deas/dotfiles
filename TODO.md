@@ -27,23 +27,6 @@ that same `*.md` rule and is never linked.
 
 ## In progress
 
-- [ ] [P2] gh: `gh` reads the seat's GitHub token per call, never exported @claude
-  - From the sovera1gn-n0des handover (2026-11-12): `sl0p` on `h0` has
-    `~/.config/s0n/secrets/github.token` (classic `repo` token on `a1auto1gg`,
-    `secret_files:`). A `gh` wrapper on `~/.local/bin` sets `GH_TOKEN` from it
-    for that one process, so shells, make, npm and the agents' other children
-    never inherit it, and a re-seeded token applies on the next call. An
-    explicit `GH_TOKEN` wins; a seat without the file falls through to `gh`'s
-    own auth. Untagged: a pass-through wherever the file is absent.
-  - Reaches what has `~/.local/bin` ahead of `/usr/bin`: interactive shells
-    and hc terminals (login PATH). Not hermes (`PATH=/usr/local/bin:/usr/bin`,
-    and `~/.config/s0n` is `InaccessiblePaths=` for it) — by design.
-  - **Observable check (`node`, `sl0p`):** after `just rcm-sync`, `type -a gh`
-    lists the wrapper first; `gh api user -q .login` answers `a1auto1gg`; the
-    interactive shell has no `GH_TOKEN`; `GH_TOKEN=bogus gh api user` is
-    refused (explicit wins); with `HOME` pointing at a dir without the file,
-    `gh` falls back to its own auth. As `devops`, `gh api user` answers what
-    it did before.
 - [ ] [P2] bash: full `mise activate bash` in tag-node's 60-deas.sh, so
   interactive non-login shells load per-directory mise `[env]` @claude
   - From the sovera1gn-n0des session (2026-11-12): herdr-core.service starts
@@ -218,6 +201,23 @@ that same `*.md` rule and is never linked.
 
 ## Done
 
+- [x] [P2] gh: `gh` reads the seat's GitHub token per call, never exported (`6608572`)
+  - From the sovera1gn-n0des handover (2026-11-12): `sl0p` on `h0` has
+    `~/.config/s0n/secrets/github.token` (classic `repo` token on `a1auto1gg`,
+    `secret_files:`). A `gh` wrapper on `~/.local/bin` sets `GH_TOKEN` from it
+    for that one process, so shells, make, npm and the agents' other children
+    never inherit it, and a re-seeded token applies on the next call. An
+    explicit `GH_TOKEN` wins; a seat without the file falls through to `gh`'s
+    own auth. Untagged: a pass-through wherever the file is absent.
+  - Reaches what has `~/.local/bin` ahead of `/usr/bin`: interactive shells
+    and hc terminals (login PATH). Not hermes (`PATH=/usr/local/bin:/usr/bin`,
+    and `~/.config/s0n` is `InaccessiblePaths=` for it) — by design.
+  - **Observable check (`node`, `sl0p`):** after `just rcm-sync`, `type -a gh`
+    lists the wrapper first; `gh api user -q .login` answers `a1auto1gg`; the
+    interactive shell has no `GH_TOKEN`; `GH_TOKEN=bogus gh api user` is
+    refused (explicit wins); with `HOME` pointing at a dir without the file,
+    `gh` falls back to its own auth. As `devops`, `gh api user` answers what
+    it did before.
 - [x] [P2] ssh: one alias per machine and account for herdr (`5aff5b0`)
   - `tag-desktop/ssh/config`: `agent-work` replaced by `h0-sl0p`, `h0-devops`,
     `h3-sl0p`, `h3-devops`, so hc and the herdr app name machines by host and
