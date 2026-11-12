@@ -29,6 +29,26 @@ that same `*.md` rule and is never linked.
 
 ## Backlog
 
+- [ ] [P3] hypr: Super+C/V in herdr-app send Ctrl+C/V (interrupt, image paste)
+  - Omarchy's `default/hypr/bindings/clipboard.lua` sends Ctrl+Shift+C/V only
+    to windows tagged `terminal` (`default/hypr/apps/terminals.lua`), and
+    Ctrl+C/V to everything else. `herdr-app` (its Wayland app-id) is not on
+    that list, so Super+C sends Ctrl+C (unbound: interrupts the agent) and
+    Super+V sends Ctrl+V (`terminal.paste_image`, which on Linux never pastes
+    text). No `keys.json` binding can catch Super: Hyprland consumes it.
+  - Unfixed on omarchy v4.5.0 and on `master` `36b70f1` (2026-11-12); being
+    discussed upstream. Revisit once omarchy decides.
+  - Interim: `tag-desktop/config/herdr-app/keys.json` is omarchy's own
+    `default/herdr-app/keys.json` at `36b70f1` (added after v4.5.0 by
+    `8acbf7716`, #18073), linked by rcm so `omarchy-refresh-herdr-app`
+    preserves it. Drop it once the installed omarchy ships the file.
+  - Candidate local fix: `o.window("herdr-app", { tag = "+terminal" })` in
+    `tag-desktop/config/hypr/bindings.lua`. It also makes the window
+    transparent like other terminals.
+  - **Observable check (desktop):** `hyprctl clients` lists `terminal` in
+    herdr-app's tags; in a herdr-app pane, Super+C copies a selection and
+    Super+V pastes text.
+
 - [ ] [P2] herdr-core: h0 as the hub for agents across accounts (`sl0p` → `deas`, …)
   - Machine lists are per core (`machines.json` in that core's state): the
     laptop's `hc machine add deas@h0` gives agents ON h0 nothing. For a hub
