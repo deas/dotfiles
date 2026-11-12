@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# gh, with the seat's own GitHub token when the node delivered one
+# (sovera1gn-n0des `secret_files:` -> ~/.config/s0n/secrets/github.token).
+#
+# Read on every call and exported to this process only — never from a shell
+# rc, so make, npm and whatever an agent runs do not inherit it, and a
+# re-seeded token applies on the next call. An explicit GH_TOKEN wins; a seat
+# without the file falls through to gh's own auth.
+f="$HOME/.config/s0n/secrets/github.token"
+if [ -z "${GH_TOKEN:-}" ] && [ -r "$f" ]; then
+  GH_TOKEN="$(<"$f")"
+  export GH_TOKEN
+fi
+
+# Exec the next gh on PATH that is not this wrapper, wherever gh is installed.
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+real=
+while IFS= read -r g; do
+  [ "$(readlink -f "$g")" = "$self" ] && continue
+  real=$g
+  break
+done < <(type -ap gh)
+if [ -z "$real" ]; then
+  echo "gh: no gh on PATH besides this wrapper ($self)" >&2
+  exit 127
+fi
+exec "$real" "$@"
