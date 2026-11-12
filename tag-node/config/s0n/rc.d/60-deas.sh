@@ -84,6 +84,17 @@ if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init bash)"
 fi
 
+# --- mise --------------------------------------------------------------------
+# Full activation (cd hook) for interactive non-login shells — herdr terminals,
+# tmux panes, nested bash — which never read /etc/profile.d/mise.sh and so only
+# get shims: per-directory mise.toml [env] (e.g. ANSIBLE_VAULT_PASSWORD_FILE)
+# would never load. Idempotent: in an ssh login shell, already activated by
+# profile.d, it re-wires the same single hook. Before direnv, which chains onto
+# PROMPT_COMMAND last.
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
+
 # --- direnv ------------------------------------------------------------------
 # Probed, never installed by us: the node project's own env comes from mise, but
 # third-party checkouts ship an `.envrc` and expect the hook, and an un-hooked
