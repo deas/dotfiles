@@ -44,6 +44,17 @@ that same `*.md` rule and is never linked.
     refused (explicit wins); with `HOME` pointing at a dir without the file,
     `gh` falls back to its own auth. As `devops`, `gh api user` answers what
     it did before.
+- [ ] [P2] bash: full `mise activate bash` in tag-node's 60-deas.sh, so
+  interactive non-login shells load per-directory mise `[env]` @claude
+  - From the sovera1gn-n0des session (2026-11-12): herdr-core.service starts
+    the core with `bash -lc` (login, non-interactive), so profile.d gives
+    shims only. Its terminals are interactive non-login shells that read just
+    ~/.bashrc, so no cd hook ever loads, and in owners/s0n
+    ANSIBLE_VAULT_PASSWORD_FILE stays unset (`ansible-vault edit` prompts).
+  - **Observable check (`node`, `devops` on h0):** in a fresh herdr pane,
+    `cd owners/s0n` sets `ANSIBLE_VAULT_PASSWORD_FILE`; `type -a hc` still
+    lists `~/.local/bin/hc` first; an ssh login shell keeps exactly one mise
+    hook.
 
 ## Backlog
 
