@@ -27,6 +27,24 @@ that same `*.md` rule and is never linked.
 
 ## In progress
 
+- [ ] [P2] gh: `gh` reads the seat's GitHub token per call, never exported @claude
+  - From the sovera1gn-n0des handover (2026-11-12): `sl0p` on `h0` has
+    `~/.config/s0n/secrets/github.token` (classic `repo` token on `a1auto1gg`,
+    `secret_files:`). A `gh` wrapper on `~/.local/bin` sets `GH_TOKEN` from it
+    for that one process, so shells, make, npm and the agents' other children
+    never inherit it, and a re-seeded token applies on the next call. An
+    explicit `GH_TOKEN` wins; a seat without the file falls through to `gh`'s
+    own auth. Untagged: a pass-through wherever the file is absent.
+  - Reaches what has `~/.local/bin` ahead of `/usr/bin`: interactive shells
+    and hc terminals (login PATH). Not hermes (`PATH=/usr/local/bin:/usr/bin`,
+    and `~/.config/s0n` is `InaccessiblePaths=` for it) — by design.
+  - **Observable check (`node`, `sl0p`):** after `just rcm-sync`, `type -a gh`
+    lists the wrapper first; `gh api user -q .login` answers `a1auto1gg`; the
+    interactive shell has no `GH_TOKEN`; `GH_TOKEN=bogus gh api user` is
+    refused (explicit wins); with `HOME` pointing at a dir without the file,
+    `gh` falls back to its own auth. As `devops`, `gh api user` answers what
+    it did before.
+
 ## Backlog
 
 - [ ] [P3] hypr: Super+C/V in herdr-app send Ctrl+C/V (interrupt, image paste)
@@ -73,6 +91,23 @@ that same `*.md` rule and is never linked.
     reaches the parent, and `hc exec --on deas 'id -un; command -v claude'`
     prints `deas` and a mise shim. Repeat with the laptop asleep: the helper
     keeps running and still reports.
+
+- [ ] [P2] gh: a seat's `git` pushes as `a1auto1gg`, via its forks
+  - **Blocked on `sovera1gn-n0des` identity-vault issue 05** (wire `a1auto1gg`
+    end to end): the grant (fork vs collaborator vs deploy key) is decided
+    there; the fork option was added to 05 on 2026-11-12. The seat key is
+    registered (`ssh -T` with it alone answers `a1auto1gg`), but on
+    2026-11-12 it could not read the private `deas/sovera1gn-n0des`: no grant
+    yet, and no forks.
+  - This repo owns the consumer half (ADR-0043): a `Host github.com` entry in
+    the seat's `~/.ssh/config` using its seat key (`IdentitiesOnly yes`) —
+    **not before the grant**, or pushes lose the forwarded-agent path with
+    nothing in its place; and agent instructions to sync the fork before
+    starting and open PRs with `gh pr create --repo deas/<repo>`.
+  - **Observable check (`node`, the agent seat):** `ssh -T git@github.com`
+    answers `a1auto1gg` without a forwarded agent; a push to `deas/<repo>` is
+    refused while a push to the fork succeeds; a PR opened from the fork runs
+    its checks without secrets.
 
 - [ ] [P2] nvim: the desktop theme plugin is a tracked symlink into `/home/deas`
   - `tag-desktop/config/nvim/lua/plugins/neovim.lua` →
