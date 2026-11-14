@@ -7,9 +7,16 @@
 # h3 is on h0's LAN but not in h0's tailnet view. Deliberately NO h3-devops
 # here — anything running as sl0p on h0 could use it, and devops has
 # passwordless sudo; that alias lives only on the desktops.
+#
+# IdentitiesOnly: the seat reaches h3 as ITSELF. Without it, a session that
+# arrived with a forwarded agent offers the operator's keys first and lands on
+# h3 as the operator (ADR-0048: a forwarded principal is a session, never the
+# seat). The file is the seat's own key, whichever seat reads this.
 Host h3-sl0p
   HostName h3
   User sl0p
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
 
 # The four WordPress sites' live host (web-default, Hetzner), the same alias
 # as tag-desktop's. By tailnet ADDRESS, not name: h0 runs with accept-dns off,
