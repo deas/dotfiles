@@ -285,7 +285,7 @@ try {
     print "Failed to get GITHUB_PERSONAL_ACCESS_TOKEN"
   }
 
-  $env.HERMES_DESKTOP_REMOTE_URL = "http://vm-chat.aiautomationisgoinggreat.com:9119/"
+  $env.HERMES_DESKTOP_REMOTE_URL = "https://hermes-ui.int.aiautomationisgoinggreat.com/"
 
   try {
     $env.HERMES_DESKTOP_REMOTE_TOKEN = ^vlt.clj get /automation/HERMES_DESKTOP_REMOTE_TOKEN
