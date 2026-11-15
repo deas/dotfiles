@@ -16,6 +16,19 @@
       "options": {
         "apiKey": "{file:~/.config/s0n/secrets/nvidia.key}",
       },
+      // The chat models that answered in under 4s on the free tier (probed
+      // 2026-11-15). The catalog lags the live list: several are missing from it,
+      // and many it does list now 404 or time out.
+      "models": {
+        "nvidia/nemotron-3.5-bolt-e4b": { "name": "Nemotron 3.5 Bolt E4B" },
+        "poolside/laguna-xs-2.1": { "name": "Laguna XS 2.1" },
+        "stepfun-ai/step-5-preview": { "name": "Step 5 Preview" },
+        "nvidia/nemotron-3.5-super-vl-120b-a12b": { "name": "Nemotron 3.5 Super VL 120B" },
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": { "name": "Nemotron 3 Nano Omni 30B Reasoning" },
+        "nvidia/nemotron-3-ultra-550b-a55b": { "name": "Nemotron 3 Ultra 550B" },
+        "nvidia/nemotron-3.5-lightning-30b-a3b": { "name": "Nemotron 3.5 Lightning 30B" },
+        "mistralai/mistral-large-4-1t-a52b": { "name": "Mistral Large 4" },
+      },
     },
   },
   "model": "github-copilot/claude-sonnet-4.5",
