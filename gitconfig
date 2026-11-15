@@ -34,6 +34,12 @@
   template = ~/.gitmessage
 [fetch]
   prune = true
+# Fetch over anonymous https, push over ssh: the s0n converge clones public
+# repos by https (no credential on the node), and a push then rides whatever
+# ssh key or forwarded agent the session has. A URL carrying a token
+# (https://<pat>@github.com/...) does not match the prefix and is left alone.
+[url "git@github.com:"]
+  pushInsteadOf = https://github.com/
 [rebase]
   autosquash = true
 [include]
