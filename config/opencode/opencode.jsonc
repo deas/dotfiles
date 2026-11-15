@@ -10,6 +10,13 @@
         "apiKey": "{file:~/.config/s0n/secrets/opencode-go.key}",
       },
     },
+    // NVIDIA NIM (build.nvidia.com). models.dev already knows the provider and
+    // its base URL; only the key comes from the seat's secret file. Not a default.
+    "nvidia": {
+      "options": {
+        "apiKey": "{file:~/.config/s0n/secrets/nvidia.key}",
+      },
+    },
   },
   "model": "github-copilot/claude-sonnet-4.5",
   "small_model": "github-copilot/claude-sonnet-4.5",
