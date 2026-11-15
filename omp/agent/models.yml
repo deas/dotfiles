@@ -6,3 +6,7 @@ providers:
   # without the file simply has no key for opencode-go.
   opencode-go:
     apiKey: "!cat ~/.config/s0n/secrets/opencode-go.key"
+  # NVIDIA NIM (build.nvidia.com), same delivery: ~/.config/s0n/secrets/nvidia.key.
+  # omp's built-in `nvidia` provider supplies the base URL; key only, no default.
+  nvidia:
+    apiKey: "!cat ~/.config/s0n/secrets/nvidia.key"
