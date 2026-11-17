@@ -38,7 +38,19 @@ o.bind("SUPER + SHIFT + C", "Calendar", { webapp = "https://calendar.google.com/
 
 -- Dictation keys from before Alt + Space and Right Alt became the defaults.
 -- Remove these lines to give the keys back to applications.
+hl.unbind("ALT + SPACE")
 if o.dictation_installed and o.dictation_installed() then
   o.bind("SUPER + CTRL + X", "Toggle dictation", "omarchy-dictation toggle")
   o.bind_hold("F9", "Start dictation (push-to-talk)", "omarchy-dictation start", "Stop dictation (push-to-talk)", "omarchy-dictation stop")
 end
+
+-- omacast launcher (plugin typecraft.omacast) on the Alt + Space freed above.
+-- Bound here rather than via `omacast setup hyprland`, which writes to the
+-- untracked ~/.config/hypr/hyprland.lua.
+o.bind("ALT + SPACE", "omacast launcher", hl.dsp.global("omacast:toggle"), { submap_universal = true })
+-- While open, omacast switches to this submap so Super+J/K reach the launcher.
+hl.define_submap("omacast", function()
+  hl.bind("SUPER + F24", hl.dsp.no_op()) -- a submap needs one bind to exist
+end)
+-- Blur behind the launcher under Glassy Windows.
+hl.layer_rule({ match = { namespace = "^omacast$" }, blur = true, ignore_alpha = 0.3 })
