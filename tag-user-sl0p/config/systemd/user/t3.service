@@ -1,0 +1,36 @@
+[Unit]
+Description=T3 Code server, loopback only
+Documentation=https://github.com/pingdotgg/t3code
+# Reached on the LAN at https://t3.int.automationisgoinggreat.de (h0's Caddy
+# ingress, declared in sovera1gn-n0des gv-ingress-layers.yml), or over
+# `ssh -L 3773:127.0.0.1:3773 <seat>@h0`. Pair a device with a reduced scope
+# (`t3 pair --ttl 15m --scope ...`), then open the printed path on the t3.int
+# name. The default scope is everything, terminals and access management
+# included.
+# Context: sovera1gn-n0des docs/spikes/0012-t3code-agent-ui.
+#
+# VERSION comes from mise (`"npm:t3" = "latest"` in this seat's mise config)
+# through the version-free shim, so `mise upgrade` moves it. A running server
+# keeps the old version until restarted:
+#   mise upgrade npm:t3 && systemctl --user restart t3.service
+# The npm package is only a launcher: the first start after a bump downloads
+# that release's binary (~185 MB, checked against its SHA256SUMS) into
+# ~/.t3/runtime/versions/, which is never pruned. Do not use `t3 update` or
+# `t3 service install`; they manage their own copy and unit, outside mise.
+#
+# WARN: every start prints a fresh full-scope pairing token to stdout, so it
+# lands in this unit's journal. Let it expire; mint scoped ones instead.
+#
+# Enable once per account:
+#   systemctl --user enable --now t3.service
+
+[Service]
+WorkingDirectory=%h
+Environment=T3CODE_TELEMETRY_ENABLED=false
+Environment=T3CODE_PORT_DISCOVERY=0
+ExecStart=%h/.local/share/mise/shims/t3 serve --mode web --host 127.0.0.1 --port 3773 --no-browser %h/projects/t3-drive
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
